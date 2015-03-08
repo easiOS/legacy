@@ -27,18 +27,11 @@ int shell_cmdbuf_c = 0;
 user_t users[256];
 user_t* current;
 
-bool strcmp(char str1[], char str2[])
+int strcmp(const char* s1, const char* s2)
 {
-	uint32_t sizeof1 = sizeof(str1) / sizeof(char);
-	uint32_t sizeof2 = sizeof(str2) / sizeof(char);
-	if(sizeof1 != sizeof2)
-		return false;
-	for(int i = 0; i < sizeof1; i++)
-	{
-		if(str1[i] != str2[i])
-			return false;
-	}
-	return true;
+    while(*s1 && (*s1==*s2))
+        s1++,s2++;
+    return *(const unsigned char*)s1-*(const unsigned char*)s2;
 }
 
 void uptime()
@@ -75,6 +68,118 @@ void exit()
 		current = (user_t*)current->last;
 }
 
+void restart()
+{
+	if(current->superuser)
+			reboot();
+		else
+			terminal_writestring("Only root can do that.\n");
+}
+
+void calculator()
+{
+	terminal_clear();
+	terminal_writestring("EasiOS Calculator\n");
+	terminal_writestring("First number: ");
+	char inp[8];
+	char c;
+	int cc = 0;
+	do
+	{
+		if(keyb_isavail())
+		{
+			c = scanc2char(keyb_get());
+			if(cc < 7 && c != '\n' && c != '\0')
+			{
+				inp[cc++] = c;
+				char asd[2];
+				asd[0] = c;
+				terminal_writestring(asd);
+			}
+		}
+	} while(c != '\n');
+	int a = atoi(inp);
+	for(int i = 0; i < 8; i++)
+	{
+		inp[i] = '\0';
+	}
+	c = 0;
+	cc = 0;
+	terminal_writestring(" Second number: ");
+	do
+	{
+		if(keyb_isavail())
+		{
+			c = scanc2char(keyb_get());
+			if(cc < 7 && c != '\n' && c != '\0')
+			{
+				inp[cc++] = c;
+				char asd[2];
+				asd[0] = c;
+				terminal_writestring(asd);
+
+			}
+		}
+	} while(c != '\n');
+	int b = atoi(inp);
+	c = 0;
+	signed char op = -1;
+	terminal_writestring("\nOperation (a - add, b - sub, c - mul, d - div): ");
+	do
+	{
+		if(keyb_isavail())
+		{
+			c = scanc2char(keyb_get());
+			terminal_writestring("\n");
+			switch(c)
+			{
+				case 'a':
+					terminal_writeint(a);
+					terminal_writestring("+");
+					terminal_writeint(b);
+					terminal_writestring("=");
+					terminal_writeint(a + b);
+					terminal_writestring("\n");
+					op = 0;
+					break;
+				case 'b':
+					terminal_writeint(a);
+					terminal_writestring("-");
+					terminal_writeint(b);
+					terminal_writestring("=");
+					terminal_writeint(a - b);
+					terminal_writestring("\n");
+					op = 0;
+					break;
+				case 'c':
+					terminal_writeint(a);
+					terminal_writestring("*");
+					terminal_writeint(b);
+					terminal_writestring("=");
+					terminal_writeint(a * b);
+					terminal_writestring("\n");
+					op = 0;
+					break;
+				case 'd':
+					terminal_writeint(a);
+					terminal_writestring("/");
+					terminal_writeint(b);
+					terminal_writestring("=");
+					terminal_writeint(a / b);
+					terminal_writestring("\n");
+					op = 0;
+					break;
+				default:
+					break;
+			}
+		}
+	} while(op == -1);
+
+}
+
+void (*shell_function[64])(); //function table
+char* shell_function_name[64];
+
 void shell_process()
 {
 	char cmd[shell_cmdbuf_c+1];
@@ -90,25 +195,20 @@ void shell_process()
 		cmd[i] = shell_cmdbuf[i];
 	}
 	cmd[shell_cmdbuf_c+1] = '\0';
-	terminal_writestring("command: ");
-	terminal_writestring(cmd);
-	terminal_writestring("\n");
-	if(strcmp(cmd, "uptime"))
+	bool ok = false;
+	for(int i = 0; i < 64; i++)
 	{
-		uptime();
+		if(strcmp(cmd, shell_function_name[i]) == 0)
+		{
+			(*shell_function[i])();
+			ok = true;
+		}
 	}
-	else if(strcmp(cmd, "su"))
+	if(!ok)
 	{
-		su();
-	}
-	else if(strcmp(cmd, "exit"))
-	{
-		exit();
-	}
-	else
-	{
-		terminal_writestring(cmd); terminal_writestring(":");
-		terminal_writestring(" unknown command\n");
+		terminal_writestring("Unknown command: ");
+		terminal_writestring(cmd);
+		terminal_writestring("\n");
 	}
 	for(int i = 0; i < 128; i++)
 	{
@@ -146,6 +246,7 @@ void shell_prompt()
 						{
 							shell_cmdbuf[shell_cmdbuf_c] = ' ';
 							shell_cmdbuf_c -= 1;
+							terminal_setcursor(terminal_getx() - 1, terminal_gety());
 						}
 						break;
 					case '\t': //autocomplete?
@@ -191,6 +292,17 @@ void shell_main()
 	users[100] = user;
 	users[100].last = &users[1];
 	current = &users[100];
+	//add functions to the table
+	shell_function[0] = exit;
+	shell_function_name[0] = "exit";
+	shell_function[1] = su;
+	shell_function_name[1] = "su";
+	shell_function[2] = restart;
+	shell_function_name[2] = "reboot";
+	shell_function[3] = uptime;
+	shell_function_name[3] = "uptime";
+	shell_function[4] = calculator;
+	shell_function_name[4] = "calculator";
 	terminal_writestring("ESh 0.2\n");
 	while(!shell_exit)
 	{

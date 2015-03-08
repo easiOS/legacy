@@ -6,4 +6,5 @@
 #endif
 void reverse(char str[], int length);
 char* itoa(int num, char* str, int base);
+long long int atoi(const char *c);
 #endif
