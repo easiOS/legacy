@@ -3,6 +3,7 @@
 #endif
 #include <stddef.h>
 #include <stdint.h>
+#include "kernel.h"
 #include "port.h"
 #include "stdmem.h"
 #include "dtables.h"
@@ -153,22 +154,16 @@ static void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags
    idt_entries[num].flags   = flags /* | 0x60 */;
 }
 
+static const char* errorstr[] = {"Division by zero", "Debug exception", 
+  "Non-maskable interrupt", "Breakpoint exception", "Into detected overflow",
+  "Out of bounds exception", "Invalid opcode exception", "No coprocessor exception",
+  "Double fault", "Coprocessor segment overrun", "Bad TSS", "Segment not present",
+  "Stack fault", "General protection fault", "Page fault", "Unknown interrupt exception",
+  "Coprocessor fault", "Alignment check exception", "Machine check exception"};
+
 void isr_handler(registers_t regs)
 {
-   switch(regs.int_no)
-   {
-      case 0:
-         terminal_writestring("Division by zero\n");
-         break;
-      case 13:
-         terminal_writestring("General protection fault ");
-         terminal_writeint(regs.err_code);
-         terminal_writestring("\n");
-         break;
-      default:
-         terminal_writeint(regs.int_no);
-         terminal_writestring("\n");
-   }
+   kpanic(errorstr[regs.int_no], regs);
    if (interrupt_handlers[regs.int_no] != 0)
     {
         isr_t handler = interrupt_handlers[regs.int_no];

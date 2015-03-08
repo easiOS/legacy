@@ -99,3 +99,17 @@ void keyb_init()
     register_interrupt_handler(IRQ1, &keyb_callback);
     terminal_prfxi(ticks(), "Keyboard registered\n");
 }
+
+void keyb_clr()
+{
+  ckey = 0;
+  avail = false;
+}
+
+void keyb_pak() //press any key
+{
+  terminal_writestring("Press any key to continue...\n");
+  keyb_clr();
+  while(!avail);
+  keyb_clr();
+}

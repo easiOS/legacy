@@ -8,4 +8,6 @@ void keyb_init();
 bool keyb_isavail();
 uint32_t keyb_get();
 char keyb_s2c(uint32_t scancode);
+void keyb_clr();
+void keyb_pak(); //press any key
 #endif

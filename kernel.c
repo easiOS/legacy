@@ -1,5 +1,5 @@
 #define KERNEL_NAME "EasiOS - PalfyMuhely\n"
-#define KERNEL_VERSION "0.0.3"
+#define KERNEL_VERSION "0.0.4"
 
 #if !defined(__cplusplus)
 #include <stdbool.h> /* C doesn't have booleans by default. */
@@ -7,6 +7,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "kernel.h"
 #include "stdmem.h"
 #include "video.h"
 #include "port.h"
@@ -32,6 +33,38 @@ bool get_nth_binary(short binary, int nth)
 	return (bool)((binary >> nth) & 1);
 }
 
+void halt()
+{
+	terminal_writestring("Processor halted.");
+	asm volatile("hlt");
+}
+
+void kpanic(const char* msg, registers_t regs)
+{
+	terminal_writestring("Shit just got real: ");
+	terminal_writestring(msg);
+	terminal_writestring("\n");
+	//ds, edi, esi, ebp, esp, ebx, edx, ecx, eax;
+	terminal_writestring("DS="); terminal_writeint(regs.ds); terminal_writestring("\n");
+	terminal_writestring("EDI="); terminal_writeint(regs.edi); terminal_writestring("\n");
+	terminal_writestring("ESI="); terminal_writeint(regs.esi); terminal_writestring("\n");
+	terminal_writestring("EBP="); terminal_writeint(regs.ebp); terminal_writestring("\n");
+	terminal_writestring("ESP="); terminal_writeint(regs.esp); terminal_writestring("\n");
+	terminal_writestring("EBX="); terminal_writeint(regs.ebx); terminal_writestring("\n");
+	terminal_writestring("EDX="); terminal_writeint(regs.edx); terminal_writestring("\n");
+	terminal_writestring("ECX="); terminal_writeint(regs.ecx); terminal_writestring("\n");
+	terminal_writestring("EAX="); terminal_writeint(regs.eax); terminal_writestring("\n");
+	//eip, cs, eflags, useresp, ss
+	terminal_writestring("EIP="); terminal_writeint(regs.eip); terminal_writestring("\n");
+	terminal_writestring("CS="); terminal_writeint(regs.cs); terminal_writestring("\n");
+	terminal_writestring("EFLAGS="); terminal_writeint(regs.eflags); terminal_writestring("\n");
+	terminal_writestring("USERESP="); terminal_writeint(regs.useresp); terminal_writestring("\n");
+	terminal_writestring("SS="); terminal_writeint(regs.ss); terminal_writestring("\n");
+	terminal_writestring("Interrupt: "); terminal_writeint(regs.int_no); terminal_writestring("\n");
+	terminal_writestring("Error code: "); terminal_writeint(regs.err_code); terminal_writestring("\n");
+	halt();
+}
+
 void reboot()
 {
 	terminal_clear();
@@ -41,7 +74,7 @@ void reboot()
     while (good & 0x02)
         good = inb(0x64);
     outb(0x64, 0xFE);
-    asm volatile("hlt");
+    halt();
 }
 
 void switch_to_user_mode()
@@ -88,12 +121,12 @@ void kernel_main()
 	terminal_initialize();
 	init_descriptor_tables();
 	//terminal_clear();
-	init_timer(1000);
+	asm volatile("sti");
+	init_timer(1000); //1000 Hz
 	keyb_init();
 	logo();
 	terminal_writestring(KERNEL_NAME);
 	terminal_writestring(KERNEL_VERSION); terminal_writestring("\n");
-	asm volatile("sti");
 	shell_main();
 	reboot();
 }
