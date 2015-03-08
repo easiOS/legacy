@@ -8,7 +8,6 @@ char sc_dict[] = {0, 27, '1', '2', '3', '4', '5', '6', '7',
 	'n', 'm', ',', '.', '/', 0, '*', 0, ' ', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, '-', 0, 0, 0, '+', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-
 char scanc2char(uint32_t sc)
 {
 	return sc_dict[sc];
@@ -27,34 +26,15 @@ int shell_cmdbuf_c = 0;
 user_t users[256];
 user_t* current;
 
-int strcmp(const char* s1, const char* s2)
+void shell_request_exit()
 {
-    while(*s1 && (*s1==*s2))
-        s1++,s2++;
-    return *(const unsigned char*)s1-*(const unsigned char*)s2;
-}
-
-void uptime()
-{
-	uint32_t seconds = ticks() / 1000;
-	uint32_t minutes = seconds / 60;
-	uint32_t hours = minutes / 60;
-	minutes -= hours * 60;
-	seconds -= hours * 3600 + minutes * 60;
-	terminal_writestring("Up since ");
-	if(hours > 0)
-	{
-		terminal_writeint(hours); terminal_writestring(" hours, ");
-	}
-	if(minutes > 0 || hours > 0)
-	{
-		terminal_writeint(minutes); terminal_writestring(" minutes, ");
-	}
-	terminal_writeint(seconds); terminal_writestring(" seconds.\n");
+	shell_exit = true;
 }
 
 void su()
 {
+	if(current == &users[0])
+		return;
 	user_t* last = &users[current->id];
 	current = &users[0];
 	current->last = (void*)last;
@@ -63,119 +43,18 @@ void su()
 void exit()
 {
 	if(((user_t*)current->last)->id == 1)
-		shell_exit = true;
+		shell_request_exit();
 	else
 		current = (user_t*)current->last;
 }
 
-void restart()
+int strcmp(const char* s1, const char* s2)
 {
-	if(current->superuser)
-			reboot();
-		else
-			terminal_writestring("Only root can do that.\n");
+    while(*s1 && (*s1==*s2))
+        s1++,s2++;
+    return *(const unsigned char*)s1-*(const unsigned char*)s2;
 }
 
-void calculator()
-{
-	terminal_clear();
-	terminal_writestring("EasiOS Calculator\n");
-	terminal_writestring("First number: ");
-	char inp[8];
-	char c;
-	int cc = 0;
-	do
-	{
-		if(keyb_isavail())
-		{
-			c = scanc2char(keyb_get());
-			if(cc < 7 && c != '\n' && c != '\0')
-			{
-				inp[cc++] = c;
-				char asd[2];
-				asd[0] = c;
-				terminal_writestring(asd);
-			}
-		}
-	} while(c != '\n');
-	int a = atoi(inp);
-	for(int i = 0; i < 8; i++)
-	{
-		inp[i] = '\0';
-	}
-	c = 0;
-	cc = 0;
-	terminal_writestring(" Second number: ");
-	do
-	{
-		if(keyb_isavail())
-		{
-			c = scanc2char(keyb_get());
-			if(cc < 7 && c != '\n' && c != '\0')
-			{
-				inp[cc++] = c;
-				char asd[2];
-				asd[0] = c;
-				terminal_writestring(asd);
-
-			}
-		}
-	} while(c != '\n');
-	int b = atoi(inp);
-	c = 0;
-	signed char op = -1;
-	terminal_writestring("\nOperation (a - add, b - sub, c - mul, d - div): ");
-	do
-	{
-		if(keyb_isavail())
-		{
-			c = scanc2char(keyb_get());
-			terminal_writestring("\n");
-			switch(c)
-			{
-				case 'a':
-					terminal_writeint(a);
-					terminal_writestring("+");
-					terminal_writeint(b);
-					terminal_writestring("=");
-					terminal_writeint(a + b);
-					terminal_writestring("\n");
-					op = 0;
-					break;
-				case 'b':
-					terminal_writeint(a);
-					terminal_writestring("-");
-					terminal_writeint(b);
-					terminal_writestring("=");
-					terminal_writeint(a - b);
-					terminal_writestring("\n");
-					op = 0;
-					break;
-				case 'c':
-					terminal_writeint(a);
-					terminal_writestring("*");
-					terminal_writeint(b);
-					terminal_writestring("=");
-					terminal_writeint(a * b);
-					terminal_writestring("\n");
-					op = 0;
-					break;
-				case 'd':
-					terminal_writeint(a);
-					terminal_writestring("/");
-					terminal_writeint(b);
-					terminal_writestring("=");
-					terminal_writeint(a / b);
-					terminal_writestring("\n");
-					op = 0;
-					break;
-				default:
-					break;
-			}
-		}
-	} while(op == -1);
-
-}
 
 void (*shell_function[64])(); //function table
 char* shell_function_name[64];
@@ -230,7 +109,6 @@ void shell_prompt()
 	{
 		if(keyb_isavail())
 		{
-			//terminal_writestring("k");
 			uint32_t held = keyb_get();
 			//if(valid_char(held))
 			{
@@ -242,11 +120,12 @@ void shell_prompt()
 						shell_process();
 						break;
 					case '\b':
-						if(shell_cmdbuf_c > 1)
+						if(shell_cmdbuf_c > 0)
 						{
-							shell_cmdbuf[shell_cmdbuf_c] = ' ';
+							shell_cmdbuf[shell_cmdbuf_c] = '\0';
 							shell_cmdbuf_c -= 1;
 							terminal_setcursor(terminal_getx() - 1, terminal_gety());
+							terminal_putentryat(' ', COLOR_LIGHT_GREY | COLOR_BLACK << 4, terminal_getx(), terminal_gety());
 						}
 						break;
 					case '\t': //autocomplete?
@@ -268,6 +147,11 @@ void shell_prompt()
 			}
 		}
 	}
+}
+
+user_t* shell_get_current_user()
+{
+	return current;
 }
 
 void shell_main()
@@ -303,6 +187,10 @@ void shell_main()
 	shell_function_name[3] = "uptime";
 	shell_function[4] = calculator;
 	shell_function_name[4] = "calculator";
+	shell_function[5] = breakout;
+	shell_function_name[5] = "breakout";
+	shell_function[6] = date;
+	shell_function_name[6] = "date";
 	terminal_writestring("ESh 0.2\n");
 	while(!shell_exit)
 	{

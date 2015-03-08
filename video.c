@@ -236,3 +236,20 @@ void concat(char p[], char q[]) {
  
    p[c] = '\0';
 }
+
+void terminal_writestringat(const char* data, size_t x, size_t y)
+{
+	terminal_setcursor(x, y);
+	terminal_writestring(data);
+}
+
+void terminal_fill(char c, size_t x, size_t y, size_t w, size_t h)
+{
+	for(int i = y; i < y+h; i++)
+	{
+		for(int j = x; j < x+w; j++)
+		{
+			terminal_putentryat(c, COLOR_WHITE | COLOR_BLACK << 4, j, i);
+		}
+	}
+}

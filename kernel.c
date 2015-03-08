@@ -1,5 +1,5 @@
 #define KERNEL_NAME "EasiOS - PalfyMuhely\n"
-#define KERNEL_VERSION "0.0.4"
+#define KERNEL_VERSION "0.1.0"
 
 #if !defined(__cplusplus)
 #include <stdbool.h> /* C doesn't have booleans by default. */
@@ -15,7 +15,7 @@
 #include "timer.h"
 #include "keyboard.h"
 #include "timer.h"
-#include "shell.h"
+#include "shell/shell.h"
 
 #define ACK 0xFA
 #define RES 0xFE
@@ -24,9 +24,16 @@
 #define KEYB_CMD 0x64
 
 short palfy[18] = {0b11111100, 0b0010100, 0b11100, 
-	0, 0b11101000, 0b10101011, 0b11111000,
+	0, 0b11101000, 0b10101010, 0b11111000,
 	0, 0b11111000, 0, 0b11111000, 0b101000, 0b101000,
 	0b1000, 0, 0b111000, 0b100000, 0b11111000};
+
+uint32_t boot_time[6];
+
+uint32_t get_boot_date()
+{
+	return boot_time;
+}
 
 bool get_nth_binary(short binary, int nth)
 {
@@ -110,7 +117,7 @@ void logo()
 		for(int j = 0; j < 8; j++)
 		{
 			if(get_nth_binary(palfy[i], j))
-				terminal_putentryat('*', color, i, j + oy);
+				terminal_putentryat('█', color, i, j + oy);
 		}
 	}
 	terminal_setcursor(0, 9 + oy);
@@ -124,9 +131,16 @@ void kernel_main()
 	asm volatile("sti");
 	init_timer(1000); //1000 Hz
 	keyb_init();
+	read_rtc();
 	logo();
 	terminal_writestring(KERNEL_NAME);
 	terminal_writestring(KERNEL_VERSION); terminal_writestring("\n");
+	terminal_writestring("Current date: ");
+	uint32_t* t = get_time();
+	for(int i = 0; i < 6; i++)
+	{
+		boot_time[i] = t[i];
+	}
 	shell_main();
 	reboot();
 }
