@@ -163,10 +163,10 @@ void breakout()
 	typedef struct ball {
 		uint32_t x,y,t;
 	} ball_t;
-	int game_ox = 2;
-	int game_oy = 2;
-	int game_mx = 32;
-	int game_my = 16;
+	uint32_t game_ox = 2;
+	uint32_t game_oy = 2;
+	uint32_t game_mx = 32;
+	uint32_t game_my = 16;
 	terminal_clear();
 	draw_border(1, 1, 32, 16, COLOR_LIGHT_GREY | COLOR_BLACK << 4);
 	terminal_writestringat("BREAKOUT", 12, 3);

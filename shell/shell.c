@@ -31,18 +31,207 @@ void shell_request_exit()
 	shell_exit = true;
 }
 
+bool shell_login()
+{
+	char uname[128];
+	char pass[128];
+	memset(uname, 0, 128);
+	memset(pass, 0, 128);
+	terminal_writestring("Login: ");
+	int cc = 0;
+	char c = 0;
+	do
+	{
+		if(keyb_isavail())
+		{
+			c = scanc2char(keyb_get());
+			switch(c)
+			{
+				case '\n':
+					terminal_writestring("\n");
+					break;
+				case '\b':
+					if(cc > 0)
+					{
+						uname[cc] = '\0';
+						cc -= 1;
+						//terminal_setcursor(terminal_getx() - 1, terminal_gety());
+						//terminal_putentryat(' ', COLOR_LIGHT_GREY | COLOR_BLACK << 4, terminal_getx(), terminal_gety());
+					}
+					break;
+				case '\t': //autocomplete?
+					break;
+				case '\0':
+					break;
+				default:
+					if(!(bool)(c & 0x80))
+					{
+						if(cc < 128)
+							uname[cc++] = c;
+						char cs[2];
+						cs[0] = c;
+						//terminal_writestring(cs); //login is hidden for the exxtra securityez
+					}
+					break;
+			}
+		}
+	}
+	while(c != '\n');
+	terminal_writestring("Password: ");
+	cc = 0;
+	c = 0;
+	do
+	{
+		if(keyb_isavail())
+		{
+			c = scanc2char(keyb_get());
+			switch(c)
+			{
+				case '\n':
+					terminal_writestring("\n");
+					break;
+				case '\b':
+					if(cc > 0)
+					{
+						pass[cc] = '\0';
+						cc -= 1;
+						//terminal_setcursor(terminal_getx() - 1, terminal_gety());
+						//terminal_putentryat(' ', COLOR_LIGHT_GREY | COLOR_BLACK << 4, terminal_getx(), terminal_gety());
+					}
+					break;
+				case '\t': //autocomplete?
+					break;
+				case '\0':
+					break;
+				default:
+					if(!(bool)(c & 0x80))
+					{
+						if(cc < 128)
+							pass[cc++] = c;
+						char cs[2];
+						cs[0] = c;
+						//terminal_writestring(cs);
+						/*terminal_writeint(shell_cmdbuf_c);*/
+					}
+					break;
+			}
+		}
+	}
+	while(c != '\n');
+	 bool unameok = true;
+	 bool passok = true;
+	for(int i = 0; i < 256; i++)
+	{
+		for(int i = 0; i < 128; i++)
+		{
+			if(uname[i] == '\0' && users[i].name[i] != '\0')
+				unameok = false;
+			else if(uname[i] != '\0' && users[i].name[i] == '\0')
+				unameok = false;
+			else if(uname[i] == users[i].name[i])
+				unameok = true;
+			else
+				unameok = false;
+			if(!unameok)
+				break;
+		}
+		for(int i = 0; i < 128; i++)
+		{
+			if(pass[i] == '\0' && users[i].passw[i] != '\0')
+				passok = false;
+			else if(pass[i] != '\0' && users[i].passw[i] == '\0')
+				passok = false;
+			else if(pass[i] == users[i].passw[i])
+				passok = true;
+			else
+				unameok = false;
+			if(!passok)
+				break;
+		}
+		if(unameok && passok)
+		{
+			break;
+		}
+	}
+	return unameok && passok;
+}
+
+bool shell_auth(char* uname)
+{
+	terminal_writestring("Password for ");
+	terminal_writestring(uname);
+	terminal_writestring(": ");
+	char pass[128];
+	int cc = 0;
+	char c = 0;
+	do
+	{
+		if(keyb_isavail())
+		{
+			c = scanc2char(keyb_get());
+			switch(c)
+			{
+				case '\n':
+					terminal_writestring("\n");
+					break;
+				case '\b':
+					if(cc > 0)
+					{
+						pass[cc] = '\0';
+						cc -= 1;
+						//terminal_setcursor(terminal_getx() - 1, terminal_gety());
+						//terminal_putentryat(' ', COLOR_LIGHT_GREY | COLOR_BLACK << 4, terminal_getx(), terminal_gety());
+					}
+					break;
+				case '\t': //autocomplete?
+					break;
+				case '\0':
+					break;
+				default:
+					if(!(bool)(c & 0x80))
+					{
+						if(cc < 128)
+							pass[cc++] = c;
+						char cs[2];
+						cs[0] = c;
+						//terminal_writestring(cs);
+						/*terminal_writeint(shell_cmdbuf_c);*/
+					}
+					break;
+			}
+		}
+	}
+	while(c != '\n');
+	for(int i = 0; i < 256; i++)
+	{
+		if(strcmp(uname, users[i].name) == 0 && strcmp(pass, users[i].passw) == 0)
+		{
+			current = &users[i];
+			return true;
+		}
+	}
+	return false;
+}
+
 void su()
 {
-	if(current == &users[0])
-		return;
-	user_t* last = &users[current->id];
-	current = &users[0];
-	current->last = (void*)last;
+	if(shell_auth("root"))
+	{
+		if(current == &users[0])
+			return;
+		user_t* last = &users[current->id];
+		current = &users[0];
+		current->last = (void*)last;
+	}
+	else
+	{
+		terminal_writestring("su: failed\n");
+	}
 }
 
 void exit()
 {
-	if(((user_t*)current->last)->id == 1)
+	if(((user_t*)current->last)->id == (user_t*)current->id)
 		shell_request_exit();
 	else
 		current = (user_t*)current->last;
@@ -75,6 +264,21 @@ void shell_process()
 	}
 	cmd[shell_cmdbuf_c+1] = '\0';
 	bool ok = false;
+	if(strcmp(cmd, "help") == 0)
+	{
+		terminal_writestring("Commands: \n");
+		for(int i = 0; i < 64; i++)
+		{
+			if(shell_function_name[i] != NULL)
+			{
+				terminal_writestring(shell_function_name[i]);
+				terminal_writestring("\n");
+			}
+		}
+		memset(shell_cmdbuf, '\0', 128);
+		shell_cmdbuf_c = 0;
+		return;
+	}
 	for(int i = 0; i < 64; i++)
 	{
 		if(strcmp(cmd, shell_function_name[i]) == 0)
@@ -89,10 +293,7 @@ void shell_process()
 		terminal_writestring(cmd);
 		terminal_writestring("\n");
 	}
-	for(int i = 0; i < 128; i++)
-	{
-		shell_cmdbuf[i] = '\0';
-	}
+	memset(shell_cmdbuf, '\0', 128);
 	shell_cmdbuf_c = 0;
 }
 
@@ -159,7 +360,7 @@ void shell_main()
 	//set up users
 	user_t root;
 	root.name = "root";
-	root.passw = "";
+	root.passw = "root";
 	root.prompt = '#';
 	root.id = 0;
 	root.superuser = true;
@@ -192,6 +393,11 @@ void shell_main()
 	shell_function[6] = date;
 	shell_function_name[6] = "date";
 	terminal_writestring("ESh 0.2\n");
+	bool login_success = false;
+	//while(!login_success)
+	//{
+	//	login_success = shell_login();
+	//}
 	while(!shell_exit)
 	{
 		shell_prompt();
