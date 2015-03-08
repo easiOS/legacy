@@ -41,7 +41,7 @@ void halt()
 
 void kpanic(const char* msg, registers_t regs)
 {
-	terminal_writestring("Shit just got real: ");
+	terminal_writestring("\nKernel Panic: ");
 	terminal_writestring(msg);
 	terminal_writestring("\n");
 	//ds, edi, esi, ebp, esp, ebx, edx, ecx, eax;
