@@ -3,6 +3,7 @@
 #include "../keyboard.h"
 #include "../kernel.h"
 #include "../timer.h"
+#include "../mouse.h"
 
 void uptime()
 {
@@ -150,6 +151,15 @@ void calculator()
 					terminal_writestring("\n");
 					op = 0;
 					break;
+				case '0':
+					terminal_writeint(a);
+					terminal_writestring("/");
+					terminal_writeint(b);
+					terminal_writestring("=");
+					terminal_writeint(a / b);
+					terminal_writestring("\n");
+					op = 0;
+					break;
 				default:
 					break;
 			}
@@ -165,12 +175,13 @@ void breakout()
 	} ball_t;
 	uint32_t game_ox = 2;
 	uint32_t game_oy = 2;
-	uint32_t game_mx = 32;
-	uint32_t game_my = 16;
+	uint32_t game_mx = 48;
+	uint32_t game_my = 20;
+	uint32_t fgc = 0;
 	terminal_clear();
-	draw_border(1, 1, 32, 16, COLOR_LIGHT_GREY | COLOR_BLACK << 4);
-	terminal_writestringat("BREAKOUT", 12, 3);
-	terminal_writestringat("Press Q to quit", 40, 7);
+	draw_border(game_ox - 1, game_oy - 1, game_mx, game_my, COLOR_LIGHT_GREY | COLOR_BLACK << 4);
+	//terminal_writestringat("BREAKOUT", 12, 3);
+	terminal_writestringat("Press Q to quit", 51, 7);
 	bool bounce(ball_t* b)
 	{
 		if(b->x <= game_ox && b->t == 1)
@@ -232,9 +243,9 @@ void breakout()
 	game_ball.y = 10;
 	game_ball.t = 0;
 	bool game_exit = false;
-	uint16_t framerate_lock = 1000/24; //silky smooth 24 fps
+	uint16_t framerate_lock = 1000/60; //silky smooth 60 fps
 	uint8_t color = COLOR_WHITE | COLOR_BLACK << 4;
-	draw_border(1, 1, 32, 16, COLOR_LIGHT_GREY | COLOR_BLACK << 4);
+	draw_border(game_ox - 1, game_oy - 1, game_mx, game_my, COLOR_LIGHT_GREY | COLOR_BLACK << 4);
 	while(!game_exit)
 	{
 		sleep(framerate_lock);
@@ -242,10 +253,28 @@ void breakout()
 		{
 			game_exit = (scanc2char(keyb_get()) == 'q');
 		}
-		terminal_fill(' ', 2, 2, 31, 15);
+		//terminal_fill(' ', 2, 2, 31, 15);
 		//draw_border(1, 1, 32, 16, COLOR_LIGHT_GREY | COLOR_BLACK << 4);
 		bounce(&game_ball);
-		terminal_putentryat('O', color, game_ball.x, game_ball.y);
+		terminal_putentryat('O', fgc | COLOR_BLACK << 4, game_ball.x, game_ball.y);
+		if(fgc == 15)
+		{
+			fgc = 0;
+		}
+		else
+			fgc++;
 	}
 	terminal_clear();
+}
+
+void click()
+{
+	if(was_click())
+	{
+		terminal_writestring("Click!\n");
+	}
+	else
+	{
+		terminal_writestring("No click :(\n");
+	}
 }

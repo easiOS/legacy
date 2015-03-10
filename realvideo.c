@@ -2,5 +2,5 @@
 
 void vbe_getinfo()
 {
-	VbeInfoBlock info;
+	
 }

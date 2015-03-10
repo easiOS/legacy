@@ -392,6 +392,8 @@ void shell_main()
 	shell_function_name[5] = "breakout";
 	shell_function[6] = date;
 	shell_function_name[6] = "date";
+	shell_function[7] = click;
+	shell_function_name[7] = "click";
 	terminal_writestring("ESh 0.2\n");
 	bool login_success = false;
 	//while(!login_success)

@@ -11,4 +11,5 @@ void uptime();
 void calculator();
 void date();
 void breakout();
+void click();
 #endif

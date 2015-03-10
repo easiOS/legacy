@@ -1,4 +1,4 @@
-#define KERNEL_NAME "EasiOS - PalfyMuhely\n"
+#define KERNEL_NAME "EasiOS\n"
 #define KERNEL_VERSION "0.1.0"
 
 #if !defined(__cplusplus)
@@ -6,7 +6,7 @@
 #endif
 #include <stddef.h>
 #include <stdint.h>
-
+#include "multiboot2.h"
 #include "kernel.h"
 #include "stdmem.h"
 #include "video.h"
@@ -15,6 +15,8 @@
 #include "timer.h"
 #include "keyboard.h"
 #include "timer.h"
+#include "mouse.h"
+//#include "realvideo.h"
 #include "shell/shell.h"
 
 #define ACK 0xFA
@@ -123,32 +125,7 @@ void logo()
 	terminal_setcursor(0, 9 + oy);
 }
 
- //Play sound using built in speaker
- static void play_sound(uint32_t nFrequence) {
- 	uint32_t Div;
- 	uint8_t tmp;
- 
-        //Set the PIT to the desired frequency
- 	Div = 1193180 / nFrequence;
- 	outb(0x43, 0xb6);
- 	outb(0x42, (uint8_t) (Div) );
- 	outb(0x42, (uint8_t) (Div >> 8));
- 
-        //And play the sound using the PC speaker
- 	tmp = inb(0x61);
-  	if (tmp != (tmp | 3)) {
- 		outb(0x61, tmp | 3);
- 	}
- }
- 
- //make it shutup
- static void nosound() {
- 	uint8_t tmp = inb(0x61) & 0xFC;
- 
- 	outb(0x61, tmp);
- }
-
-void kernel_main()
+void kernel_main(struct multiboot *mboot_ptr)
 {
 	terminal_initialize();
 	init_descriptor_tables();
@@ -157,7 +134,8 @@ void kernel_main()
 	init_timer(1000); //1000 Hz
 	keyb_init();
 	read_rtc();
-	logo();
+	init_mouse();
+	//logo();
 	terminal_writestring(KERNEL_NAME);
 	terminal_writestring(KERNEL_VERSION); terminal_writestring("\n");
 	uint32_t* t = get_time();
