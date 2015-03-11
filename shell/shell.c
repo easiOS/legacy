@@ -22,9 +22,11 @@ bool valid_char(uint32_t sc)
 
 bool shell_exit = false;
 char shell_cmdbuf[128];
+char shell_lastcmd[128];
 int shell_cmdbuf_c = 0;
 user_t users[256];
 user_t* current;
+size_t cursor_default_x = 0;
 
 void shell_request_exit()
 {
@@ -261,8 +263,10 @@ void shell_process()
 	for(int i = 0; i < l; i++)
 	{
 		cmd[i] = shell_cmdbuf[i];
+		shell_lastcmd[i] = cmd[i];
 	}
 	cmd[shell_cmdbuf_c+1] = '\0';
+	shell_lastcmd[shell_cmdbuf_c + 1] = '\0';
 	bool ok = false;
 	if(strcmp(cmd, "help") == 0)
 	{
@@ -303,6 +307,7 @@ void shell_prompt()
 	terminal_writestring(current->name);
 	char p[2];
 	p[0] = current->prompt;
+	p[1] = '\0';
 	terminal_writestring(p);
 	terminal_writestring(" ");
 	char c;
@@ -311,6 +316,18 @@ void shell_prompt()
 		if(keyb_isavail())
 		{
 			uint32_t held = keyb_get();
+			if(held == 0x48)
+			{
+				terminal_setcursor(cursor_default_x, terminal_gety());
+				for(int i = 0; i < 128; i++)
+				{
+					shell_cmdbuf[i] = shell_lastcmd[i];
+					terminal_writestring(shell_cmdbuf[i]);
+				}
+				memset(shell_lastcmd, 0, 128);
+				
+				continue;
+			}
 			//if(valid_char(held))
 			{
 				c = scanc2char(held);
@@ -318,6 +335,7 @@ void shell_prompt()
 				{
 					case '\n':
 						terminal_writestring("\n");
+						cursor_default_x = terminal_getx();
 						shell_process();
 						break;
 					case '\b':
@@ -357,6 +375,8 @@ user_t* shell_get_current_user()
 
 void shell_main()
 {
+	memset(shell_lastcmd, 0, 128);
+	memset(shell_cmdbuf, 0, 128);
 	//set up users
 	user_t root;
 	root.name = "root";
@@ -394,6 +414,10 @@ void shell_main()
 	shell_function_name[6] = "date";
 	shell_function[7] = click;
 	shell_function_name[7] = "click";
+	shell_function[8] = panic;
+	shell_function_name[8] = "panic";
+	shell_function[9] = cowsay;
+	shell_function_name[9] = "cowsay";
 	terminal_writestring("ESh 0.2\n");
 	bool login_success = false;
 	//while(!login_success)

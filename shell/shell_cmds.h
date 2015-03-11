@@ -12,4 +12,6 @@ void calculator();
 void date();
 void breakout();
 void click();
+void panic();
+void cowsay();
 #endif

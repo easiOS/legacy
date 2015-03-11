@@ -50,7 +50,16 @@ void halt()
 
 void kpanic(const char* msg, registers_t regs)
 {
-	terminal_writestring("\nKernel Panic: ");
+	uint8_t color = make_color(15, 1);
+	for(size_t y = 0; y < 25; y++)
+	{
+		for(size_t x = 0; x < 80; x++)
+		{
+			terminal_putentryat(terminal_getcharat(x, y), color, x, y);
+		}
+	}
+	terminal_setcolor(color);
+	terminal_writestring("\nFatal Error: ");
 	terminal_writestring(msg);
 	terminal_writestring("\n");
 	//ds, edi, esi, ebp, esp, ebx, edx, ecx, eax;
@@ -78,7 +87,7 @@ void reboot()
 {
 	terminal_clear();
 	terminal_writestring("The system is going down for reboot NOW!\n");
-	sleep(1000);
+	sleep(750);
     uint8_t good = 0x02;
     while (good & 0x02)
         good = inb(0x64);

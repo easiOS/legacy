@@ -76,6 +76,11 @@ void terminal_putentryat(char c, uint8_t color, size_t x, size_t y)
 	terminal_buffer[index] = make_vgaentry(c, color);
 }
 
+char terminal_getcharat(size_t x, size_t y)
+{
+	return (char) (terminal_buffer[y * VGA_WIDTH + x] & 0xFF);
+}
+
 static void scroll()
 {
 

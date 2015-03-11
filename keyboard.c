@@ -58,23 +58,20 @@ static void keyb_callback(registers_t regs)
 	a = inb(0x61);
 	outb(0x61, a | 0x80);
 	outb(0x61, a);
-  ckey = scancode;
+  if(scancode == 0xE0)
+  {
+    scancode = inb(0x60);
+    a = inb(0x61);
+    outb(0x61, a | 0x80);
+    outb(0x61, a);
+    ckey = scancode;
+  }
+  else
+  {
+    ckey = scancode;
+  }
   avail = true;
-	//is released
-	/*if(scancode & 0x80)
-	{
-		keys_pressed[scancode] = false;
-	}
-	else //pressed
-	{
-		keys_pressed[scancode] = true;
-	}*/
 }
-
-/*bool* keyb_get()
-{
-	return keys_pressed;
-}*/
 
 bool keyb_isavail()
 {
@@ -96,8 +93,11 @@ char keyb_s2c(uint32_t scancode)
 
 void keyb_init()
 {
+  if(ps2test())
+  {
+    terminal_prfxi(ticks(), "Keyboard IRQ callback registered\n");
     register_interrupt_handler(IRQ1, &keyb_callback);
-    terminal_prfxi(ticks(), "Keyboard registered\n");
+  }
 }
 
 void keyb_clr()
@@ -112,4 +112,26 @@ void keyb_pak() //press any key
   keyb_clr();
   while(!avail);
   keyb_clr();
+}
+
+bool ps2test()
+{
+  terminal_prfxi(ticks(), "PS/2 test...");
+  outb(0x64, 0xAA);
+  size_t r = inb(0x60);
+  if(r == 0x55)
+  {
+    terminal_writestring("passed.\n");
+    return true;
+  }
+  else if(r == 0xFC)
+  {
+    terminal_writestring("failed.\n");
+    return false;
+  }
+  else
+  {
+    terminal_writestring("???.\n");
+    return false;
+  }
 }

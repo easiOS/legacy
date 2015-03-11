@@ -278,3 +278,64 @@ void click()
 		terminal_writestring("No click :(\n");
 	}
 }
+
+void panic()
+{
+	switch_to_user_mode();
+}
+
+void cowsay()
+{
+	/*
+	 _______ 
+< hello >
+ ------- 
+        \   ^__^
+         \  (oo)\_______
+            (__)\       )\/\
+                ||----w |
+                ||     ||
+	*/
+	char input[79];
+	char c = 0;
+	uint32_t cc = 0;
+	do
+	{
+		if(keyb_isavail())
+		{
+			c = scanc2char(keyb_get());
+			if(c == '\b')
+			{
+				if(cc > 0)
+				{
+					input[cc] = '\0';
+					cc -= 1;
+					terminal_setcursor(terminal_getx() - 1, terminal_gety());
+					terminal_putentryat(' ', COLOR_LIGHT_GREY | COLOR_BLACK << 4, terminal_getx(), terminal_gety());
+				}
+			}
+			else if(cc < 79 && c != '\n' && c != '\0' && c != '\b')
+			{
+				input[cc++] = c;
+				char asd[2];
+				asd[0] = c;
+				asd[1] = '\0';
+				terminal_writestring(asd);
+			}
+		}
+	} while(c != '\n');
+	terminal_writestring("\n");
+	uint32_t color = COLOR_LIGHT_GREY | COLOR_BLACK << 4;
+	for(int i = 0; i < cc; i++)
+	{
+		terminal_putentryat('_', color, i + 1, terminal_gety() + 1);
+		terminal_putentryat(input[i], color, i + 1, terminal_gety() + 2);
+		terminal_putentryat('-', color, i + 1, terminal_gety() + 3);
+	}
+	terminal_setcursor(0, terminal_gety() + 4);
+	terminal_writestring("        \\   ^__^\n");
+	terminal_writestring("         \\  (oo)\\_______\n");
+	terminal_writestring("            (__)\\       )\\/\\\n");
+	terminal_writestring("                ||----w |\n");
+	terminal_writestring("                ||     ||\n");
+}
