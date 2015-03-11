@@ -224,6 +224,7 @@ void su()
 		user_t* last = &users[current->id];
 		current = &users[0];
 		current->last = (void*)last;
+		cowsay_c("I ", 2);
 	}
 	else
 	{
@@ -418,6 +419,10 @@ void shell_main()
 	shell_function_name[8] = "panic";
 	shell_function[9] = cowsay;
 	shell_function_name[9] = "cowsay";
+	shell_function[10] = clear;
+	shell_function_name[10] = "clear";
+	shell_function[11] = cowsay_fortune;
+	shell_function_name[11] = "fortune";
 	terminal_writestring("ESh 0.2\n");
 	bool login_success = false;
 	//while(!login_success)

@@ -284,12 +284,33 @@ void panic()
 	switch_to_user_mode();
 }
 
+void cowsay_c(const char* input, uint32_t cc)
+{
+	terminal_writestring("\n");
+	uint32_t color = COLOR_LIGHT_GREY | COLOR_BLACK << 4;
+	for(int i = 0; i < cc; i++)
+	{
+		if(i == 78)
+		{
+			terminal_putchar('\n');
+		}
+		terminal_putchar(input[i]);
+	}
+	terminal_putchar('\n');
+	terminal_setcursor(0, terminal_gety() + 4);
+	terminal_writestring("        \\   ^__^\n");
+	terminal_writestring("         \\  (oo)\\_______\n");
+	terminal_writestring("            (__)\\       )\\/\\\n");
+	terminal_writestring("                ||----w |\n");
+	terminal_writestring("                ||     ||\n");
+}
+
 void cowsay()
 {
 	/*
-	 _______ 
-< hello >
- ------- 
+ _____________ 
+< hello human >
+ ------------- 
         \   ^__^
          \  (oo)\_______
             (__)\       )\/\
@@ -324,18 +345,45 @@ void cowsay()
 			}
 		}
 	} while(c != '\n');
-	terminal_writestring("\n");
-	uint32_t color = COLOR_LIGHT_GREY | COLOR_BLACK << 4;
-	for(int i = 0; i < cc; i++)
+	cowsay_c(input, cc);
+	memset(input, 0, 79);
+	cc = 0;
+	c = 0;
+}
+
+static uint32_t next = -1;
+
+void cowsay_fortune()
+{
+	if(next == -1)
 	{
-		terminal_putentryat('_', color, i + 1, terminal_gety() + 1);
-		terminal_putentryat(input[i], color, i + 1, terminal_gety() + 2);
-		terminal_putentryat('-', color, i + 1, terminal_gety() + 3);
+		next = ticks();
 	}
-	terminal_setcursor(0, terminal_gety() + 4);
-	terminal_writestring("        \\   ^__^\n");
-	terminal_writestring("         \\  (oo)\\_______\n");
-	terminal_writestring("            (__)\\       )\\/\\\n");
-	terminal_writestring("                ||----w |\n");
-	terminal_writestring("                ||     ||\n");
+	next = next * 1103515245 + ticks();
+	int random = ((next/65536) % 32768) % 11;
+	char* wisdom[32];
+	wisdom[0] = "Real Men don't make backups. They upload it via ftp and let the world mirror it.\n\t--Linus Torvalds";
+	wisdom[1] = "If a 'train station' is where a train stops, what's a 'workstation'?";
+	wisdom[2] = "A feature is nothing more than a bug with seniority.";
+	wisdom[3] = "You can not get anything worthwhile done without raising a sweat.\n-- The First Law Of Thermodynamics\nWhat ever you want is going to cost a little more than it is worth.\n-- The Second Law Of Thermodynamics\nYou can not win the game, and you are not allowed to stop playing.\n-- The Third Law Of Thermodynamics";
+	wisdom[4] = "Dopeler effect: the tendency of stupid ideas to seem smarter when they come at you rapidly.";
+	wisdom[5] = "The sum of the Universe is zero.";
+	wisdom[6] = "This quote intentionally left blank.";
+	wisdom[7] = "Q: Why was Stonehenge abandoned?\nA: It wasn't IBM compatible.";
+	wisdom[8] = "Q: How many IBM CPU's does it take to do a logical right shift?\nA: 33. 1 to hold the bits and 32 to push the register.";
+	wisdom[9] = "I've heard a Jew and a Muslim argue in a Damascus cafe with less passion than the emacs wars.";
+	wisdom[10] = "\"We all know Linux is great...it does infinite loops in 5 seconds.\"";
+	wisdom[11] = "In most countries selling harmful things like drugs is punishable.\nThen howcome people can sell Microsoft software and go unpunished?";
+	char c = 0;
+	int i = 0;
+	do
+	{
+		c = wisdom[random][i++];
+	} while(c != '\0');
+	cowsay_c(wisdom[random], i);
+}
+
+void clear()
+{
+	terminal_clear();
 }

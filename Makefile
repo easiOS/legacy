@@ -17,7 +17,7 @@ all:
 	#i686-elf-gcc -c realvideo.c -o realvideo.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 	i686-elf-gcc -c shell/shell_cmds.c -o shell_cmds.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 	i686-elf-gcc -c shell/shell.c -o shell.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-	i686-elf-gcc -c shell/shgfx.c -o shgfx.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+	i686-elf-gcc -c shell/shgfx.c -o shgfx.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra 
 	i686-elf-gcc -T linker.ld -o easios.bin -ffreestanding -O2 -nostdlib boot.o int.o itoa.o stdmem.o \
 		keyboard.o dtables2.o mouse.o dtables.o timer.o kernel.o video.o shgfx.o shell_cmds.o shell.o -lgcc
 

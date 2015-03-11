@@ -13,5 +13,8 @@ void date();
 void breakout();
 void click();
 void panic();
+void cowsay_c(const char* input, uint32_t cc); //nem egy parancs
 void cowsay();
+void clear();
+void cowsay_fortune();
 #endif
