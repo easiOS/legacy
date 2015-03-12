@@ -7,4 +7,6 @@ uint32_t millis();
 void sleep(uint32_t millis);
 void read_rtc();
 uint32_t* get_time();
+void set_tz(int32_t tz);
+int32_t get_tz();
 #endif

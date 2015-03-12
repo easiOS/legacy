@@ -1,24 +1,12 @@
 //EasiOS Shell
 #include "shell.h"
 
-char sc_dict[] = {0, 27, '1', '2', '3', '4', '5', '6', '7',
-	'8', '9', '0', '-', '=', '\b', '\t', 'q', 'w', 'e', 'r', 't', 'y',
-	'u', 'i', 'o', 'p', '[', ']', '\n', 0, 'a', 's', 'd', 'f', 'g', 'h',
-	'j', 'k', 'l', ';', '\'', '`', 0, '\\', 'z', 'x', 'c', 'v', 'b',
-	'n', 'm', ',', '.', '/', 0, '*', 0, ' ', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 0, 0, 0, 0, '-', 0, 0, 0, '+', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-char scanc2char(uint32_t sc)
-{
-	return sc_dict[sc];
-}
-
-bool valid_char(uint32_t sc)
+/*bool valid_char(uint32_t sc)
 {
 	if(!(sc & 0x80))
 		return false;
 	return sc_dict[sc] != 0;
-}
+}*/
 
 bool shell_exit = false;
 char shell_cmdbuf[128];
@@ -27,6 +15,7 @@ int shell_cmdbuf_c = 0;
 user_t users[256];
 user_t* current;
 size_t cursor_default_x = 0;
+char* args[16];
 
 void shell_request_exit()
 {
@@ -39,18 +28,16 @@ bool shell_login()
 	char pass[128];
 	memset(uname, 0, 128);
 	memset(pass, 0, 128);
-	terminal_writestring("Login: ");
+	puts("Login: ");
 	int cc = 0;
 	char c = 0;
 	do
 	{
-		if(keyb_isavail())
-		{
-			c = scanc2char(keyb_get());
+			c = getchar();
 			switch(c)
 			{
 				case '\n':
-					terminal_writestring("\n");
+					putchar('\n');
 					break;
 				case '\b':
 					if(cc > 0)
@@ -76,21 +63,18 @@ bool shell_login()
 					}
 					break;
 			}
-		}
 	}
 	while(c != '\n');
-	terminal_writestring("Password: ");
+	puts("Password: ");
 	cc = 0;
 	c = 0;
 	do
 	{
-		if(keyb_isavail())
-		{
-			c = scanc2char(keyb_get());
+			c = getchar();
 			switch(c)
 			{
 				case '\n':
-					terminal_writestring("\n");
+					putchar('\n');
 					break;
 				case '\b':
 					if(cc > 0)
@@ -112,12 +96,10 @@ bool shell_login()
 							pass[cc++] = c;
 						char cs[2];
 						cs[0] = c;
-						//terminal_writestring(cs);
-						/*terminal_writeint(shell_cmdbuf_c);*/
+						//terminal_writestring(cs); //login is hidden for the exxtra securityez
 					}
 					break;
 			}
-		}
 	}
 	while(c != '\n');
 	 bool unameok = true;
@@ -168,9 +150,7 @@ bool shell_auth(char* uname)
 	char c = 0;
 	do
 	{
-		if(keyb_isavail())
-		{
-			c = scanc2char(keyb_get());
+			c = getchar();
 			switch(c)
 			{
 				case '\n':
@@ -201,7 +181,6 @@ bool shell_auth(char* uname)
 					}
 					break;
 			}
-		}
 	}
 	while(c != '\n');
 	for(int i = 0; i < 256; i++)
@@ -224,11 +203,11 @@ void su()
 		user_t* last = &users[current->id];
 		current = &users[0];
 		current->last = (void*)last;
-		cowsay_c("I ", 2);
+		cowsay_c("I have become root, destroyer of servers", 40);
 	}
 	else
 	{
-		terminal_writestring("su: failed\n");
+		puts("su: failed\n");
 	}
 }
 
@@ -304,32 +283,20 @@ void shell_process()
 
 void shell_prompt()
 {
-	terminal_writestring("\n");
+	terminal_putchar('\n');
 	terminal_writestring(current->name);
-	terminal_writestring(" ");
-	const char* wd = vfs_get_cnode()->name;
-	char wdc = 0;
-	uint16_t i = 0;
-	do
-	{
-		wdc = wd[i++];
-		char asd[2];
-		asd[0] = wdc;
-		asd[1] = '\0';
-		terminal_writestring(asd);
-	} while(wdc != 0);
+	/*terminal_putchar(' ');
+	terminal_writestring(vfs_get_cnode()->name);*/
+	terminal_putchar(' ');
 	char p[2];
 	p[0] = current->prompt;
 	p[1] = '\0';
 	terminal_writestring(p);
-	terminal_writestring(" ");
+	terminal_putchar(' ');
 	char c;
 	while(c != '\n')
 	{
-		if(keyb_isavail())
-		{
-			uint32_t held = keyb_get();
-			if(held == 0x48)
+			/*if(held == 0x48)
 			{
 				terminal_setcursor(cursor_default_x, terminal_gety());
 				for(int i = 0; i < 128; i++)
@@ -340,10 +307,10 @@ void shell_prompt()
 				memset(shell_lastcmd, 0, 128);
 				
 				continue;
-			}
+			}*/
 			//if(valid_char(held))
 			{
-				c = scanc2char(held);
+				c = getchar();
 				switch(c)
 				{
 					case '\n':
@@ -362,6 +329,13 @@ void shell_prompt()
 						break;
 					case '\t': //autocomplete?
 						break;
+					case 24: //cancel, CTRL+C
+						terminal_writestring("^C\n");
+						memset(shell_cmdbuf, '\0', 128);
+						shell_cmdbuf_c = 0;
+						cursor_default_x = terminal_getx();
+						c = '\n';
+						break;
 					case '\0':
 						break;
 					default:
@@ -377,8 +351,12 @@ void shell_prompt()
 						break;
 				}
 			}
-		}
 	}
+}
+
+char* shell_get_arguments()
+{
+	return args;
 }
 
 user_t* shell_get_current_user()
@@ -435,6 +413,8 @@ void shell_main()
 	shell_function_name[10] = "clear";
 	shell_function[11] = cowsay_fortune;
 	shell_function_name[11] = "fortune";
+	shell_function[12] = tz;
+	shell_function_name[12] = "tz";
 	terminal_writestring("ESh 0.2\n");
 	bool login_success = false;
 	//while(!login_success)

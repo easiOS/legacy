@@ -17,6 +17,7 @@ uint32_t day = 1;
 uint32_t hour = 0;
 uint32_t minute = 0;
 uint32_t second = 0;
+int32_t timezone = 0;
 
 static void timer_callback(registers_t regs)
 {
@@ -77,10 +78,20 @@ uint32_t* get_time()
     time[0] = year;
     time[1] = month;
     time[2] = day;
-    time[3] = hour;
+    time[3] = hour + timezone;
     time[4] = minute;
     time[5] = second;
     return time;
+}
+
+void set_tz(int32_t tz)
+{
+  timezone = tz;
+}
+
+int32_t get_tz()
+{
+  return timezone;
 }
 
 uint32_t ticks()
