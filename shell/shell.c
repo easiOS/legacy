@@ -5,7 +5,7 @@ char sc_dict[] = {0, 27, '1', '2', '3', '4', '5', '6', '7',
 	'8', '9', '0', '-', '=', '\b', '\t', 'q', 'w', 'e', 'r', 't', 'y',
 	'u', 'i', 'o', 'p', '[', ']', '\n', 0, 'a', 's', 'd', 'f', 'g', 'h',
 	'j', 'k', 'l', ';', '\'', '`', 0, '\\', 'z', 'x', 'c', 'v', 'b',
-	'n', 'm', ',', '.', '/', 0, '*', 0, ' ', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+	'n', 'm', ',', '.', '/', 0, '*', 0, ' ', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, '-', 0, 0, 0, '+', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 char scanc2char(uint32_t sc)
@@ -13,10 +13,11 @@ char scanc2char(uint32_t sc)
 	return sc_dict[sc];
 }
 
-bool valid_char(uint32_t sc)
+bool valid_char(uint8_t sc)
 {
 	if(!(sc & 0x80))
 		return false;
+	if(sc > sizeof(sc_dict) / sizeof(char)) return false;
 	return sc_dict[sc] != 0;
 }
 
@@ -70,8 +71,8 @@ bool shell_login()
 					{
 						if(cc < 128)
 							uname[cc++] = c;
-						char cs[2];
-						cs[0] = c;
+						//char cs[2];
+						//cs[0] = c;
 						//terminal_writestring(cs); //login is hidden for the exxtra securityez
 					}
 					break;
@@ -110,8 +111,8 @@ bool shell_login()
 					{
 						if(cc < 128)
 							pass[cc++] = c;
-						char cs[2];
-						cs[0] = c;
+						//char cs[2];
+						//cs[0] = c;
 						//terminal_writestring(cs);
 						/*terminal_writeint(shell_cmdbuf_c);*/
 					}
@@ -194,8 +195,8 @@ bool shell_auth(char* uname)
 					{
 						if(cc < 128)
 							pass[cc++] = c;
-						char cs[2];
-						cs[0] = c;
+						//char cs[2];
+						//cs[0] = c;
 						//terminal_writestring(cs);
 						/*terminal_writeint(shell_cmdbuf_c);*/
 					}
@@ -234,7 +235,7 @@ void su()
 
 void exit()
 {
-	if(((user_t*)current->last)->id == (user_t*)current->id)
+	if(((user_t*)current->last)->id == /*(user_t*)*/current->id)
 		shell_request_exit();
 	else
 		current = (user_t*)current->last;
@@ -323,10 +324,10 @@ void shell_prompt()
 				for(int i = 0; i < 128; i++)
 				{
 					shell_cmdbuf[i] = shell_lastcmd[i];
-					terminal_writestring(shell_cmdbuf[i]);
+					terminal_putchar(shell_cmdbuf[i]);
 				}
 				memset(shell_lastcmd, 0, 128);
-				
+
 				continue;
 			}
 			//if(valid_char(held))
@@ -424,7 +425,7 @@ void shell_main()
 	shell_function[11] = cowsay_fortune;
 	shell_function_name[11] = "fortune";
 	terminal_writestring("ESh 0.2\n");
-	bool login_success = false;
+	//bool login_success = false;
 	//while(!login_success)
 	//{
 	//	login_success = shell_login();

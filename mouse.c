@@ -7,16 +7,18 @@
 #include "dtables.h"
 #include "video.h"
 #include "keyboard.h"
+#include "timer.h"
 
 bool wasclick = false;
 
 static void mouse_callback(registers_t regs)
 {
+	terminal_prfxi(ticks(), "Mouse callback lofasz\n");
 	wasclick = true;
 }
 
 bool was_click()
-{ 
+{
   return wasclick;
 }
 

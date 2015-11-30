@@ -25,14 +25,14 @@
 #define KEYB_DAT 0x60
 #define KEYB_CMD 0x64
 
-short palfy[18] = {0b11111100, 0b0010100, 0b11100, 
+short palfy[18] = {0b11111100, 0b0010100, 0b11100,
 	0, 0b11101000, 0b10101010, 0b11111000,
 	0, 0b11111000, 0, 0b11111000, 0b101000, 0b101000,
 	0b1000, 0, 0b111000, 0b100000, 0b11111000};
 
 uint32_t boot_time[6];
 
-uint32_t get_boot_date()
+uint32_t* get_boot_date()
 {
 	return boot_time;
 }
@@ -116,7 +116,7 @@ void switch_to_user_mode()
    1: \
      ");
    terminal_writestring("So this is user mode. The grass was\nmuch greener on the other site :(\n");
-} 
+}
 
 void logo()
 {
@@ -128,7 +128,7 @@ void logo()
 		for(int j = 0; j < 8; j++)
 		{
 			if(get_nth_binary(palfy[i], j))
-				terminal_putentryat('█', color, i, j + oy);
+				terminal_putentryat('*', color, i, j + oy);
 		}
 	}
 	terminal_setcursor(0, 9 + oy);

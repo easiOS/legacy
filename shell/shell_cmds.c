@@ -4,6 +4,8 @@
 #include "../kernel.h"
 #include "../timer.h"
 #include "../mouse.h"
+#include "shell.h"
+#include "../itoa.h"
 
 void uptime()
 {
@@ -236,6 +238,7 @@ void breakout()
 				b->x++;
 				break;
 		}
+		return true;
 	}
 
 	ball_t game_ball;
@@ -244,7 +247,7 @@ void breakout()
 	game_ball.t = 0;
 	bool game_exit = false;
 	uint16_t framerate_lock = 1000/60; //silky smooth 60 fps
-	uint8_t color = COLOR_WHITE | COLOR_BLACK << 4;
+	//uint8_t color = COLOR_WHITE | COLOR_BLACK << 4;
 	draw_border(game_ox - 1, game_oy - 1, game_mx, game_my, COLOR_LIGHT_GREY | COLOR_BLACK << 4);
 	while(!game_exit)
 	{
@@ -287,7 +290,7 @@ void panic()
 void cowsay_c(const char* input, uint32_t cc)
 {
 	terminal_writestring("\n");
-	uint32_t color = COLOR_LIGHT_GREY | COLOR_BLACK << 4;
+	//uint32_t color = COLOR_LIGHT_GREY | COLOR_BLACK << 4;
 	for(int i = 0; i < cc; i++)
 	{
 		if(i == 78)
@@ -308,9 +311,9 @@ void cowsay_c(const char* input, uint32_t cc)
 void cowsay()
 {
 	/*
- _____________ 
+ _____________
 < hello human >
- ------------- 
+ -------------
         \   ^__^
          \  (oo)\_______
             (__)\       )\/\

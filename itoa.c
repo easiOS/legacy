@@ -12,16 +12,15 @@ void reverse(char str[], int length)
         end--;
     }*/
 }
- 
+
 // Implementation of itoa()
 char* itoa(int num, char* str, int base)
 {
     if (num == 0)
     {
-        char zero[1];
-        zero[0] = '0';
-        str = zero;
-        return zero;
+        str[0] = '0';
+        str[1] = '\0';
+        return str;
     }
 
     int32_t acc = num;
@@ -42,8 +41,12 @@ char* itoa(int num, char* str, int base)
     {
         c2[i--] = c[j++];
     }
-    str = c2;
-    return c2;
+    for(int j = 0; j < 32; j++)
+    {
+      if(c2[j] == '\0') break;
+      str[j] = c2[j];
+    }
+    return str;
 }
 
 int isdigit (char c) {

@@ -18,4 +18,6 @@ typedef struct user {
 user_t* shell_get_current_user();
 void shell_request_exit();
 bool shell_auth(char* uname);
+char scanc2char(uint32_t sc);
+int strcmp(const char* s1, const char* s2);
 #endif
