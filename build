@@ -1,0 +1,78 @@
+#!/usr/bin/python3
+
+import subprocess
+import sys
+import os
+import copy
+
+CC="i686-elf-gcc"
+AS="nasm"
+LINKER="i686-elf-gcc"
+CFLAGS="-c $INPUT -o $OUTPUT -std=gnu99 -ffreestanding -O2 -Wall \
+-fdiagnostics-color=always"
+AFLAGS="-felf32 -o $OUTPUT $INPUT"
+EXECUTABLE="easios.bin"
+LDFLAGS="-T linker.ld -o $OUTPUT -ffreestanding -O2 -nostdlib -lgcc"
+
+EXT = {
+    "c" : {
+        "C" : CC,
+        "F" : CFLAGS
+    },
+    "asm" : {
+        "C" : AS,
+        "F" : AFLAGS
+    }
+}
+
+SOURCES=["boot.asm", "dtables.asm", "int.asm",
+         "stdmem.c", "timer.c", "dtables.c", "kernel.c", "video.c",
+         "keyboard.c", "itoa.c", "mouse.c", "realvideo.c",
+         "shell/shell_cmds.c", "shell/shell.c", "shell/shgfx.c"]
+
+def build():
+    for f in SOURCES:
+        if not os.path.isfile(f):
+            print("File " + f + " doesn't exists, exiting.")
+            sys.exit(0)
+        fname = f.split(".")
+        tmpfname = copy.copy(fname)
+        tmpfname[len(tmpfname)-1] = "o"
+        fout = ".".join(tmpfname)
+        fext = fname[len(fname)-1]
+        if not fext in EXT:
+            print("Unknown file extension " + fext + ", exiting.")
+            sys.exit(0)
+        cc = EXT[fext]["C"]
+        flags = EXT[fext]["F"]
+        print("File: " + f)
+        print("Output: " + fout)
+        print("Compiler: " + cc)
+        if "$INPUT" in flags:
+            flags = flags.replace("$INPUT", f)
+        else:
+            flags += " " + f
+        if "$OUTPUT" in flags:
+            flags = flags.replace("$OUTPUT", fout)
+        else:
+            flags += " " + fout
+        print("Compiler flags: " + flags)
+        subprocess.run(args=[cc]+flags.split(), check=True)
+
+def clean():
+    print("Cleaning...")
+    for f in SOURCES:
+        fname = f.split(".")
+        fname[len(fname)-1] = "o"
+        nfn = ".".join(fname)
+        if os.path.isfile(nfn):
+            os.remove(nfn)
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        if "build" in sys.argv:
+            build()
+        if "clean" in sys.argv:
+            clean()
+    else:
+        build()
