@@ -22,29 +22,43 @@ char* itoa(int num, char* str, int base)
         str[1] = '\0';
         return str;
     }
-
-    int32_t acc = num;
-    char c[32];
-    int i = 0;
-    while (acc > 0)
+    if(base == 10)
     {
+      int32_t acc = num;
+      char c[32];
+      int i = 0;
+      while (acc > 0)
+      {
         c[i] = '0' + acc%10;
         acc /= 10;
         i++;
-    }
-    c[i] = 0;
-
-    char c2[32];
-    c2[i--] = 0;
-    int j = 0;
-    while(i >= 0)
-    {
+      }
+      c[i] = 0;
+      char c2[32];
+      c2[i--] = 0;
+      int j = 0;
+      while(i >= 0)
+      {
         c2[i--] = c[j++];
+      }
+      for(int j = 0; j < 32; j++)
+      {
+        if(c2[j] == '\0') break;
+        str[j] = c2[j];
+      }
     }
-    for(int j = 0; j < 32; j++)
+    if(base == 2)
     {
-      if(c2[j] == '\0') break;
-      str[j] = c2[j];
+      char c[32];
+      for(int i = 0; i < 32; i++)
+      {
+        c[31-i] = ((num>>i) & 1) ? '1' : '0';
+      }
+      for(int j = 0; j < 32; j++)
+      {
+        if(c[j] == '\0') break;
+        str[j] = c[j];
+      }
     }
     return str;
 }
