@@ -131,9 +131,7 @@ bool ps2test()
   }
   else
   {
-    terminal_writestring("???: ");
-    terminal_writeint(r);
-    terminal_writestring("\n");
-    return true;
+    terminal_writestring("???.\n");
+    return false;
   }
 }

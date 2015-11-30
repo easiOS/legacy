@@ -5,7 +5,6 @@
 #include "../keyboard.h"
 #include "../kernel.h"
 #include "../stdmem.h"
-#include "../vfs.h"
 #include "shell_cmds.h"
 void shell_main();
 typedef struct user {

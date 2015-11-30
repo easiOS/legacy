@@ -306,18 +306,6 @@ void shell_prompt()
 {
 	terminal_writestring("\n");
 	terminal_writestring(current->name);
-	terminal_writestring(" ");
-	const char* wd = vfs_get_cnode()->name;
-	char wdc = 0;
-	uint16_t i = 0;
-	do
-	{
-		wdc = wd[i++];
-		char asd[2];
-		asd[0] = wdc;
-		asd[1] = '\0';
-		terminal_writestring(asd);
-	} while(wdc != 0);
 	char p[2];
 	p[0] = current->prompt;
 	p[1] = '\0';
