@@ -16,6 +16,7 @@
 #include "keyboard.h"
 #include "timer.h"
 #include "mouse.h"
+#include "itoa.h"
 //#include "realvideo.h"
 #include "shell/shell.h"
 
@@ -134,8 +135,15 @@ void logo()
 	terminal_setcursor(0, 9 + oy);
 }
 
-void kernel_main(struct multiboot *mboot_ptr)
+void kernel_main(void* mboot_ptr)
 {
+	for(int i = 0; i < 100; i++)
+	{
+		for(int j = 0; j < 100; j++)
+		{
+			vga_putpixel(j, i, 4);
+		}
+	}
 	terminal_initialize();
 	init_descriptor_tables();
 	//terminal_clear();
@@ -151,6 +159,13 @@ void kernel_main(struct multiboot *mboot_ptr)
 	for(int i = 0; i < 6; i++)
 	{
 		boot_time[i] = t[i];
+	}
+	if((int)mboot_ptr!=0)
+	{
+		char mbbuffer[64];
+		itoa((int)mboot_ptr, mbbuffer, 10);
+		terminal_writestring("Multiboot2 info at address ");
+		terminal_writestring(mbbuffer); terminal_writestring("\n");
 	}
 	shell_main();
 	reboot();
