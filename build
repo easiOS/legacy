@@ -31,8 +31,10 @@ SOURCES=["boot.asm", "adtables.asm", "int.asm",
          "shell/shell_cmds.c", "shell/shell.c", "shell/shgfx.c"]
 
 def build():
+    print("=== \033[95mStarting build...\033[0m ===")
     OBJECTS = []
     for f in SOURCES:
+        print("Building " + f)
         if not os.path.isfile(f):
             print("File " + f + " doesn't exists, exiting.")
             sys.exit(0)
@@ -47,9 +49,6 @@ def build():
             sys.exit(0)
         cc = EXT[fext]["C"]
         flags = EXT[fext]["F"]
-        print("File: " + f)
-        print("Output: " + fout)
-        print("Compiler: " + cc)
         if "$INPUT" in flags:
             flags = flags.replace("$INPUT", f)
         else:
@@ -58,9 +57,9 @@ def build():
             flags = flags.replace("$OUTPUT", fout)
         else:
             flags += " " + fout
-        print("Compiler flags: " + flags)
         subprocess.run(args=[cc]+flags.split(), check=True)
         OBJECTS.append(fout)
+    print("=== \033[95mLinking...\033[0m ===")
     flags = LDFLAGS
     if "$INPUT" in flags:
         flags = flags.replace("$INPUT", " ".join(OBJECTS))
@@ -70,9 +69,8 @@ def build():
         flags = flags.replace("$OUTPUT", EXECUTABLE)
     else:
         flags += " " + EXECUTABLE
-    print("Linker: " + cc)
-    print("Linker flags: " + flags)
     subprocess.run(args=[cc]+flags.split(), check=True)
+    print("Output: " + os.path.abspath(EXECUTABLE))
 
 def clean():
     print("Cleaning...")
