@@ -1,3 +1,4 @@
 easios.bin
-iso/
+iso/boot/easios.bin
+easios.iso
 *.o
