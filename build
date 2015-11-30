@@ -12,7 +12,7 @@ CFLAGS="-c $INPUT -o $OUTPUT -std=gnu99 -ffreestanding -O2 -Wall \
 -fdiagnostics-color=always"
 AFLAGS="-felf32 -o $OUTPUT $INPUT"
 EXECUTABLE="easios.bin"
-LDFLAGS="-T linker.ld -o $OUTPUT -ffreestanding -O2 -nostdlib -lgcc"
+LDFLAGS="-T linker.ld -o $OUTPUT -ffreestanding -O2 -nostdlib $INPUT -lgcc"
 
 EXT = {
     "c" : {
@@ -31,6 +31,7 @@ SOURCES=["boot.asm", "dtables.asm", "int.asm",
          "shell/shell_cmds.c", "shell/shell.c", "shell/shgfx.c"]
 
 def build():
+    OBJECTS = []
     for f in SOURCES:
         if not os.path.isfile(f):
             print("File " + f + " doesn't exists, exiting.")
@@ -39,6 +40,7 @@ def build():
         tmpfname = copy.copy(fname)
         tmpfname[len(tmpfname)-1] = "o"
         fout = ".".join(tmpfname)
+
         fext = fname[len(fname)-1]
         if not fext in EXT:
             print("Unknown file extension " + fext + ", exiting.")
@@ -58,6 +60,19 @@ def build():
             flags += " " + fout
         print("Compiler flags: " + flags)
         subprocess.run(args=[cc]+flags.split(), check=True)
+        OBJECTS.append(fout)
+    flags = LDFLAGS
+    if "$INPUT" in flags:
+        flags = flags.replace("$INPUT", " ".join(OBJECTS))
+    else:
+        flags += " " + " ".join(OBJECTS)
+    if "$OUTPUT" in flags:
+        flags = flags.replace("$OUTPUT", EXECUTABLE)
+    else:
+        flags += " " + EXECUTABLE
+    print("Linker: " + cc)
+    print("Linker flags: " + flags)
+    subprocess.run(args=[cc]+flags.split(), check=True)
 
 def clean():
     print("Cleaning...")
