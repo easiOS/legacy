@@ -121,8 +121,7 @@ static void init_idt()
    idt_set_gate( 28, (uint32_t)isr28 , 0x08, 0x8E);
    idt_set_gate( 29, (uint32_t)isr29 , 0x08, 0x8E);
    idt_set_gate( 30, (uint32_t)isr30 , 0x08, 0x8E);
-   idt_set_gate( 31, (uint32_t)isr31 , 0x08, 0x8E);
-   //idt_set_gate( 80, (uint32_t)isr80 , 0x08, 0x8E); //system calls
+   idt_set_gate(31, (uint32_t)isr31, 0x08, 0x8E);
    idt_set_gate(32, (uint32_t)irq0, 0x08, 0x8E);
    idt_set_gate(33, (uint32_t)irq1, 0x08, 0x8E);
    idt_set_gate(34, (uint32_t)irq2, 0x08, 0x8E);
@@ -160,14 +159,11 @@ static const char* errorstr[] = {"Division by zero", "Debug exception",
   "Out of bounds exception", "Invalid opcode exception", "No coprocessor exception",
   "Double fault", "Coprocessor segment overrun", "Bad TSS", "Segment not present",
   "Stack fault", "General protection fault", "Page fault", "Unknown interrupt exception",
-  "Coprocessor fault", "Alignment check exception", "Machine check exception", "Intentional error"};
+  "Coprocessor fault", "Alignment check exception", "Machine check exception"};
 
 void isr_handler(registers_t regs)
 {
-   if(regs.int_no != 80)
-    kpanic(errorstr[regs.int_no], regs);
-   else
-    oscall_handler(regs);
+   kpanic(errorstr[regs.int_no], regs);
    if (interrupt_handlers[regs.int_no] != 0)
     {
         isr_t handler = interrupt_handlers[regs.int_no];

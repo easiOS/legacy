@@ -15,31 +15,14 @@ all:
 	i686-elf-gcc -c itoa.c -o itoa.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 	i686-elf-gcc -c mouse.c -o mouse.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 	i686-elf-gcc -c vfs.c -o vfs.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-	i686-elf-gcc -c stdio.c -o stdio.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-	i686-elf-gcc -c string.c -o string.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 	#i686-elf-gcc -c realvideo.c -o realvideo.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 	i686-elf-gcc -c shell/shell_cmds.c -o shell_cmds.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 	i686-elf-gcc -c shell/shell.c -o shell.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 	i686-elf-gcc -c shell/shgfx.c -o shgfx.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra 
 	i686-elf-gcc -T linker.ld -o easios.bin -ffreestanding -O2 -nostdlib boot.o int.o itoa.o stdmem.o \
-		keyboard.o stdio.o dtables2.o mouse.o dtables.o vfs.o timer.o kernel.o\
-		video.o shgfx.o shell_cmds.o shell.o string.o -lgcc
+		keyboard.o dtables2.o mouse.o dtables.o vfs.o timer.o kernel.o\
+		video.o shgfx.o shell_cmds.o shell.o -lgcc
 
-.PHONY: iso
-iso: 
-	cp easios.bin iso/boot/
-	if [ -a easios.iso ]; \
-		then \
-		rm easios.iso; \
-	fi;
-	if [ -a easios.bin ]; \
-		then \
-		grub-mkrescue -o easios.iso iso; \
-	fi;
-
-.PHONY: clean
 clean:
 	rm easios.bin
-	rm iso/boot/easios.bin
-	rm easios.iso
 	rm *.o

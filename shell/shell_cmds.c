@@ -5,8 +5,6 @@
 #include "../timer.h"
 #include "../mouse.h"
 
-static uint32_t next = -1;
-
 void uptime()
 {
 	uint32_t seconds = ticks() / 1000;
@@ -31,11 +29,7 @@ void uptime()
 	terminal_writeint(t[2]); terminal_writestring(". ");
 	terminal_writeint(t[3]); terminal_writestring(":");
 	terminal_writeint(t[4]); terminal_writestring(":");
-	terminal_writeint(t[5]); terminal_writestring(" (UTC");
-	int32_t tz = get_tz();
-	terminal_putchar((tz >= 0) ? '+' : '-');
-	terminal_writeint(tz);
-	terminal_writestring(")\n");
+	terminal_writeint(t[5]); terminal_writestring(" (UTC)\n");
 }
 
 void restart()
@@ -56,17 +50,7 @@ void date()
 	terminal_writeint(t[2]); terminal_writestring(". ");
 	terminal_writeint(t[3]); terminal_writestring(":");
 	terminal_writeint(t[4]); terminal_writestring(":");
-	terminal_writeint(t[5]); terminal_writestring(" (UTC");
-	int32_t tz = get_tz();
-	terminal_putchar((tz >= 0) ? '+' : '-');
-	terminal_writeint(tz);
-	terminal_writestring(")\n");
-}
-
-void tz()
-{
-	char* args = shell_get_arguments();
-	set_tz(atoi(args[1]));
+	terminal_writeint(t[5]); terminal_writestring(" (UTC)\n");
 }
 
 void calculator()
@@ -79,9 +63,9 @@ void calculator()
 	int cc = 0;
 	do
 	{
-		
+		if(keyb_isavail())
 		{
-			c = getchar();
+			c = scanc2char(keyb_get());
 			if(cc < 7 && c != '\n' && c != '\0')
 			{
 				inp[cc++] = c;
@@ -101,9 +85,9 @@ void calculator()
 	terminal_writestring(" Second number: ");
 	do
 	{
-		
+		if(keyb_isavail())
 		{
-			c = getchar();
+			c = scanc2char(keyb_get());
 			if(cc < 7 && c != '\n' && c != '\0')
 			{
 				inp[cc++] = c;
@@ -120,9 +104,9 @@ void calculator()
 	terminal_writestring("\nOperation (a - add, b - sub, c - mul, d - div): ");
 	do
 	{
-		
+		if(keyb_isavail())
 		{
-			c = getchar();
+			c = scanc2char(keyb_get());
 			terminal_writestring("\n");
 			switch(c)
 			{
@@ -259,13 +243,16 @@ void breakout()
 	game_ball.y = 10;
 	game_ball.t = 0;
 	bool game_exit = false;
-	uint16_t framerate_lock = 1000/24; //silky smooth 24 fps
+	uint16_t framerate_lock = 1000/60; //silky smooth 60 fps
 	uint8_t color = COLOR_WHITE | COLOR_BLACK << 4;
 	draw_border(game_ox - 1, game_oy - 1, game_mx, game_my, COLOR_LIGHT_GREY | COLOR_BLACK << 4);
 	while(!game_exit)
 	{
 		sleep(framerate_lock);
-		game_exit = (getchar_nb() == 'q');
+		if(keyb_isavail())
+		{
+			game_exit = (scanc2char(keyb_get()) == 'q');
+		}
 		//terminal_fill(' ', 2, 2, 31, 15);
 		//draw_border(1, 1, 32, 16, COLOR_LIGHT_GREY | COLOR_BLACK << 4);
 		bounce(&game_ball);
@@ -294,7 +281,7 @@ void click()
 
 void panic()
 {
-	asm volatile("int $19");
+	switch_to_user_mode();
 }
 
 void cowsay_c(const char* input, uint32_t cc)
@@ -335,9 +322,9 @@ void cowsay()
 	uint32_t cc = 0;
 	do
 	{
-		
+		if(keyb_isavail())
 		{
-			c = getchar();
+			c = scanc2char(keyb_get());
 			if(c == '\b')
 			{
 				if(cc > 0)
@@ -363,6 +350,8 @@ void cowsay()
 	cc = 0;
 	c = 0;
 }
+
+static uint32_t next = -1;
 
 void cowsay_fortune()
 {
@@ -397,13 +386,4 @@ void cowsay_fortune()
 void clear()
 {
 	terminal_clear();
-}
-
-static char* edit_text;
-
-void edit()
-{
-	terminal_clear();
-	const size_t MAX_X = 79;
-
 }

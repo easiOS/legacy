@@ -125,7 +125,7 @@ void terminal_putchar(char c)
 	}
 	else if(c == '\t')
 	{
-		terminal_column += 4;
+		terminal_row += 4;
 	}
 	else
 	{

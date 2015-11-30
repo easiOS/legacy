@@ -7,7 +7,6 @@
 #include "../stdmem.h"
 #include "../vfs.h"
 #include "shell_cmds.h"
-#include "../stdio.h"
 void shell_main();
 typedef struct user {
 	uint32_t id;

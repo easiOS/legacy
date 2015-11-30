@@ -17,5 +17,4 @@ void cowsay_c(const char* input, uint32_t cc); //nem egy parancs
 void cowsay();
 void clear();
 void cowsay_fortune();
-void tz();
 #endif
