@@ -29,7 +29,7 @@ EXT = {
 
 SOURCES=["boot.asm", "adtables.asm", "int.asm",
          "stdmem.c", "timer.c", "dtables.c", "kernel.c", "video.c",
-         "keyboard.c", "itoa.c", "mouse.c", "realvideo.c",
+         "keyboard.c", "itoa.c", "mouse.c",
          "shell/shell_cmds.c", "shell/shell.c", "shell/shgfx.c"]
 
 def build():
