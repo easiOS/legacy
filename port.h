@@ -16,3 +16,10 @@ inline unsigned short inw(unsigned int port)
    asm volatile ("inw %1, %0" : "=a" (ret) : "dN" (port));
    return ret;
 }
+
+static inline void io_wait(void)
+{
+    asm volatile ( "jmp 1f\n\t"
+                   "1:jmp 2f\n\t"
+                   "2:" );
+}
