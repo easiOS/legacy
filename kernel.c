@@ -19,6 +19,7 @@
 #include "itoa.h"
 #include "serial.h"
 #include "ps2.h"
+#include "tar.h"
 //#include "realvideo.h"
 #include "shell/shell.h"
 
@@ -198,6 +199,33 @@ void parse_multiboot2_tags(unsigned long mboot_ptr)
 					(struct multiboot_tag_string *)tag;
 				terminal_writestring("Bootloader name: "); terminal_writestring(tagstr->string);
 				terminal_putchar('\n');
+				break;
+			}
+			case MULTIBOOT_TAG_TYPE_MODULE:
+			{
+				struct multiboot_tag_module *tagmod =
+					(struct multiboot_tag_module *)tag;
+				terminal_writestring("Start: "); terminal_writeint(tagmod->mod_start);
+				terminal_writestring("\nEnd: "); terminal_writeint(tagmod->mod_end);
+				terminal_writestring(" "); terminal_writestring(tagmod->cmdline);
+				terminal_putchar('\n');
+				struct posix_header* tarmod = (struct posix_header*)tagmod->mod_start;
+				if(tarmod->magic[0] != 'u' ||
+					 tarmod->magic[1] != 's' ||
+				 	 tarmod->magic[2] != 't' ||
+				   tarmod->magic[3] != 'a' ||
+				   tarmod->magic[4] != 'r')
+				{
+					terminal_writestring("Module is not tar file\n");
+				}
+				else
+				{
+					int size = atoi(tarmod->size);
+					terminal_writestring("Module size: ");
+					terminal_writeint(size);
+					terminal_putchar('\n');
+				}
+				break;
 			}
 			default:
 				break;
