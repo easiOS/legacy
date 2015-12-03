@@ -24,9 +24,6 @@ bool was_click()
 
 void init_mouse()
 {
-    if(ps2test())
-    {
-    	register_interrupt_handler(IRQ12, &mouse_callback);
-    	terminal_prfxi(ticks(), "Mouse IRQ callback registered\n");
-    }
+  register_interrupt_handler(IRQ12, &mouse_callback);
+  terminal_prfxi(ticks(), "Mouse IRQ callback registered\n");
 }

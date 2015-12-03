@@ -1,5 +1,6 @@
 #include "video.h"
 #include "port.h"
+#include "serial.h"
 
 uint8_t make_color(enum vga_color fg, enum vga_color bg)
 {
@@ -108,10 +109,14 @@ static void scroll()
        // The cursor should now be on the last line.
        terminal_row = 24;
    }
-} 
+}
 
 void terminal_putchar(char c)
 {
+	if(serial_enabled())
+	{
+		write_serial(c);
+	}
 	if(c == '\n')
 	{
 		terminal_row++;
@@ -224,21 +229,21 @@ uint32_t terminal_gety()
 
 void concat(char p[], char q[]) {
    int c, d;
- 
+
    c = 0;
- 
+
    while (p[c] != '\0') {
-      c++;  	
+      c++;
    }
- 
+
    d = 0;
- 
+
    while (q[d] != '\0') {
       p[c] = q[d];
       d++;
-      c++;	
+      c++;
    }
- 
+
    p[c] = '\0';
 }
 

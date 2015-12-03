@@ -52,6 +52,7 @@ bool avail = false;
 
 static void keyb_callback(registers_t regs)
 {
+  if(!(inb(0x64) & 1)) return;
 	uint32_t scancode;
 	int a;
 	scancode = inb(0x60);
@@ -71,6 +72,7 @@ static void keyb_callback(registers_t regs)
     ckey = scancode;
   }
   avail = true;
+  outb(0x20, 0x20); //End of Interrupt
 }
 
 bool keyb_isavail()
@@ -93,12 +95,32 @@ char keyb_s2c(uint32_t scancode)
 
 void keyb_init()
 {
-  if(ps2test())
-  {
-    terminal_prfxi(ticks(), "Keyboard IRQ callback registered\n");
-    register_interrupt_handler(IRQ1, &keyb_callback);
-  }
+  //it looks like grub sets up PS/2 for us, so we just need to register the
+  //callback
+  terminal_prfxi(ticks(), "Keyboard IRQ callback registered\n");
+  register_interrupt_handler(IRQ1, &keyb_callback);
 }
+
+/*void keyb_init()
+{
+  terminal_writestring("Keyboard PS2 test...");
+  unsigned int start = ticks();
+  ps2test();
+
+  terminal_writestring("OK!\n");
+  outb(0x64, 0xAE);
+  terminal_writestring("First PS/2 port enabled\n");
+  terminal_prfxi(ticks(), "Keyboard IRQ callback registered\n");
+  register_interrupt_handler(IRQ1, &keyb_callback);
+  terminal_writestring("Clearing keyboard buffers");
+  while(inb(0x64) & 1)
+  {
+    terminal_putchar('.');
+    inb(0x60);
+    sleep(5);
+  }
+  terminal_putchar('\n');
+}*/
 
 void keyb_clr()
 {
@@ -116,22 +138,5 @@ void keyb_pak() //press any key
 
 bool ps2test()
 {
-  terminal_prfxi(ticks(), "PS/2 test...");
-  outb(0x64, 0xAA);
-  size_t r = inb(0x60);
-  if(r == 0x55)
-  {
-    terminal_writestring("passed.\n");
-    return true;
-  }
-  else if(r == 0xFC)
-  {
-    terminal_writestring("failed.\n");
-    return false;
-  }
-  else
-  {
-    terminal_writestring("???.\n");
-    return false;
-  }
+  return true;
 }

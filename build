@@ -29,7 +29,7 @@ EXT = {
 
 SOURCES=["boot.asm", "adtables.asm", "int.asm",
          "stdmem.c", "timer.c", "dtables.c", "kernel.c", "video.c",
-         "keyboard.c", "itoa.c", "mouse.c",
+         "keyboard.c", "itoa.c", "mouse.c", "serial.c", "ps2.c",
          "shell/shell_cmds.c", "shell/shell.c", "shell/shgfx.c"]
 
 def build():
@@ -97,14 +97,20 @@ def iso():
     shutil.copy(EXECUTABLE, "iso/boot/")
     subprocess.run(args=["grub-mkrescue", "-o", ISO, "iso"])
 
+def run():
+    if os.path.isfile(ISO):
+        subprocess.run(args=["qemu-system-i386", "-cdrom", ISO])
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        if "build" in sys.argv:
-            build()
         if "clean" in sys.argv:
             clean()
+        if "build" in sys.argv:
+            build()
         if "iso" in sys.argv:
             iso()
+        if "run" in sys.argv:
+            run()
     else:
         build()

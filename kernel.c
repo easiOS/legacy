@@ -1,5 +1,5 @@
-#define KERNEL_NAME "EasiOS\n"
-#define KERNEL_VERSION "0.1.0"
+#define KERNEL_NAME "EasiOS "
+#define KERNEL_VERSION "0.2.0 "
 
 #if !defined(__cplusplus)
 #include <stdbool.h> /* C doesn't have booleans by default. */
@@ -17,6 +17,8 @@
 #include "timer.h"
 #include "mouse.h"
 #include "itoa.h"
+#include "serial.h"
+#include "ps2.h"
 //#include "realvideo.h"
 #include "shell/shell.h"
 
@@ -32,6 +34,7 @@ short palfy[18] = {0b11111100, 0b0010100, 0b11100,
 	0b1000, 0, 0b111000, 0b100000, 0b11111000};
 
 uint32_t boot_time[6];
+const char* cmdline = NULL;
 
 uint32_t* get_boot_date()
 {
@@ -135,37 +138,115 @@ void logo()
 	terminal_setcursor(0, 9 + oy);
 }
 
-void kernel_main(void* mboot_ptr)
+void parse_multiboot2_tags(unsigned long mboot_ptr)
 {
-	for(int i = 0; i < 100; i++)
+	struct multiboot_tag *tag;
+	unsigned size;
+	size = *(unsigned *) mboot_ptr;
+	terminal_writestring("Multiboot2 addr "); terminal_writeint(mboot_ptr);
+	terminal_writestring(" size "); terminal_writeint(size);
+	terminal_putchar('\n');
+	for (tag = (struct multiboot_tag *) (mboot_ptr + 8);
+		 tag->type != MULTIBOOT_TAG_TYPE_END;
+		 tag = (struct multiboot_tag *) ((multiboot_uint8_t *) tag
+						 + ((tag->size + 7) & ~7)))
 	{
-		for(int j = 0; j < 100; j++)
+		terminal_writestring("Tag type "); terminal_writeint(tag->type);
+		terminal_writestring(" size "); terminal_writeint(tag->size);
+		terminal_putchar('\n');
+		switch (tag->type)
 		{
-			vga_putpixel(j, i, 4);
+			case MULTIBOOT_TAG_TYPE_CMDLINE:
+			{
+				struct multiboot_tag_string *tagstr =
+					(struct multiboot_tag_string *)tag;
+				terminal_writestring("Command line: "); terminal_writestring(tagstr->string);
+				terminal_putchar('\n');
+				cmdline = (tagstr->string);
+				if(strcmp(cmdline, "serial") == 0)
+				{
+					terminal_writestring("Serial enabled from cmdline!\n");
+					init_serial();
+				}
+				break;
+			}
+			case MULTIBOOT_TAG_TYPE_FRAMEBUFFER:
+			{
+				struct multiboot_tag_framebuffer_common* tagfb =
+					(struct multiboot_tag_framebuffer_common*) tag;
+				terminal_writestring("Framebuffer");
+				terminal_writestring("\n  Address: "); terminal_writeint(tagfb->framebuffer_addr);
+				terminal_writestring(" Pitch: "); terminal_writeint(tagfb->framebuffer_pitch);
+				terminal_writestring(" Width: "); terminal_writeint(tagfb->framebuffer_width);
+				terminal_writestring(" Height: "); terminal_writeint(tagfb->framebuffer_height);
+				terminal_writestring(" Bits per pixel: "); terminal_writeint(tagfb->framebuffer_bpp);
+				terminal_putchar('\n');
+				break;
+			}
+			case MULTIBOOT_TAG_TYPE_BASIC_MEMINFO:
+			{
+				struct multiboot_tag_basic_meminfo* tagmem =
+					(struct multiboot_tag_basic_meminfo*) tag;
+				terminal_writestring("Lower: "); terminal_writeint(tagmem->mem_lower);
+				terminal_writestring(" kilobytes\nUpper: "); terminal_writeint(tagmem->mem_upper);
+				terminal_writestring(" kilobytes\n");
+				break;
+			}
+			case MULTIBOOT_TAG_TYPE_BOOT_LOADER_NAME:
+			{
+				struct multiboot_tag_string *tagstr =
+					(struct multiboot_tag_string *)tag;
+				terminal_writestring("Bootloader name: "); terminal_writestring(tagstr->string);
+				terminal_putchar('\n');
+			}
+			default:
+				break;
 		}
 	}
+	terminal_writestring("End enumerating tags\n");
+}
+
+void kernel_main(unsigned long magic, unsigned long mboot_ptr)
+{
 	terminal_initialize();
 	init_descriptor_tables();
 	//terminal_clear();
 	asm volatile("sti");
+	//multiboot
+	if((int)mboot_ptr!=0)
+	{
+		if(magic != MULTIBOOT2_BOOTLOADER_MAGIC)
+		{
+			terminal_writestring("FATAL: Bad magic\n");
+			return;
+		}
+		if(mboot_ptr & 7)
+		{
+			terminal_writestring("FATAL: Unaligned mbi\n");
+			return;
+		}
+		parse_multiboot2_tags(mboot_ptr);
+	}
+	else
+	{
+		terminal_writestring("No bootloader :(\n");
+	}
 	init_timer(1000); //1000 Hz
+	//init_ps2();
 	keyb_init();
 	read_rtc();
-	init_mouse();
+	//init_mouse();
 	//logo();
 	terminal_writestring(KERNEL_NAME);
-	terminal_writestring(KERNEL_VERSION); terminal_writestring("\n");
+	terminal_writestring(KERNEL_VERSION);
+	#ifdef KERNEL_GIT_HEAD
+	terminal_writestring(KERNEL_GIT_HEAD);
+	#endif
+	terminal_writestring("\n");
 	uint32_t* t = get_time();
 	for(int i = 0; i < 6; i++)
 	{
 		boot_time[i] = t[i];
-	}
-	if((int)mboot_ptr!=0)
-	{
-		char mbbuffer[64];
-		itoa((int)mboot_ptr, mbbuffer, 10);
-		terminal_writestring("Multiboot2 info at address ");
-		terminal_writestring(mbbuffer); terminal_writestring("\n");
 	}
 	shell_main();
 	reboot();
