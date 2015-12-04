@@ -99,7 +99,7 @@ def iso():
 
 def run():
     if os.path.isfile(ISO):
-        subprocess.run(args=["qemu-system-i386", "-cdrom", ISO])
+        subprocess.run(args=["qemu-system-i386", "-serial", "stdio", "-cdrom", ISO])
 
 
 if __name__ == "__main__":
