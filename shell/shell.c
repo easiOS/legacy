@@ -1,5 +1,6 @@
 //EasiOS Shell
 #include "shell.h"
+#include <string.h>
 
 char sc_dict[] = {0, 27, '1', '2', '3', '4', '5', '6', '7',
 	'8', '9', '0', '-', '=', '\b', '\t', 'q', 'w', 'e', 'r', 't', 'y',
@@ -239,13 +240,6 @@ void exit()
 		shell_request_exit();
 	else
 		current = (user_t*)current->last;
-}
-
-int strcmp(const char* s1, const char* s2)
-{
-    while(*s1 && (*s1==*s2))
-        s1++,s2++;
-    return *(const unsigned char*)s1-*(const unsigned char*)s2;
 }
 
 

@@ -29,7 +29,6 @@ enum vga_color
 
 uint8_t make_color(enum vga_color fg, enum vga_color bg);
 uint16_t make_vgaentry(char c, uint8_t color);
-size_t strlen(const char* str);
 void terminal_initialize();
 void terminal_setcolor(uint8_t color);
 void terminal_putentryat(char c, uint8_t color, size_t x, size_t y);
@@ -37,7 +36,7 @@ void terminal_putchar(char c);
 void terminal_writestring(const char* data);
 void terminal_writestringat(const char* data, size_t x, size_t y);
 void terminal_test();
-void terminal_writeint(uint32_t n);
+void terminal_writeint(int64_t n);
 void terminal_setcursor(uint16_t x, uint16_t y);
 void terminal_clear();
 void terminal_prfx(char* prefix, char* str);
@@ -45,6 +44,5 @@ void terminal_prfxi(uint32_t prefix, char* str);
 uint32_t terminal_getx();
 uint32_t terminal_gety();
 void terminal_fill(char c, size_t x, size_t y, size_t w, size_t h);
-void concat(char p[], char q[]);
 char terminal_getcharat(size_t x, size_t y);
 #endif

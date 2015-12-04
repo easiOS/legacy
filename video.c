@@ -14,14 +14,6 @@ uint16_t make_vgaentry(char c, uint8_t color)
 	return c16 | color16 << 8;
 }
 
-size_t strlen(const char* str)
-{
-	size_t ret = 0;
-	while ( str[ret] != 0 )
-		ret++;
-	return ret;
-}
-
 static const size_t VGA_WIDTH = 80;
 static const size_t VGA_HEIGHT = 25;
 
@@ -163,35 +155,11 @@ void terminal_test()
 	}
 }
 
-void terminal_writeint(uint32_t n)
+void terminal_writeint(int64_t n)
 {
-
-    if (n == 0)
-    {
-        terminal_putchar('0');
-        return;
-    }
-
-    int32_t acc = n;
-    char c[32];
-    int i = 0;
-    while (acc > 0)
-    {
-        c[i] = '0' + acc%10;
-        acc /= 10;
-        i++;
-    }
-    c[i] = 0;
-
-    char c2[32];
-    c2[i--] = 0;
-    int j = 0;
-    while(i >= 0)
-    {
-        c2[i--] = c[j++];
-    }
-    terminal_writestring(c2);
-
+		char buffer[65];
+		itoa(n, buffer);
+    terminal_writestring(buffer);
 }
 
 void terminal_setcursor(uint16_t x, uint16_t y)
@@ -225,26 +193,6 @@ uint32_t terminal_getx()
 uint32_t terminal_gety()
 {
 	return terminal_row;
-}
-
-void concat(char p[], char q[]) {
-   int c, d;
-
-   c = 0;
-
-   while (p[c] != '\0') {
-      c++;
-   }
-
-   d = 0;
-
-   while (q[d] != '\0') {
-      p[c] = q[d];
-      d++;
-      c++;
-   }
-
-   p[c] = '\0';
 }
 
 void terminal_writestringat(const char* data, size_t x, size_t y)

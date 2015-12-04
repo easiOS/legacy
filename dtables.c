@@ -21,8 +21,6 @@ static void idt_set_gate(uint8_t,uint32_t,uint16_t,uint8_t);
 gdt_entry_t gdt_entries[5];
 gdt_ptr_t   gdt_ptr;
 idt_entry_t idt_entries[256];
-idt_ptr_t   idt_ptr; 
-idt_entry_t idt_entries[256];
 idt_ptr_t   idt_ptr;
 
 void init_descriptor_tables()
@@ -30,6 +28,11 @@ void init_descriptor_tables()
    // Initialise the global descriptor table.
    init_gdt();
    init_idt();
+}
+
+void syscall_handler(registers_t regs)
+{
+  terminal_writestring("Syscall!\n");
 }
 
 isr_t interrupt_handlers[256];
@@ -67,7 +70,7 @@ static void gdt_set_gate(int32_t num, uint32_t base, uint32_t limit, uint8_t acc
 
    gdt_entries[num].granularity |= gran & 0xF0;
    gdt_entries[num].access      = access;
-} 
+}
 
 static void init_idt()
 {
@@ -154,7 +157,7 @@ static void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags
    idt_entries[num].flags   = flags /* | 0x60 */;
 }
 
-static const char* errorstr[] = {"Division by zero", "Debug exception", 
+static const char* errorstr[] = {"Division by zero", "Debug exception",
   "Non-maskable interrupt", "Breakpoint exception", "Into detected overflow",
   "Out of bounds exception", "Invalid opcode exception", "No coprocessor exception",
   "Double fault", "Coprocessor segment overrun", "Bad TSS", "Segment not present",
@@ -163,13 +166,16 @@ static const char* errorstr[] = {"Division by zero", "Debug exception",
 
 void isr_handler(registers_t regs)
 {
-   kpanic(errorstr[regs.int_no], regs);
-   if (interrupt_handlers[regs.int_no] != 0)
+   if (interrupt_handlers[regs.int_no] != 0 && regs.int_no < 32)
     {
         isr_t handler = interrupt_handlers[regs.int_no];
         handler(regs);
     }
-} 
+    else
+    {
+      kpanic(errorstr[regs.int_no], regs);
+    }
+}
 
 void irq_handler(registers_t regs)
 {
@@ -188,4 +194,4 @@ void irq_handler(registers_t regs)
        isr_t handler = interrupt_handlers[regs.int_no];
        handler(regs);
    }
-} 
+}

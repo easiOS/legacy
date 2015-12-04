@@ -1,20 +1,20 @@
 #include "itoa.h"
 
 /* A utility function to reverse a string  */
-void reverse(char str[], int length)
+void reverse(char s[])
 {
-    /*int start = 0;
-    int end = length -1;
-    while (start < end)
-    {
-        swap(*(str+start), *(str+end));
-        start++;
-        end--;
-    }*/
+    int i, j;
+    char c;
+
+    for (i = 0, j = strlen(s)-1; i<j; i++, j--) {
+        c = s[i];
+        s[i] = s[j];
+        s[j] = c;
+    }
 }
 
 // Implementation of itoa()
-char* itoa(int num, char* str, int base)
+/*char* itoa(uint32_t num, char* str, int base)
 {
     if (num == 0)
     {
@@ -24,7 +24,7 @@ char* itoa(int num, char* str, int base)
     }
     if(base == 10)
     {
-      int32_t acc = num;
+      uint32_t acc = num;
       char c[32];
       int i = 0;
       while (acc > 0)
@@ -61,6 +61,24 @@ char* itoa(int num, char* str, int base)
       }
     }
     return str;
+}*/
+
+//K&R implementation
+
+void itoa(int64_t n, char s[])
+{
+    int i, sign;
+
+    if ((sign = n) < 0)  /* record sign */
+        n = -n;          /* make n positive */
+    i = 0;
+    do {       /* generate digits in reverse order */
+        s[i++] = n % 10 + '0';   /* get next digit */
+    } while ((n /= 10) > 0);     /* delete it */
+    if (sign < 0)
+        s[i++] = '-';
+    s[i] = '\0';
+    reverse(s);
 }
 
 int isdigit (char c) {
