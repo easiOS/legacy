@@ -1,4 +1,5 @@
 #include "itoa.h"
+#include <string.h>
 
 /* A utility function to reverse a string  */
 void reverse(char s[])

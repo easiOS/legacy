@@ -22,6 +22,7 @@
 #include "tar.h"
 //#include "realvideo.h"
 #include "shell/shell.h"
+#include <string.h>
 
 #define ACK 0xFA
 #define RES 0xFE
@@ -237,7 +238,7 @@ void parse_multiboot2_tags(unsigned long mboot_ptr)
 				for(int i = 0; i < tagmmap->entry_size; i++)
 				{
 					struct multiboot_mmap_entry* mmap_entry = &tagmmap->entries[i];
-					terminal_writestring("Address: "); terminal_writeint(mmap_entry->addr >> 32);terminal_writeint(mmap_entry->addr & 0xFFFF);
+					terminal_writestring("Address: "); terminal_writeint(mmap_entry->addr);
 					terminal_writestring(" Length: "); terminal_writeint(mmap_entry->len);
 					terminal_writestring(" Type: "); terminal_writeint(mmap_entry->type);
 					terminal_writestring(" SBZ: "); terminal_writeint(mmap_entry->zero);

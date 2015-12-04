@@ -1,6 +1,8 @@
 #include "video.h"
 #include "port.h"
 #include "serial.h"
+#include <string.h>
+#include "itoa.h"
 
 uint8_t make_color(enum vga_color fg, enum vga_color bg)
 {

@@ -6,6 +6,7 @@
 #include "../mouse.h"
 #include "shell.h"
 #include "../itoa.h"
+#include <string.h>
 
 void uptime()
 {

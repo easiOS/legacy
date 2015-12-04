@@ -8,6 +8,7 @@
 #include "stdmem.h"
 #include "dtables.h"
 #include "video.h"
+#include <string.h>
 
 
 extern void gdt_flush(uint32_t);
