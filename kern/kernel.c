@@ -17,7 +17,7 @@
 #include <kbd.h>
 #include <mem.h>
 
-#define KERNEL_NAME "EasiOS v0.3.0a1"
+#define KERNEL_NAME "EasiOS v0.3.0"
 
 const char* cmdline = NULL;
 
