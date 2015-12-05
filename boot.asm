@@ -10,27 +10,33 @@ align 8
 multiboot:
 dd 0xE85250D6
 dd 0
-dd multiboot-multiboot_end
-dq -(0xE85250D6 + (multiboot-multiboot_end))
+dd multiboot_end-multiboot
+dd 0xFFFFFFFF & -(0xE85250D6 + (multiboot_end-multiboot))
+
+align 8 ; KÉT TEG KÖZÉ EZ KELL IDE
 
 entry_address_tag_start:
 dw 3,1
 dd entry_address_tag_end - entry_address_tag_start
-dd _start
+dd multiboot_entry
 entry_address_tag_end:
+
+align 8 ; KÉT TEG KÖZÉ EZ KELL IDE
 
 framebuffer_tag_start:
 dw 5,1
 dd framebuffer_tag_end - framebuffer_tag_start
-dd 800
-dd 600
+dd 1024
+dd 768
 dd 24
 framebuffer_tag_end:
 
-;end tag
-align 8
+align 8 ; KÉT TEG KÖZÉ EZ KELL IDE
+
+end_tag_start:
 dw 0,0
-dd 8
+dd end_tag_end - end_tag_start
+end_tag_end:
 multiboot_end:
 
 ; Multiboot1 constants
