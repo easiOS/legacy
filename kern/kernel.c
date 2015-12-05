@@ -15,6 +15,7 @@
 #include <timer.h>
 #include <video.h>
 #include <kbd.h>
+#include <mem.h>
 
 #define KERNEL_NAME "EasiOS v0.3.0a1"
 
@@ -109,6 +110,13 @@ void multiboot_enum(uint32_t mbp)
         puts(buffer);
         putc('\n');
       }
+      case MULTIBOOT_TAG_TYPE_MMAP:
+			{
+				struct multiboot_tag_mmap *tagmmap =
+					(struct multiboot_tag_mmap *)tag;
+				int mmap_n = (tagmmap->size - 16) / sizeof(struct multiboot_mmap_entry);
+				memmgmt_init(tagmmap->entries, mmap_n);
+			}
     }
   }
 }
