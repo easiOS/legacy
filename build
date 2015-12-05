@@ -10,7 +10,7 @@ CC="i686-elf-gcc"
 AS="nasm"
 LINKER="i686-elf-gcc"
 CFLAGS="-c $INPUT -o $OUTPUT -std=gnu99 -ffreestanding -O2 -Wall \
--fdiagnostics-color=always -I ."
+-fdiagnostics-color=always -I include/"
 AFLAGS="-felf32 -o $OUTPUT $INPUT"
 EXECUTABLE="easios.bin"
 ISO="easios.iso"
@@ -27,7 +27,7 @@ EXT = {
     }
 }
 
-SOURCES=["boot.s"]
+SOURCES=["kern/boot.s", "kern/kernel.c"]
 
 def build():
     print("=== \033[95mStarting build...\033[0m ===")
