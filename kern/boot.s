@@ -29,7 +29,7 @@ dw 5,1
 dd framebuffer_tag_end - framebuffer_tag_start
 dd 1024
 dd 768
-dd 24
+dd 32
 framebuffer_tag_end:
 
 align 8 ; KÉT TEG KÖZÉ EZ KELL IDE

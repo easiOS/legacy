@@ -6,7 +6,7 @@
 #include <port.h>
 
 bool* signals[256];
-int keybuffer_sp = 0;
+int keybuffer_sp = -1;
 bool shift = false;
 bool ctrl = false;
 
@@ -30,7 +30,7 @@ const char keys_shift[] = {
 
 static void kbdcallback(registers_t regs)
 {
-  struct keyevent* e = &keybuffer[keybuffer_sp];
+  struct keyevent* e;
   if(!(inb(0x64) & 1)) return;
 	uint32_t scancode;
 	int a;
@@ -63,20 +63,20 @@ static void kbdcallback(registers_t regs)
       shift = false;
       break;
     default:
+      if(keybuffer_sp + 1 > 255) break;
+      e = &keybuffer[++keybuffer_sp];
       e->keycode = scancode & ~0x80;
       e->release = scancode & 0x80;
       e->character = (shift ? keys_shift: keys)[scancode & ~0x80];
       e->shift = shift;
       e->ctrl = ctrl;
-      keybuffer_sp++; //PUSH
-      putc(e->character);
       break;
   }
   for(int i = 0; i < 256; i++)
   {
     if(signals[i] != NULL)
     {
-      signals[i] = true;
+      *signals[i] = true;
     }
   }
   outb(0x20, 0x20); //End of Interrupt
@@ -96,7 +96,7 @@ struct keyevent* kbdpoll()
 
 bool kbdavail()
 {
-  return keybuffer_sp >= 0;
+  return keybuffer_sp > -1;
 }
 
 void kbdregsign(bool* b)
