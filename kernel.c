@@ -23,6 +23,8 @@
 //#include "realvideo.h"
 #include "shell/shell.h"
 #include <string.h>
+#include <memmgmt.h>
+#include <stdlib.h>
 
 #define ACK 0xFA
 #define RES 0xFE
@@ -51,6 +53,7 @@ bool get_nth_binary(short binary, int nth)
 void halt()
 {
 	terminal_writestring("Processor halted.");
+	asm volatile("cli");
 	asm volatile("hlt");
 }
 
@@ -232,18 +235,12 @@ void parse_multiboot2_tags(unsigned long mboot_ptr)
 			{
 				struct multiboot_tag_mmap *tagmmap =
 					(struct multiboot_tag_mmap *)tag;
-				terminal_writestring("Entry size: ");
-				terminal_writeint(tagmmap->entry_size);
+				terminal_writestring("Size: ");
+				int mmap_n = (tagmmap->size - 16) / sizeof(struct multiboot_mmap_entry);
+				terminal_writeint(mmap_n);
 				terminal_putchar('\n');
-				for(int i = 0; i < tagmmap->entry_size; i++)
-				{
-					struct multiboot_mmap_entry* mmap_entry = &tagmmap->entries[i];
-					terminal_writestring("Address: "); terminal_writeint(mmap_entry->addr);
-					terminal_writestring(" Length: "); terminal_writeint(mmap_entry->len);
-					terminal_writestring(" Type: "); terminal_writeint(mmap_entry->type);
-					terminal_writestring(" SBZ: "); terminal_writeint(mmap_entry->zero);
-					terminal_putchar('\n');
-				}
+				memmgmt_init(tagmmap->entries, mmap_n);
+
 			}
 			default:
 				break;

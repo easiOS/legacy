@@ -6,5 +6,6 @@
 #endif
 void reverse(char s[]);
 void itoa(int64_t n, char s[]);
+void uitoa(uint64_t n, char s[]);
 long long int atoi(const char *c);
 #endif

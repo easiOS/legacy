@@ -45,4 +45,5 @@ uint32_t terminal_getx();
 uint32_t terminal_gety();
 void terminal_fill(char c, size_t x, size_t y, size_t w, size_t h);
 char terminal_getcharat(size_t x, size_t y);
+void terminal_writeuint(uint64_t n);
 #endif

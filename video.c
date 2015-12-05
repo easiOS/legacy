@@ -164,6 +164,13 @@ void terminal_writeint(int64_t n)
     terminal_writestring(buffer);
 }
 
+void terminal_writeuint(uint64_t n)
+{
+		char buffer[65];
+		uitoa(n, buffer);
+    terminal_writestring(buffer);
+}
+
 void terminal_setcursor(uint16_t x, uint16_t y)
 {
 	terminal_row = y;

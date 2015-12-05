@@ -82,6 +82,17 @@ void itoa(int64_t n, char s[])
     reverse(s);
 }
 
+void uitoa(uint64_t n, char s[])
+{
+    int i;
+    i = 0;
+    do {       /* generate digits in reverse order */
+        s[i++] = n % 10 + '0';   /* get next digit */
+    } while ((n /= 10) > 0);     /* delete it */
+    s[i] = '\0';
+    reverse(s);
+}
+
 int isdigit (char c) {
     return (c>='0') && (c<='9');
 }
