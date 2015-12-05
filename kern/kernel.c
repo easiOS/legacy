@@ -10,8 +10,17 @@
 #include <multiboot2.h>
 #include <serial.h>
 #include <string.h>
+#include <dtables.h>
+#include <stdlib.h>
 
 const char* cmdline = NULL;
+
+void kpanic(const char* msg, registers_t regs)
+{
+  puts("-----------------\nEXCEPTION\n-----------------\n");
+  asm("cli");
+  asm("hlt");
+}
 
 void multiboot_enum(uint32_t mbp)
 {
@@ -47,4 +56,6 @@ void kmain(uint32_t magic, uint32_t mbp)
   /*serinit();
   serinitport(COM1);*/
   multiboot_enum(mbp);
+  init_descriptor_tables();
+  asm volatile("sti");
 }

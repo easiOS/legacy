@@ -28,7 +28,8 @@ EXT = {
 }
 
 SOURCES=["kern/boot.s", "kern/kernel.c", "kern/text.c", "kern/serial.c",
-         "kern/video.c", "kern/libc/stdio.c", "kern/libc/string.c"]
+         "kern/video.c", "kern/libc/stdio.c", "kern/libc/string.c",
+         "kern/dtables.c", "kern/dtablesa.s", "kern/int.s"]
 
 def build():
     print("=== \033[95mStarting build...\033[0m ===")
