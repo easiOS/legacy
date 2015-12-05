@@ -1,0 +1,113 @@
+#!/usr/bin/python3
+
+import subprocess
+import sys
+import os
+import copy
+import shutil
+
+CC="i686-elf-gcc"
+AS="nasm"
+LINKER="i686-elf-gcc"
+CFLAGS="-c $INPUT -o $OUTPUT -std=gnu99 -ffreestanding -O2 -Wall \
+-fdiagnostics-color=always -I ."
+AFLAGS="-felf32 -o $OUTPUT $INPUT"
+EXECUTABLE="easios.bin"
+ISO="easios.iso"
+LDFLAGS="-T linker.ld -o $OUTPUT -ffreestanding -O2 -nostdlib $INPUT -lgcc"
+
+EXT = {
+    "c" : {
+        "C" : CC,
+        "F" : CFLAGS
+    },
+    "s" : {
+        "C" : AS,
+        "F" : AFLAGS
+    }
+}
+
+SOURCES=["boot.s"]
+
+def build():
+    print("=== \033[95mStarting build...\033[0m ===")
+    OBJECTS = []
+    for f in SOURCES:
+        print("Building " + f)
+        if not os.path.isfile(f):
+            print("File " + f + " doesn't exists, exiting.")
+            sys.exit(0)
+        fname = f.split(".")
+        tmpfname = copy.copy(fname)
+        tmpfname[len(tmpfname)-1] = "o"
+        fout = ".".join(tmpfname)
+
+        fext = fname[len(fname)-1]
+        if not fext in EXT:
+            print("Unknown file extension " + fext + ", exiting.")
+            sys.exit(0)
+        cc = EXT[fext]["C"]
+        flags = EXT[fext]["F"]
+        if "$INPUT" in flags:
+            flags = flags.replace("$INPUT", f)
+        else:
+            flags += " " + f
+        if "$OUTPUT" in flags:
+            flags = flags.replace("$OUTPUT", fout)
+        else:
+            flags += " " + fout
+        subprocess.run(args=[cc]+flags.split(), check=True)
+        OBJECTS.append(fout)
+    print("=== \033[95mLinking...\033[0m ===")
+    flags = LDFLAGS
+    if "$INPUT" in flags:
+        flags = flags.replace("$INPUT", " ".join(OBJECTS))
+    else:
+        flags += " " + " ".join(OBJECTS)
+    if "$OUTPUT" in flags:
+        flags = flags.replace("$OUTPUT", EXECUTABLE)
+    else:
+        flags += " " + EXECUTABLE
+    subprocess.run(args=[CC]+flags.split(), check=True)
+    print("Output: " + os.path.abspath(EXECUTABLE))
+
+def clean():
+    print("Cleaning...")
+    for f in SOURCES:
+        fname = f.split(".")
+        fname[len(fname)-1] = "o"
+        nfn = ".".join(fname)
+        if os.path.isfile(nfn):
+            os.remove(nfn)
+    if os.path.isfile(EXECUTABLE):
+        os.remove(EXECUTABLE)
+    if os.path.isfile(ISO):
+        os.remove(ISO)
+
+def iso():
+    if os.path.isfile(ISO):
+        os.remove(ISO)
+    if not os.path.isdir("iso"):
+        os.mkdir("iso")
+    if not os.path.isdir("iso/boot"):
+        os.mkdir("iso/boot")
+    shutil.copy(EXECUTABLE, "iso/boot/")
+    subprocess.run(args=["grub-mkrescue", "-o", ISO, "iso"])
+
+def run():
+    if os.path.isfile(ISO):
+        subprocess.run(args=["qemu-system-i386", "-serial", "stdio", "-cdrom", ISO])
+
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        if "clean" in sys.argv:
+            clean()
+        if "build" in sys.argv:
+            build()
+        if "iso" in sys.argv:
+            iso()
+        if "run" in sys.argv:
+            run()
+    else:
+        build()

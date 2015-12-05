@@ -1,0 +1,4 @@
+legacy/
+*.o
+easios.bin
+easios.iso
