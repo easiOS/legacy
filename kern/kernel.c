@@ -12,6 +12,7 @@
 #include <string.h>
 #include <dtables.h>
 #include <stdlib.h>
+#include <timer.h>
 
 const char* cmdline = NULL;
 
@@ -59,5 +60,7 @@ void kmain(uint32_t magic, uint32_t mbp)
   init_descriptor_tables();
   asm volatile("sti");
   timerinit(1000);
+  read_rtc();
+  kbdinit();
   while(true);
 }
