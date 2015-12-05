@@ -58,4 +58,6 @@ void kmain(uint32_t magic, uint32_t mbp)
   multiboot_enum(mbp);
   init_descriptor_tables();
   asm volatile("sti");
+  timerinit(1000);
+  while(true);
 }

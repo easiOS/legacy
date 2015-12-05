@@ -1,42 +1,40 @@
 #include <stdlib.h>
+#include <string.h>
 
-void reverse(char s*)
+char* itoa(int64_t n, char* s, int base)
 {
-    int i, j;
-    char c;
+  char tmp[33];
+  memset(tmp, 0, 33);
+  char *tp = tmp;
+  int i;
+  unsigned v;
 
-    for (i = 0, j = strlen(s)-1; i<j; i++, j--) {
-        c = s[i];
-        s[i] = s[j];
-        s[j] = c;
-    }
-}
+  int sign = (base == 10 && n < 0);
+  if (sign)
+      v = -n;
+  else
+      v = (unsigned)n;
 
-void itoa(int64_t n, char s*, int base)
-{
-    int i, sign;
+  while (v || tp == tmp)
+  {
+      i = v % base;
+      v /= base;
+      if (i < 10)
+        *tp++ = i+'0';
+      else
+        *tp++ = i + 'a' - 10;
+  }
 
-    if ((sign = n) < 0)  /* record sign */
-        n = -n;          /* make n positive */
-    i = 0;
-    do {       /* generate digits in reverse order */
-        s[i++] = n % 10 + '0';   /* get next digit */
-    } while ((n /= 10) > 0);     /* delete it */
-    if (sign < 0)
-        s[i++] = '-';
-    s[i] = '\0';
-    reverse(s);
-    return s;
-}
+  int len = tp - tmp;
 
-void uitoa(uint64_t n, char s*, int base)
-{
-    int i;
-    i = 0;
-    do {       /* generate digits in reverse order */
-        s[i++] = n % 10 + '0';   /* get next digit */
-    } while ((n /= 10) > 0);     /* delete it */
-    s[i] = '\0';
-    reverse(s);
-    return s;
+  if (sign)
+  {
+      *s++ = '-';
+      len++;
+  }
+
+  while (tp > tmp)
+      *s++ = *--tp;
+  *s = '\0';
+  return s;
 }
