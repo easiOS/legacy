@@ -29,8 +29,8 @@ EXT = {
 
 SOURCES=["kern/boot.s", "kern/kernel.c", "kern/text.c", "kern/serial.c",
          "kern/video.c", "kern/libc/stdio.c", "kern/libc/string.c",
-         "kern/dtables.c", "kern/dtablesa.s", "kern/int.s", "kern/timer.c",
-         "kern/libc/stdlib.c", "kern/kbd.c", "kern/mem.c", "kern/mouse.c",
+         "kern/dtables.c", "kern/dtablesa.s", "kern/int.s", "dev/timer.c",
+         "kern/libc/stdlib.c", "dev/kbd.c", "kern/mem.c", "dev/mouse.c",
          "kern/libc/time.c"]
 
 def build():
