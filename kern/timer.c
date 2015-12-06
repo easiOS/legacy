@@ -72,16 +72,15 @@ static void timer_callback(registers_t regs)
     }
 }
 
-uint32_t* get_time()
+uint32_t* get_time(uint32_t* out)
 {
-    static uint32_t time[6];
-    time[0] = year;
-    time[1] = month;
-    time[2] = day;
-    time[3] = hour;
-    time[4] = minute;
-    time[5] = second;
-    return time;
+    out[0] = year;
+    out[1] = month;
+    out[2] = day;
+    out[3] = hour;
+    out[4] = minute;
+    out[5] = second;
+    return out;
 }
 
 uint32_t ticks()
