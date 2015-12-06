@@ -17,6 +17,7 @@
 #include <kbd.h>
 #include <mem.h>
 #include <mouse.h>
+#include <text.h>
 
 #define KERNEL_NAME "EasiOS v0.3.0"
 
@@ -92,7 +93,7 @@ void multiboot_enum(uint32_t mbp)
         if(tagfb->framebuffer_type == 2)
         {
           tinit(tagfb->framebuffer_width, tagfb->framebuffer_height,
-                tagfb->framebuffer_addr);
+                (uint16_t*)(uint32_t)tagfb->framebuffer_addr);
         }
 				break;
 			}
@@ -151,6 +152,9 @@ void kmain(uint32_t magic, uint32_t mbp)
   if(!h) h = 768;
   rgb_t color;
   color.r = 255;
+  color.g = 0;
+  color.b = 0;
+  color.a = 255;
   enum {RGr, GRf, GBr, BGf, BRr, RBf} color_state = RGr;
   //r = 1
   //r = 1 g++

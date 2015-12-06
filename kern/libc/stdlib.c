@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mem.h>
+#include <stdio.h>
 
 char* itoa(int64_t n, char* s, int base)
 {
