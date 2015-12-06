@@ -6,7 +6,7 @@
 #include <port.h>
 
 bool* signals[256];
-int keybuffer_sp = -1;
+int keyevents_sp = -1;
 bool shift = false;
 bool ctrl = false;
 
@@ -63,8 +63,8 @@ static void kbdcallback(registers_t regs)
       shift = false;
       break;
     default:
-      if(keybuffer_sp + 1 > 255) break;
-      e = &keybuffer[++keybuffer_sp];
+      if(keyevents_sp + 1 > 255) break;
+      e = &keyevents[++keyevents_sp];
       e->keycode = scancode & ~0x80;
       e->release = scancode & 0x80;
       e->character = (shift ? keys_shift: keys)[scancode & ~0x80];
@@ -84,19 +84,19 @@ static void kbdcallback(registers_t regs)
 
 struct keyevent* kbdpoll()
 {
-  if(keybuffer_sp < 0)
+  if(keyevents_sp < 0)
   {
-    keybuffer_sp = -1;
+    keyevents_sp = -1;
     return NULL;
   }
-  struct keyevent* ret = &keybuffer[keybuffer_sp];
-  keybuffer_sp--;
+  struct keyevent* ret = &keyevents[keyevents_sp];
+  keyevents_sp--;
   return ret;
 }
 
 bool kbdavail()
 {
-  return keybuffer_sp > -1;
+  return keyevents_sp > -1;
 }
 
 void kbdregsign(bool* b)
@@ -125,7 +125,7 @@ void kbdunregsign(bool* b)
 
 void kbdinit()
 {
-  memset(keybuffer, 0, 128*sizeof(struct keyevent));
+  memset(keyevents, 0, 256*sizeof(struct keyevent));
   memset(signals, 0, 256*sizeof(bool));
   register_interrupt_handler(IRQ1, &kbdcallback);
   puts("Keyboard IRQ callback registered\n");
