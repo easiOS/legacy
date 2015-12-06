@@ -10,7 +10,7 @@ struct keyevent {
   bool release;
   bool shift;
   bool ctrl;
-} keybuffer[128];
+} keybuffer[256];
 
 void kbdinit();
 bool kbdavail();
