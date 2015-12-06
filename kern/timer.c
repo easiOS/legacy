@@ -127,7 +127,7 @@ void sleep(uint32_t millis)
     while(now - start < millis)
     {
         now = ticks();
-        asm("nop");
+        puts("");
     }
 }
 ///RTC (CMOS)
