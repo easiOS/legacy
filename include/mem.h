@@ -7,7 +7,8 @@
 struct memmgmt {
   uint64_t address; //start of free memory
   uint64_t blocks_n; //number of 16kB blocks
-  uint8_t blocks[2048]; //
+  uint64_t blocks[2048]; //bit 0: is allocated
+                         //bit 1-63: hány blokk tartozik még ehhez
 } mmgmt_conf;
 
 void memmgmt_init(struct multiboot_mmap_entry* mmap, int mmap_size);

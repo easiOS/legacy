@@ -47,4 +47,6 @@ void vd_triangle(vdrawmode_t drawmode, size_t x1, size_t y1, size_t x2, size_t y
 void vd_rectangle(vdrawmode_t drawmode, size_t x, size_t y, size_t w, size_t h);
 size_t vgetw();
 size_t vgeth();
+void vswap();
+void vd_bitmap16(uint16_t* bitmap, size_t x, size_t y, size_t h);
 #endif

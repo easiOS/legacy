@@ -9,8 +9,11 @@
 #include <stddef.h>
 #include <string.h>
 #include <video.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 uint32_t* fb;
+uint32_t fbb[1310720];
 size_t fbw, fbh, fbbpp, fbp;
 uint8_t fbt;
 rgb_t color;
@@ -18,6 +21,11 @@ rgb_t color;
 void vinit(size_t width, size_t height, size_t bpp, size_t pitch, uint64_t addr)
 {
   fb = (uint32_t*)(uint32_t)addr;
+  puts("Back buffer at 0x");
+  char b[16];
+  itoa((int)fbb, b, 16);
+  puts(b);
+  putc('\n');
   fbw = width;
   fbh = height;
   fbbpp = bpp;
@@ -25,13 +33,20 @@ void vinit(size_t width, size_t height, size_t bpp, size_t pitch, uint64_t addr)
   color.r = 255;
   color.g = 255;
   color.b = 255;
+  for(size_t y = 0; y < fbh; y++)
+    for(size_t x = 0; x < fbw; x++)
+    {
+      fbb[y * width + x] = 0;
+    }
 }
 
 void vplot(size_t x, size_t y)
 {
+  if(x < 0) return;
+  if(y < 0) return;
   if(x >= fbw) return;
   if(y >= fbh) return;
-  fb[y * fbw + x] = color.r << 16 | color.g << 8 | color.b;
+  fbb[y * fbw + x] = color.r << 16 | color.g << 8 | color.b;
 }
 
 void vsetcol(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
@@ -51,7 +66,11 @@ void vcls()
 {
   for(size_t y = 0; y < fbh; y++)
     for(size_t x = 0; x < fbw; x++)
-      vplot(x, y);
+    {
+      uint32_t p = fb[y * fbw + x];
+      if((p >> 16 & 0xFF) != color.r || (p >> 8 & 0xFF) != color.g || (p & 0xFF) != color.b)
+        vplot(x, y);
+    }
 }
 
 void vd_print(size_t x, size_t y, const char* str)
@@ -113,5 +132,28 @@ void vd_line(size_t x1, size_t y1, size_t x2, size_t y2)
   {
     float y = ry1 + dy * (x - rx1) / dx;
     vplot((size_t)x, (size_t)y);
+  }
+}
+
+//copy framebuffer buffer to framebuffer
+void vswap()
+{
+  uint8_t* fbbyte = (uint8_t*)fb;
+  uint8_t* fbbbyte = (uint8_t*)fbb;
+  for(size_t y = 0; y < fbh; y++)
+    for(size_t x = 0; x < fbp; x++)
+    {
+      fbbyte[y * fbp + x] = fbbbyte[y * fbp + x];
+    }
+}
+
+void vd_bitmap16(uint16_t* bitmap, size_t x, size_t y, size_t h)
+{
+  for(size_t i = 0; i < h; i++)
+  {
+    for(int j = 15; j > 0; j--)
+    {
+      if(bitmap[i] >> j & 1) vplot(x + 16 - j, y + i);
+    }
   }
 }

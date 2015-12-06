@@ -13,5 +13,6 @@ void mouseinit();
 
 bool mouseavail();
 struct mouseevent* mousepoll();
+void mousegetcoords(int32_t* x, int32_t* y);
 
 #endif

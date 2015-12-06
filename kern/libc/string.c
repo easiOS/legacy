@@ -46,10 +46,21 @@ int strcoll(const char* str1, const char* str2)
   return strcmp(str1, str2);
 }
 
-char* strcpy(char* destination, const char* source)
+/*char* strcpy(char* destination, const char* source)
 {
   int i = 0;
   while ((destination[i] = source[i]) != '\0')
     i++;
+  return destination;
+}*/
+
+char* strcpy(char* destination, const char* source)
+{
+  char* src = source;
+  char* dst = destination;
+  while(src != '\0')
+  {
+    *dst++ = *src++;
+  }
   return destination;
 }

@@ -28,13 +28,13 @@ void mousecallback(registers_t regs)
       break;
     case 2:
       mouse_byte[2]=inb(0x60);
-      mouse_x = mouse_byte[1];
-      mouse_y = mouse_byte[2];
+      mouse_y += (mouse_byte[0] >> 4 & 1 ? 1 : -1) * mouse_byte[1] / 8;
+      mouse_x += (mouse_byte[0] >> 5 & 1 ? -1 : 1) * mouse_byte[2] * 4;
       mouse_cycle=0;
       if(mouseevents_sp + 1 > 255) break;
       e = &mouseevents[++mouseevents_sp];
-      e->dy = (mouse_byte[0] >> 4 & 1 ? 1 : -1) * mouse_x / 8;
-      e->dx = (mouse_byte[0] >> 5 & 1 ? -1 : 1) * mouse_y * 4;
+      e->dy = (mouse_byte[0] >> 4 & 1 ? 1 : -1) * mouse_byte[1] / 8;
+      e->dx = (mouse_byte[0] >> 5 & 1 ? -1 : 1) * mouse_byte[2] * 4;
       e->left = mouse_byte[0] & 1;
       e->right = mouse_byte[0] >> 1 & 1;
       e->middle = mouse_byte[0] >> 2 & 1;
@@ -100,6 +100,12 @@ struct mouseevent* mousepoll()
   mouseevents_sp--;
   asm("sti");
   return ret;
+}
+
+void mousegetcoords(int32_t* x, int32_t* y)
+{
+  *x = mouse_x;
+  *y = mouse_y;
 }
 
 void mouseinit()

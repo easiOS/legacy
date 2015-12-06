@@ -2,6 +2,7 @@
 #include <string.h>
 #include <mem.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 char* itoa(int64_t n, char* s, int base)
 {
@@ -43,26 +44,48 @@ char* itoa(int64_t n, char* s, int base)
 
 void* malloc(size_t size)
 {
-  if(size <= 0) return 0;
-  if(size > 16384)
-  {
-    puts("malloc(): fuck\n");
-  }
+  puts("Enter malloc\n");
+  if(size <= 0){ puts("malloc: Size less than zero\n"); return 0;}
+  uint32_t db = size / 16384 + 1;
   int n = -1;
   for(int i = 0; i < mmgmt_conf.blocks_n; i++)
   {
-    if(!(mmgmt_conf.blocks[i] & 1)) //is block non-allocated
+    bool c = true;
+    for(int j = 0; j < db; j++)
     {
-      mmgmt_conf.blocks[i] |= 1;
+      if(mmgmt_conf.blocks[i + j] & 1)
+      {
+        c = false;
+        break;
+      }
+    }
+    if(c)
+    {
+      puts("malloc: found ");
+      char b[16];
+      itoa(db, b, 10);
+      puts(b); puts(" free blocks\n");
+      for(int j = 0; j < db; j++)
+      {
+        mmgmt_conf.blocks[i + j] |= 1;
+      }
       n = i;
       break;
     }
   }
   uint32_t address = 0;
   if(n != -1)
+  {
+    puts("malloc: n: ");
+    char b[16];
+    itoa(n, b, 10);
+    puts(b); puts("\n");
+    mmgmt_conf.blocks[n] |= db << 1;
     address = mmgmt_conf.address + (n * 16384);
+  }
   else
     puts("malloc(): out of memory\n");
+  puts("Exit malloc\n");
   return (void*)address;
 }
 
@@ -76,6 +99,19 @@ void* free(void* ptr)
   }
   uint32_t tmp = (uint32_t)ptr;
   uint32_t block_i = (tmp - mmgmt_conf.address) / 16384;
-  mmgmt_conf.blocks[block_i - 1] &= ~1; //clear allocated bit
+  uint64_t nextn = mmgmt_conf.blocks[block_i] >> 1;
+  char b[16];
+  puts("free: block_i: ");
+  itoa(block_i, b, 10);
+  puts(b);
+  putc('\n');
+  itoa(nextn, b, 10);
+  puts("free: next ");
+  puts(b);
+  puts(" blocks needs to be freed too\n");
+  for(size_t i = block_i; i < block_i + nextn; i++)
+  {
+      mmgmt_conf.blocks[i] = 0; //clear allocated bit
+  }
   return ptr;
 }

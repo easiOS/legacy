@@ -18,6 +18,9 @@
 #include <mem.h>
 #include <mouse.h>
 #include <text.h>
+#include <krandom.h>
+#include <time.h>
+#include <eelphant.h>
 
 #define KERNEL_NAME "EasiOS v0.3.0"
 
@@ -139,10 +142,20 @@ void kmain(uint32_t magic, uint32_t mbp)
   kbdinit();
   mouseinit();
   asm volatile("sti");
+  while(time(NULL) == 0);
+  krandom_get();
   puts("Welcome to ");
   puts(KERNEL_NAME);
   puts("!\n");
-  vsetcol(255, 0, 0, 255);
+  size_t w = vgetw();
+  size_t h = vgeth();
+  if(w == 0 || h == 0)
+  {
+    puts("Cannot start Eelphant: no video\n");
+    return;
+  }
+  eelphant_main(w, h);
+  /*vsetcol(255, 0, 0, 255);
   vd_rectangle(FILL, 10, 10, 128, 128);
   int64_t mx = 0;
   int64_t my = 0;
@@ -220,5 +233,5 @@ void kmain(uint32_t magic, uint32_t mbp)
       putc(e->release ? '^' : '_'); putc(e->character);
     }
     sleep(42);
-  }
+  }*/
 }

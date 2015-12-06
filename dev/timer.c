@@ -29,7 +29,7 @@ static void timer_callback(registers_t regs)
 {
     if(ttime == 0)
     {
-      ttime = (86400 * 365) * (year - 1970) + (20952 * 365) * (year - 1970);
+      ttime = 31556952 * (year - 1970);
       int days = 0;
       for(int i = 1; i < month; i++)
       {
