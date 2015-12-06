@@ -89,3 +89,29 @@ void vd_rectangle(vdrawmode_t drawmode, size_t x, size_t y, size_t w, size_t h)
     }
   }
 }
+
+void vd_line(size_t x1, size_t y1, size_t x2, size_t y2)
+{
+  float rx1, rx2, ry1, ry2;
+  if(x2 >= x1)
+  {
+    rx1 = x1;
+    rx2 = x2;
+    ry1 = y1;
+    ry2 = y2;
+  }
+  else
+  {
+    rx1 = x2;
+    rx2 = x1;
+    ry1 = y2;
+    ry2 = y1;
+  }
+  float dx = rx2 - rx1;
+  float dy = ry2 - ry1;
+  for(float x = rx1; x < rx2; x += 0.5)
+  {
+    float y = ry1 + dy * (x - rx1) / dx;
+    vplot((size_t)x, (size_t)y);
+  }
+}
