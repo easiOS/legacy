@@ -16,6 +16,7 @@
 #include <video.h>
 #include <kbd.h>
 #include <mem.h>
+#include <mouse.h>
 
 #define KERNEL_NAME "EasiOS v0.3.0"
 
@@ -88,6 +89,11 @@ void multiboot_enum(uint32_t mbp)
                 tagfb->framebuffer_bpp, tagfb->framebuffer_pitch,
                 tagfb->framebuffer_addr);
         }
+        if(tagfb->framebuffer_type == 2)
+        {
+          tinit(tagfb->framebuffer_width, tagfb->framebuffer_height,
+                tagfb->framebuffer_addr);
+        }
 				break;
 			}
       case MULTIBOOT_TAG_TYPE_VBE:
@@ -130,36 +136,85 @@ void kmain(uint32_t magic, uint32_t mbp)
   timerinit(1000);
   read_rtc();
   kbdinit();
+  mouseinit();
   asm volatile("sti");
   puts("Welcome to ");
   puts(KERNEL_NAME);
   puts("!\n");
+  vsetcol(255, 0, 0, 255);
+  vd_rectangle(FILL, 10, 10, 128, 128);
+  int64_t mx = 0;
+  int64_t my = 0;
+  size_t w = vgetw();
+  size_t h = vgeth();
+  if(!w) w = 1024;
+  if(!h) h = 768;
+  rgb_t color;
+  color.r = 255;
+  enum {RGr, GRf, GBr, BGf, BRr, RBf} color_state = RGr;
+  //r = 1
+  //r = 1 g++
+  //g = 1 r--
+  //g = 1 b++
+  //b = 1 g--
+  //b = 1 r++
+  //r = 1 b--
   while(true)
   {
-      if(!kbdavail()) continue;
+    if(mouseavail())
+    {
+      while(mouseavail())
+      {
+      struct mouseevent* e = mousepoll();
+      mx += e->dx;
+      my += e->dy;
+      if(mx < 0) mx = 0;
+      if(my < 0) my = 0;
+      if(mx >= w) mx = w - 1;
+      if(my >= h) my = h - 1;
+      switch(color_state)
+      {
+        case RGr:
+          color.g++;
+          if(color.g >= 255) color_state = GRf;
+          break;
+        case GRf:
+          color.r--;
+          if(color.r <= 0) color_state = GBr;
+          break;
+        case GBr:
+          color.b++;
+          if(color.b >= 255) color_state = BGf;
+          break;
+        case BGf:
+          color.g--;
+          if(color.g <= 0) color_state = BRr;
+          break;
+        case BRr:
+          color.r++;
+          if(color.r >= 255) color_state = RBf;
+          break;
+        case RBf:
+          color.b--;
+          if(color.b <= 0) color_state = RGr;
+          break;
+      }
+      vsetcol(color.r, color.g, color.b, color.a);
+      vd_rectangle(FILL, mx, my, 32, 32);
+      char buffer[64];
+      itoa(mx, buffer, 10);
+      puts("Mouse x: "); puts(buffer);
+      puts(" y: "); itoa(my, buffer, 10); puts(buffer);
+      puts(" dx: "); itoa(e->dx, buffer, 10); puts(buffer);
+      puts(" dy: "); itoa(e->dy, buffer, 10); puts(buffer);
+      putc('\n');
+      }
+    }
+    if(kbdavail())
+    {
       struct keyevent* e = kbdpoll();
-      int sc = e->keycode;
-      uint8_t r = 255,g = 255,b=255;
-      if(e->shift)
-      {
-        g = 100;
-      }
-      if(e->ctrl)
-      {
-        b = 100;
-      }
-      if(e->release)
-      {
-        r = 0;
-        g = 0;
-        b = 0;
-      }
-      for(int y = 0; y < 64; y++)
-      {
-        for(int x = 0; x < 64; x++)
-        {
-          vplot(sc%8 * 64 + x, sc/8 * 64 + y, r, g, b);
-        }
-      }
+      putc(e->release ? '^' : '_'); putc(e->character);
+    }
+    sleep(42);
   }
 }

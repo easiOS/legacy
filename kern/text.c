@@ -10,7 +10,7 @@
 size_t tw, th;
 size_t tx, ty;
 uint8_t tcolor;
-uint16_t* tbuffer;
+uint16_t* tbuffer = 0;
 
 void tinit(size_t width, size_t height, uint16_t* addr)
 {
@@ -66,6 +66,7 @@ void tputc(char a, uint8_t color)
     case '\n':
       ty++;
       if(ty >= th) tscroll();
+      tx = 0;
       return;
     case '\b':
       tbuffer[ty * tw + tx] = ' ' | tcolor;
@@ -102,6 +103,6 @@ void tswrite(const char* str)
 {
   for(int i = 0; str[i] != '\0'; i++)
   {
-
+    tputc(str[i], tcolor);
   }
 }

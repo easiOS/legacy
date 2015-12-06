@@ -47,7 +47,14 @@ void serinitport(uint16_t port)
 void serwrite(uint16_t port, char a)
 {
   while (!sertxempty(port));
-  outb(port, a);
+
+  if(a == '\n')
+  {
+    outb(port, '\r');
+    outb(port, '\n');
+  }
+  else
+    outb(port, a);
 }
 
 bool sertxempty(uint16_t port)

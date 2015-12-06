@@ -26,6 +26,25 @@ struct VBEModeInfoBlock {
   uint16_t reserved2;
 } __attribute__((packed));
 
+typedef enum {
+  FILL,
+  LINE
+} vdrawmode_t;
+
+typedef struct {
+  uint8_t r,g,b,a;
+} rgb_t;
+
 void vinit(size_t width, size_t height, size_t bpp, size_t pitch, uint64_t addr);
-void vplot(size_t x, size_t y, uint8_t r, uint8_t g, uint8_t b);
+void vplot(size_t x, size_t y);
+void vd_circle(size_t x, size_t y, size_t r, size_t segments);
+void vsetcol(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+rgb_t vgetcol();
+void vcls();
+void vd_print(size_t x, size_t y, const char* str);
+void vd_line(size_t x1, size_t y1, size_t x2, size_t y2);
+void vd_triangle(vdrawmode_t drawmode, size_t x1, size_t y1, size_t x2, size_t y2, size_t x3, size_t y3);
+void vd_rectangle(vdrawmode_t drawmode, size_t x, size_t y, size_t w, size_t h);
+size_t vgetw();
+size_t vgeth();
 #endif

@@ -84,6 +84,7 @@ static void kbdcallback(registers_t regs)
 
 struct keyevent* kbdpoll()
 {
+  asm("cli");
   if(keyevents_sp < 0)
   {
     keyevents_sp = -1;
@@ -91,6 +92,7 @@ struct keyevent* kbdpoll()
   }
   struct keyevent* ret = &keyevents[keyevents_sp];
   keyevents_sp--;
+  asm("sti");
   return ret;
 }
 

@@ -11,6 +11,7 @@
 
 uint32_t tick = 0;
 uint32_t last_rtc_read = 3600000;
+uint64_t ttime = 0;
 uint32_t century = 0;
 uint32_t year = 1970;
 uint32_t month = 1;
@@ -19,11 +20,41 @@ uint32_t hour = 0;
 uint32_t minute = 0;
 uint32_t second = 0;
 
+uint64_t get_unix_time()
+{
+  return ttime;
+}
+
 static void timer_callback(registers_t regs)
 {
+    if(ttime == 0)
+    {
+      ttime = (86400 * 365) * (year - 1970) + (20952 * 365) * (year - 1970);
+      int days = 0;
+      for(int i = 1; i < month; i++)
+      {
+        switch(i)
+        {
+          case 2:
+            days += 28; //we've already added the 29th day
+            break;
+          case 4:
+          case 6:
+          case 9:
+          case 11:
+            days += 30;
+            break;
+          default:
+            days += 31;
+            break;
+        }
+      }
+      ttime += days * 86400 + hour * 3600 + minute * 60 + second;
+    }
     tick++;
     if(tick % 1000 == 0)
     {
+        ttime++;
         if(second + 1 >= 60)
         {
             second = 0;
