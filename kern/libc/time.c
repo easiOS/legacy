@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <time.h>
-#include <timer.h>
+#include <dev/timer.h>
 
 time_t time(time_t* timer)
 {

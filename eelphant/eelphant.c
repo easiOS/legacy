@@ -11,9 +11,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include <mouse.h>
+#include <dev/mouse.h>
 #include <stdio.h>
-#include <timer.h>
+#include <dev/timer.h>
 
 int32_t ep_mx = 20, ep_my = 20;
 size_t ep_sw, ep_sh;

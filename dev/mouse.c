@@ -1,4 +1,4 @@
-#include <mouse.h>
+#include <dev/mouse.h>
 #include <port.h>
 #include <stdint.h>
 #include <dtables.h>

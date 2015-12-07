@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <port.h>
 #include <dtables.h>
-#include <timer.h>
+#include <dev/timer.h>
 #include <stdio.h>
 #include <stdlib.h>
 

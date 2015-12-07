@@ -5,7 +5,7 @@
  * Description: serial ports
  */
 
-#include <serial.h>
+#include <dev/serial.h>
 
 struct serial_port_table {
   uint16_t port;

@@ -56,7 +56,7 @@ int strcoll(const char* str1, const char* str2)
 
 char* strcpy(char* destination, const char* source)
 {
-  char* src = source;
+  char* src = (char*)source;
   char* dst = destination;
   while(src != '\0')
   {

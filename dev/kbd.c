@@ -1,4 +1,4 @@
-#include <kbd.h>
+#include <dev/kbd.h>
 #include <string.h>
 #include <stdint.h>
 #include <dtables.h>

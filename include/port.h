@@ -23,3 +23,46 @@ static inline void io_wait(void)
                    "1:jmp 2f\n\t"
                    "2:" );
 }
+
+static inline void
+insl(int port, void *addr, int cnt)
+{
+  asm volatile("cld; rep insl" :
+               "=D" (addr), "=c" (cnt) :
+               "d" (port), "0" (addr), "1" (cnt) :
+               "memory", "cc");
+}
+
+
+static inline void
+outw(uint16_t port, uint16_t data)
+{
+  asm volatile("out %0,%1" : : "a" (data), "d" (port));
+}
+
+static inline void
+outsl(int port, const void *addr, int cnt)
+{
+  asm volatile("cld; rep outsl" :
+               "=S" (addr), "=c" (cnt) :
+               "d" (port), "0" (addr), "1" (cnt) :
+               "cc");
+}
+
+static inline void
+stosb(void *addr, int data, int cnt)
+{
+  asm volatile("cld; rep stosb" :
+               "=D" (addr), "=c" (cnt) :
+               "0" (addr), "1" (cnt), "a" (data) :
+               "memory", "cc");
+}
+
+static inline void
+stosl(void *addr, int data, int cnt)
+{
+  asm volatile("cld; rep stosl" :
+               "=D" (addr), "=c" (cnt) :
+               "0" (addr), "1" (cnt), "a" (data) :
+               "memory", "cc");
+}

@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <serial.h>
+#include <dev/serial.h>
 #include <text.h>
 
 int puts(const char* str)
