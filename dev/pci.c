@@ -5,19 +5,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <dev/pci/ne2k_pci.h>
 
 struct _pci_device {
   uint16_t vendor;
   uint16_t device;
   char name[64];
+  void (*initfunc)(uint8_t, uint8_t);
 } _pci_devices[] = {
 //  Vendor   Device  Name
-    {0x8086, 0x1237, "Intel PCI & Memory"},
-    {0x8086, 0x7000, "Intel PIIX3 PCI2ISA Bridge (Triton II)"},
-    {0x8086, 0x1038, "Intel PRO/100"},
-    {0x8086, 0x100e, "Intel Pro 1000/MT"},
-    {0x1234, 0x1111, "QEMU/Bochs Virtual VGA"},
-    {0x10ec, 0x8029, "Ne2000 PCI"},
+    {0x8086, 0x1237, "Intel PCI & Memory", NULL},
+    {0x8086, 0x7000, "Intel PIIX3 PCI2ISA Bridge (Triton II)", NULL},
+    {0x8086, 0x1038, "Intel PRO/100", NULL},
+    {0x8086, 0x100e, "Intel Pro 1000/MT", NULL},
+    {0x1234, 0x1111, "QEMU/Bochs Virtual VGA", NULL},
+    {0x10ec, 0x8029, "Ne2000 PCI", &ne2k_pciinit},
     {}
 };
 
@@ -67,13 +69,13 @@ void pciinit()
       {
         if(pdptr->vendor == vendor && pdptr->device == device)
         {
-          puts(pdptr->name);
+          puts(pdptr->name); putc('\n');
+          if(pdptr->initfunc != NULL) pdptr->initfunc(bus, slot);
           break;
         }
         pdptr++;
       }
-      if(pdptr->vendor == 0) puts("Unknown");
-      putc('\n');
+      if(pdptr->vendor == 0) puts("Unknown\n");
     }
   }
 }
