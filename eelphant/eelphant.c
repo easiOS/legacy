@@ -50,7 +50,22 @@ void eelphant_event()
 
 void eelphant_update(time_t dt)
 {
-
+  if(windows[0].flags >> 6 & 1)
+  {
+    windows[0].x+=10 * dt / 100;
+  }
+  if(!(windows[0].flags >> 6 & 1))
+  {
+    windows[0].x-=10 * dt / 100;
+  }
+  if(windows[0].x >= 300 && (windows[0].flags >> 6 & 1))
+  {
+    windows[0].flags &= ~(1 << 6);
+  }
+  if(windows[0].x <= 100 && !(windows[0].flags >> 6 & 1))
+  {
+    windows[0].flags |= 1 << 6;
+  }
 }
 
 void eelphant_draw()
@@ -108,9 +123,9 @@ void eelphant_draw()
       vsetcol(52, 73, 94, 255);
       vd_rectangle(LINE, w->x, w->y - 32, w->w, 32);
       vsetcol(231, 76, 60, 255);
-      vd_rectangle(FILL, w->x+w->w - 32, w->y, 32, 32);
+      vd_rectangle(FILL, w->x+w->w - 32, w->y - 32, 32, 32);
       vsetcol(192, 57, 43, 255);
-      vd_rectangle(LINE, w->x+w->w - 32, w->y, 32, 32);
+      vd_rectangle(LINE, w->x+w->w - 32, w->y - 32, 32, 32);
       vsetcol(236, 240, 241, 255);
       vd_rectangle(FILL, w->x, w->y, w->w, w->h);
     }

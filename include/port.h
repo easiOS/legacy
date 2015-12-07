@@ -17,6 +17,18 @@ inline unsigned short inw(unsigned int port)
    return ret;
 }
 
+inline void outl(unsigned short port, unsigned long data)
+{
+	asm volatile("outl %%eax, %%dx" :: "d" (port), "a" (data));
+}
+
+inline unsigned long inl(unsigned short port)
+{
+	unsigned long ret;
+	asm volatile("inl %%dx, %%eax" : "=a" (ret): "dN" (port));
+	return ret;
+}
+
 static inline void io_wait(void)
 {
     asm volatile ( "jmp 1f\n\t"

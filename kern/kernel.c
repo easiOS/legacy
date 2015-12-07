@@ -22,8 +22,9 @@
 #include <time.h>
 #include <eelphant.h>
 #include <dev/ide.h>
+#include <dev/pci.h>
 
-#define KERNEL_NAME "EasiOS v0.3.0"
+#define KERNEL_NAME "EasiOS v0.3.1"
 
 const char* cmdline = NULL;
 
@@ -146,6 +147,7 @@ void kmain(uint32_t magic, uint32_t mbp)
   asm volatile("sti");
   while(time(NULL) == 0);
   krandom_get();
+  pciinit();
   puts("Welcome to ");
   puts(KERNEL_NAME);
   puts("!\n");
