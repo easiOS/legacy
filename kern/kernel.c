@@ -149,6 +149,7 @@ void kmain(uint32_t magic, uint32_t mbp)
   puts("Welcome to ");
   puts(KERNEL_NAME);
   puts("!\n");
+  puts("Copyright (c) 2015, Daniel (Easimer) Meszaros\nAll rights reserved.\n");
   size_t w = vgetw();
   size_t h = vgeth();
   if(w == 0 || h == 0)
