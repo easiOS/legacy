@@ -121,6 +121,7 @@ void multiboot_enum(uint32_t mbp)
         itoa(tagvbe->vbe_interface_len, buffer, 10);
         puts(buffer);
         putc('\n');
+        break;
       }
       case MULTIBOOT_TAG_TYPE_MMAP:
 			{
@@ -128,6 +129,7 @@ void multiboot_enum(uint32_t mbp)
 					(struct multiboot_tag_mmap *)tag;
 				int mmap_n = (tagmmap->size - 16) / sizeof(struct multiboot_mmap_entry);
 				memmgmt_init(tagmmap->entries, mmap_n);
+        break;
 			}
     }
   }
