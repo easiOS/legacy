@@ -20,6 +20,8 @@ struct _pci_device {
     {0x8086, 0x100e, "Intel Pro 1000/MT", NULL},
     {0x1234, 0x1111, "QEMU/Bochs Virtual VGA", NULL},
     {0x10ec, 0x8029, "Ne2000 PCI", &ne2k_pciinit},
+    {0x11c1, 0x0450, "LSI Winmodem 56k", NULL},
+    {0x8086, 0x3576, "Intel Host-AGP Bridge", NULL},
     {}
 };
 
@@ -37,6 +39,7 @@ uint16_t pci_config_read_word(uint8_t bus, uint8_t slot, uint8_t func, uint8_t o
   addr = (uint32_t)((lbus<<16) | (lslot << 11) | (lfunc << 8) |
           (offset & 0xfc) | ((uint32_t)0x80000000));
   outl(PCI_PORT_CONF_ADDR, addr);
+  io_wait();
   uint32_t in = inl(0xCFC);
   t = (uint16_t)((in >> ((offset & 2) * 8)) & 0xffff);
   return t;
@@ -51,15 +54,15 @@ void pciinit()
     {
       char b[16];
       memset(b, 0, 16);
-      puts("  "); itoa(bus, b, 16); puts(b);
-      putc(':'); itoa(slot, b, 16); puts(b);
-      puts(": ");
       uint16_t vendor = pci_config_read_word(bus, slot, 0, 0);
       if(vendor == 0xffff)
       {
-        puts("No device\n");
+        //puts("No device\n");
         continue;
       }
+      puts("  "); itoa(bus, b, 16); puts(b);
+      putc(':'); itoa(slot, b, 16); puts(b);
+      puts(": ");
       uint16_t device = pci_config_read_word(bus, slot, 0, 2);
       puts("Vendor: 0x"); itoa(vendor, b, 16); puts(b);
       puts(" Device: 0x"); itoa(device, b, 16); puts(b);
@@ -75,7 +78,10 @@ void pciinit()
         }
         pdptr++;
       }
-      if(pdptr->vendor == 0) puts("Unknown\n");
+      if(pdptr->vendor == 0)
+      {
+        puts("Unknown\n");
+      }
     }
   }
 }

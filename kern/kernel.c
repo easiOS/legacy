@@ -23,6 +23,7 @@
 #include <eelphant.h>
 #include <dev/ide.h>
 #include <dev/pci.h>
+#include <tar.h>
 
 #define KERNEL_NAME "EasiOS v0.3.1"
 
@@ -131,6 +132,26 @@ void multiboot_enum(uint32_t mbp)
 				memmgmt_init(tagmmap->entries, mmap_n);
         break;
 			}
+      case MULTIBOOT_TAG_TYPE_MODULE:
+      {
+        struct multiboot_tag_module *tagmod =
+          (struct multiboot_tag_module *)tag;
+        puts("GRUB module detected!\n");
+        if(*(uint32_t*)tagmod->mod_start == 0xC0C0A123)
+        {
+          puts("EasiOS VFS detected\n");
+          //TODO: load
+          continue;
+        }
+        struct posix_header* tarmod = (struct posix_header*)tagmod->mod_start;
+        if(tarmod->magic[0] == 'u' && tarmod->magic[1] == 's' &&
+           tarmod->magic[2] == 't' && tarmod->magic[3] == 'a' &&
+           tarmod->magic[4] == 'r')
+        {
+          puts("Valid tar file\n");
+        }
+        break;
+      }
     }
   }
 }
