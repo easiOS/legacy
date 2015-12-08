@@ -45,6 +45,22 @@ uint16_t pci_config_read_word(uint8_t bus, uint8_t slot, uint8_t func, uint8_t o
   return t;
 }
 
+void pci_config_write_word(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset, uint16_t val)
+{
+  uint32_t addr;
+  uint32_t lbus = (uint32_t)bus;
+  uint32_t lslot = (uint32_t)slot;
+  uint32_t lfunc = (uint32_t)func;
+  uint16_t t = 0;
+
+  addr = (uint32_t)((lbus<<16) | (lslot << 11) | (lfunc << 8) |
+          (offset & 0xfc) | ((uint32_t)0x80000000));
+  outl(PCI_PORT_CONF_ADDR, addr);
+  io_wait();
+  outl(PCI_PORT_CONF_DATA, val);
+  io_wait();
+}
+
 void pciinit()
 {
   puts("Probing PCI bus...\n");
