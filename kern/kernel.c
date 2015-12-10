@@ -24,6 +24,7 @@
 #include <dev/ide.h>
 #include <dev/pci.h>
 #include <tar.h>
+#include <dev/ethernet.h>
 
 #define KERNEL_NAME "EasiOS v0.3.1"
 
@@ -31,7 +32,20 @@ const char* cmdline = NULL;
 
 void kpanic(const char* msg, registers_t regs)
 {
-  puts("-----------------\nEXCEPTION\n-----------------\n");
+  puts("-----------------\nEXCEPTION\n");
+  puts(msg); putc('\n'); puts("-----------------\n");
+  vsetcol(0x20, 0x67, 0xb2, 0xff);
+  vcls();
+  vsetcol(0xff, 0xff, 0xff, 0xff);
+  vd_rectangle(FILL, 100, 100, 32, 32);
+  vd_rectangle(FILL, 100, 200, 32, 32);
+  vd_rectangle(FILL, 196, 100, 16, 132);
+  struct {int x,y,w,h;} ayy[] = {{212, 100, 32, 16}, {244, 116, 32, 16},
+  {276, 132, 16, 64},
+  {212, 216, 32, 16}, {244, 200, 32, 16}};
+  for(int i = 0; i < 5; i++)
+    vd_rectangle(FILL, ayy[i].x, ayy[i].y, ayy[i].w, ayy[i].h);
+  vswap();
   asm("cli");
   asm("hlt");
 }
@@ -167,10 +181,11 @@ void kmain(uint32_t magic, uint32_t mbp)
   kbdinit();
   mouseinit();
   //ideinit();
+  pciinit();
   asm volatile("sti");
   while(time(NULL) == 0);
   krandom_get();
-  pciinit();
+  ethernet_list();
   puts("Welcome to ");
   puts(KERNEL_NAME);
   puts("!\n");

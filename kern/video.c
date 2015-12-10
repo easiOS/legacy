@@ -36,12 +36,14 @@ void vinit(size_t width, size_t height, size_t bpp, size_t pitch, uint64_t addr)
   for(size_t y = 0; y < fbh; y++)
     for(size_t x = 0; x < fbw; x++)
     {
+      fb[y * width + x] = 149 << 16 | 165 << 8 | 166;
       fbb[y * width + x] = 0;
     }
 }
 
 void vplot(size_t x, size_t y)
 {
+  if(fb == NULL) return;
   if(x < 0) return;
   if(y < 0) return;
   if(x >= fbw) return;

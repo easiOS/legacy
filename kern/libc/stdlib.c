@@ -46,7 +46,7 @@ void* malloc(size_t size)
 {
   puts("Enter malloc\n");
   if(size <= 0){ puts("malloc: Size less than zero\n"); return 0;}
-  uint32_t db = size / 16384 + 1;
+  /*uint32_t db = size / 16384 + 1;
   int n = -1;
   for(int i = 0; i < mmgmt_conf.blocks_n; i++)
   {
@@ -84,14 +84,15 @@ void* malloc(size_t size)
     address = mmgmt_conf.address + (n * 16384);
   }
   else
-    puts("malloc(): out of memory\n");
+    puts("malloc(): out of memory\n");*/
+  uint32_t address = (uint32_t)mmgmt_alloc(size);
   puts("Exit malloc\n");
   return (void*)address;
 }
 
-void* free(void* ptr)
+void* free(void* ptr) //actually this is kfree but who cares lol
 {
-  if(ptr == 0) return 0;
+  /*if(ptr == 0) return 0;
   if((int)ptr < mmgmt_conf.address || (int)ptr > mmgmt_conf.address + mmgmt_conf.blocks_n * 16384)
   {
     puts("free(): ptr points to unmanaged memory area\n");
@@ -112,6 +113,7 @@ void* free(void* ptr)
   for(size_t i = block_i; i < block_i + nextn; i++)
   {
       mmgmt_conf.blocks[i] = 0; //clear allocated bit
-  }
+  }*/
+  mmgmt_free(ptr);
   return ptr;
 }

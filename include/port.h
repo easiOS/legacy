@@ -10,7 +10,7 @@ inline void outb(unsigned int port, unsigned char value)
 	asm volatile ("outb %%al,%%dx": :"d" (port), "a" (value));
 }
 
-inline unsigned short inw(unsigned int port)
+inline unsigned short inw(unsigned short port)
 {
    unsigned short ret;
    asm volatile ("inw %1, %0" : "=a" (ret) : "dN" (port));

@@ -52,11 +52,11 @@ void eelphant_update(time_t dt)
 {
   if(windows[0].flags >> 6 & 1)
   {
-    windows[0].x+=10 * dt / 100;
+    windows[0].x+=10 + dt;
   }
   if(!(windows[0].flags >> 6 & 1))
   {
-    windows[0].x-=10 * dt / 100;
+    windows[0].x-=10 + dt;
   }
   if(windows[0].x >= 300 && (windows[0].flags >> 6 & 1))
   {
