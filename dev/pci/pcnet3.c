@@ -161,7 +161,7 @@ static int pcnet32_sendpacket(void* packet, size_t len)
 	puts("set de...");
   *(uint16_t *)&tdes[tx_buffer_ptr * 16 + 4] = bcnt;
 	tdes[tx_buffer_ptr * 16 + 7] |= 0x80;
-	while(tdes[tx_buffer_ptr * 16 + 7] | 0x80);
+	//while(tdes[tx_buffer_ptr * 16 + 7] | 0x80);
 	//pcnet32_dwio_write_csr(iobase, 0, 0x48);
 	tx_buffer_ptr = pcnet32_nexttxidx(tx_buffer_ptr);
 	puts("done!\n");
@@ -210,7 +210,7 @@ void pcnet3init(uint8_t bus, uint8_t slot)
 	dev->flags |= 1;
   dev->iobase = iobase;
   dev->irq = 9;
-	pci_config_write_byte(bus, slot, 0, 0x3f, 9);
+	//pci_config_write_byte(bus, slot, 0, 0x3f, 9);
   puts("pcnet3: switching to 32-bit mode\n");
   //set to 32-bit mode
   inl(iobase + 0x18);
@@ -228,9 +228,9 @@ void pcnet3init(uint8_t bus, uint8_t slot)
     puts(b); if(i != 5) putc(':');
   }
   putc('\n');
-	puts("pcnet3: Register interrupt handler...");
-	register_interrupt_handler(IRQ9, &pcnet32_callback);
-	puts("done!\n");
+	//puts("pcnet3: Register interrupt handler...");
+	//register_interrupt_handler(IRQ9, &pcnet32_callback);
+	//puts("done!\n");
 	//swstyle -> 2
 	puts("pcnet3: setting swtyle to 2\n");
 	uint32_t csr58 = pcnet32_dwio_read_csr(iobase, 58);
