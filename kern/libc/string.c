@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stddef.h>
-#include "string.h"
+#include <stdlib.h>
+#include <string.h>
 
 char* strcat(char* destination, const char* source) {
    int c, d;
@@ -73,4 +74,51 @@ void* memcpy(void* dest, const void* src, size_t count) {
     *dst8++ = *src8++;
   }
   return dest;
+}
+
+char* strtok(char* str, const char* delimiters)
+{
+    static int currIndex = 0;
+    if(!str || !delimiters || str[currIndex] == '\0')
+      return NULL;
+    char *W = (char *)malloc(sizeof(char)*100);
+    int i = currIndex, k = 0, j = 0;
+    while (str[i] != '\0')
+    {
+      j = 0;
+      while (delimiters[j] != '\0')
+      {
+        if (str[i] != delimiters[j])
+          W[k] = str[i];
+        else
+          goto It;
+        j++;
+      }
+      i++;
+      k++;
+    }
+It:
+    W[i] = 0;
+    currIndex = i+1;
+    return W;
+}
+
+size_t strspn (const char *str1, const char *str2)
+{
+  const char *p;
+  const char *a;
+  size_t count = 0;
+
+  for (p = str1; *p != '\0'; ++p)
+    {
+      for (a = str2; *a != '\0'; ++a)
+    if (*p == *a)
+      break;
+      if (*a == '\0')
+    return count;
+      else
+    ++count;
+    }
+
+  return count;
 }

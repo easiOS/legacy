@@ -29,4 +29,6 @@ void* memset(void* ptr, int value, size_t num); //implemented
 char* strerror (int errnum);
 size_t strlen(const char * str); //implemented
 
+extern void _memcpy_sse2(void* dest, const void* src, const unsigned long size);
+
 #endif

@@ -6,6 +6,7 @@
 
 char* itoa(int64_t n, char* s, int base)
 {
+  char* orig = s;
   char tmp[33];
   memset(tmp, 0, 33);
   char *tp = tmp;
@@ -39,7 +40,7 @@ char* itoa(int64_t n, char* s, int base)
   while (tp > tmp)
       *s++ = *--tp;
   *s = '\0';
-  return s;
+  return orig;
 }
 
 void* malloc(size_t size)
@@ -86,6 +87,9 @@ void* malloc(size_t size)
   else
     puts("malloc(): out of memory\n");*/
   uint32_t address = (uint32_t)mmgmt_alloc(size);
+  char b[16];
+  puts(itoa(address, b, 16));
+  putc('\n');
   puts("Exit malloc\n");
   return (void*)address;
 }
@@ -116,4 +120,13 @@ void* free(void* ptr) //actually this is kfree but who cares lol
   }*/
   mmgmt_free(ptr);
   return ptr;
+}
+
+int atoi(char* p) {
+    int k = 0;
+    while (*p) {
+        k = (k<<3)+(k<<1)+(*p)-'0';
+        p++;
+     }
+     return k;
 }

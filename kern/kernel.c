@@ -25,13 +25,16 @@
 #include <dev/pci.h>
 #include <tar.h>
 #include <dev/ethernet.h>
+#include <kshell.h>
 
-#define KERNEL_NAME "EasiOS v0.3.1"
+#define KERNEL_NAME "EasiOS v0.3.2"
 
 const char* cmdline = NULL;
+uint16_t text_buffer[2000];
 
 void kpanic(const char* msg, registers_t regs)
 {
+  asm volatile("cli");
   puts("-----------------\nEXCEPTION\n");
   puts(msg); putc('\n'); puts("-----------------\n");
   vsetcol(0x20, 0x67, 0xb2, 0xff);
@@ -45,8 +48,20 @@ void kpanic(const char* msg, registers_t regs)
   {212, 216, 32, 16}, {244, 200, 32, 16}};
   for(int i = 0; i < 5; i++)
     vd_rectangle(FILL, ayy[i].x, ayy[i].y, ayy[i].w, ayy[i].h);
+  puts("drawn rectangle\n");
   vswap();
-  asm("cli");
+  puts("swapped\n");
+  vd_print(100, 250, "Your PC ran into a problem and needs a restart.\n\
+  We're just collecting some error info and then you can restart.", NULL, NULL);
+  vswap();
+  puts("swapped\n");
+  int64_t px, py;
+  vd_print(100, 270, "If you'd like to know more, you can search\n\
+  online later for this error: ", &px, &py);
+  vswap();
+  puts("swapped\n");
+  vd_print(px, py, msg, NULL, NULL);
+  vswap();
   asm("hlt");
 }
 
@@ -109,6 +124,7 @@ void multiboot_enum(uint32_t mbp)
           vinit(tagfb->framebuffer_width, tagfb->framebuffer_height,
                 tagfb->framebuffer_bpp, tagfb->framebuffer_pitch,
                 tagfb->framebuffer_addr);
+          tinit(80, 25, (uint16_t*)&text_buffer);
         }
         if(tagfb->framebuffer_type == 2)
         {
@@ -153,7 +169,13 @@ void multiboot_enum(uint32_t mbp)
         puts("GRUB module detected!\n");
         if(*(uint32_t*)tagmod->mod_start == 0xC0C0A123)
         {
-          puts("EasiOS VFS detected\n");
+          puts("  EasiOS VFS detected\n");
+          //TODO: load
+          continue;
+        }
+        if(*(uint32_t*)tagmod->mod_start == 0x1B4C7561)
+        {
+          puts("  Lua bytecode detected\n");
           //TODO: load
           continue;
         }
@@ -162,7 +184,7 @@ void multiboot_enum(uint32_t mbp)
            tarmod->magic[2] == 't' && tarmod->magic[3] == 'a' &&
            tarmod->magic[4] == 'r')
         {
-          puts("Valid tar file\n");
+          puts("  Tar file detected\n");
         }
         break;
       }
@@ -172,8 +194,6 @@ void multiboot_enum(uint32_t mbp)
 
 void kmain(uint32_t magic, uint32_t mbp)
 {
-  /*serinit();
-  serinitport(COM1);*/
   multiboot_enum(mbp);
   init_descriptor_tables();
   timerinit(1000);
@@ -194,8 +214,8 @@ void kmain(uint32_t magic, uint32_t mbp)
   size_t h = vgeth();
   if(w == 0 || h == 0)
   {
-    puts("Cannot start Eelphant: no video\n");
-    return;
+    puts("Cannot start Eelphant: no video. Falling back to kernel shell\n");
+    kshell_main();
   }
   eelphant_main(w, h);
 }

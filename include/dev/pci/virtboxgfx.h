@@ -8,5 +8,6 @@
 
 void vbgfxinit(uint8_t bus, uint8_t slot);
 void vbgfx_set_res(uint32_t w, uint32_t h);
+int vbgfx_isinit();
 
 #endif

@@ -35,18 +35,20 @@ typedef struct {
   uint8_t r,g,b,a;
 } rgb_t;
 
-void vinit(size_t width, size_t height, size_t bpp, size_t pitch, uint64_t addr);
-void vplot(size_t x, size_t y);
-void vd_circle(size_t x, size_t y, size_t r, size_t segments);
+void vinit(int64_t width, int64_t height, int64_t bpp, int64_t pitch, uint64_t addr);
+void vdestroy();
+void vplot(int64_t x, int64_t y);
+void vd_circle(int64_t x, int64_t y, int64_t r, int64_t segments);
 void vsetcol(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 rgb_t vgetcol();
 void vcls();
-void vd_print(size_t x, size_t y, const char* str);
-void vd_line(size_t x1, size_t y1, size_t x2, size_t y2);
-void vd_triangle(vdrawmode_t drawmode, size_t x1, size_t y1, size_t x2, size_t y2, size_t x3, size_t y3);
-void vd_rectangle(vdrawmode_t drawmode, size_t x, size_t y, size_t w, size_t h);
-size_t vgetw();
-size_t vgeth();
+void vd_print(int64_t x, int64_t y, const char* str, int64_t* xe, int64_t* ye);
+void vd_line(int64_t x1, int64_t y1, int64_t x2, int64_t y2);
+void vd_triangle(vdrawmode_t drawmode, int64_t x1, int64_t y1, int64_t x2, int64_t y2, int64_t x3, int64_t y3);
+void vd_rectangle(vdrawmode_t drawmode, int64_t x, int64_t y, int64_t w, int64_t h);
+int64_t vgetw();
+int64_t vgeth();
 void vswap();
-void vd_bitmap16(uint16_t* bitmap, size_t x, size_t y, size_t h);
+void vd_bitmap16(uint16_t* bitmap, int64_t x, int64_t y, int64_t h);
+void vd_bitmap32(uint32_t* bitmap, int64_t x, int64_t y, int64_t h);
 #endif

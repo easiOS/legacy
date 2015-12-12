@@ -8,6 +8,7 @@
 #include <dev/timer.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <kernel.h>
 
 uint32_t tick = 0;
 uint32_t last_rtc_read = 3600000;
@@ -20,6 +21,8 @@ uint32_t hour = 0;
 uint32_t minute = 0;
 uint32_t second = 0;
 
+uint64_t watchdog_last_kick = 0;
+
 uint64_t get_unix_time()
 {
   return ttime;
@@ -27,6 +30,14 @@ uint64_t get_unix_time()
 
 static void timer_callback(registers_t regs)
 {
+    if(watchdog_last_kick == 0)
+      watchdog_last_kick = tick + 1;
+    if(tick + 1 - watchdog_last_kick > 1000)
+    {
+      //we are unresponsive, panic
+      kpanic("KERNEL_WATCHDOG_TIMEOUT", regs);
+    }
+    watchdog_last_kick = tick + 1;
     if(ttime == 0)
     {
       ttime = 31556952 * (year - 1970);
@@ -57,6 +68,7 @@ static void timer_callback(registers_t regs)
         ttime++;
         if(second + 1 >= 60)
         {
+            read_rtc();
             second = 0;
             if(minute + 1 > 60)
             {
@@ -101,6 +113,7 @@ static void timer_callback(registers_t regs)
         else
             second++;
     }
+    outb(0x20, 0x20); //End of Interrupt
 }
 
 uint32_t* get_time(uint32_t* out)
@@ -187,8 +200,8 @@ unsigned char get_RTC_register(int reg) {
 }
 
 void read_rtc() {
-      if(ticks() - last_rtc_read < 3600000)
-        return;
+      /*if(ticks() - last_rtc_read < 30000)
+        return;*/
       last_rtc_read = ticks();
       unsigned char century;
       unsigned char last_second;
@@ -268,6 +281,6 @@ void read_rtc() {
             year += (1970 / 100) * 100;
             if(year < 1970) year += 100;
       }
-      puts("RTC: OK\n");
+      //puts("RTC: OK\n");
       //seconds_since_1970 = tm_sec + tm_min*60 + tm_hour*3600 + (last_month * )*86400 + (last_year-70)*31536000 + ((tm_year-69)/4)*86400 - ((tm_year-1)/100)*86400 + ((tm_year+299)/400)*86400;
 }

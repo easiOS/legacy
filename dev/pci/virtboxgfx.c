@@ -104,3 +104,8 @@ void vbgfx_set_res(uint32_t w, uint32_t h)
   bpp = inl(iobase + VBGFX_IO_DATA);
   vinit(width, height, bpp, w * 4, lfb_addr);
 }
+
+int vbgfx_isinit()
+{
+  return iobase != 0;
+}

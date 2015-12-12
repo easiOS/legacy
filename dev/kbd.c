@@ -56,11 +56,11 @@ static void kbdcallback(registers_t regs)
       shift = true;
       break;
     case 0x9D:
-      ctrl = false;
+      //ctrl = false;
       break;
     case 0xAA:
     case 0xB6:
-      shift = false;
+      //shift = false;
       break;
     default:
       if(keyevents_sp + 1 > 255) break;
@@ -70,6 +70,8 @@ static void kbdcallback(registers_t regs)
       e->character = (shift ? keys_shift: keys)[scancode & ~0x80];
       e->shift = shift;
       e->ctrl = ctrl;
+      shift = false;
+      ctrl = false;
       break;
   }
   for(int i = 0; i < 256; i++)
@@ -84,7 +86,7 @@ static void kbdcallback(registers_t regs)
 
 struct keyevent* kbdpoll()
 {
-  asm("cli");
+  //asm("cli");
   if(keyevents_sp < 0)
   {
     keyevents_sp = -1;
@@ -92,7 +94,7 @@ struct keyevent* kbdpoll()
   }
   struct keyevent* ret = &keyevents[keyevents_sp];
   keyevents_sp--;
-  asm("sti");
+  //asm("sti");
   return ret;
 }
 

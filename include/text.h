@@ -33,5 +33,6 @@ void tswrite(const char* str);
 void tputcat(char a, uint8_t color, size_t x, size_t y);
 uint8_t tgetcolor();
 void tsetcolor(uint8_t fg, uint8_t bg);
+const uint16_t* tgetbuf();
 
 #endif

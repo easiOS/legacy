@@ -24,6 +24,7 @@ void tinit(size_t width, size_t height, uint16_t* addr)
   th = height;
   tcolor = COLOR_LIGHT_GREY | COLOR_BLACK << 4;
   tbuffer = addr;
+  tcls();
 }
 
 uint8_t tgetcolor()
@@ -43,7 +44,7 @@ bool tisinit()
 
 void tputcat(char a, uint8_t color, size_t x, size_t y)
 {
-  tbuffer[(y % th) * tw + x] = ((uint16_t)a) | ((uint16_t)color) << 8;
+  tbuffer[(y % th) * tw + x] = a | (color << 8);
 }
 
 void tscroll()
@@ -67,7 +68,6 @@ void tputc(char a, uint8_t color)
       ty++;
       if(ty >= th) tscroll();
       tx = 0;
-      return;
     case '\b':
       tbuffer[ty * tw + tx] = ' ' | tcolor;
       tx--;
@@ -105,4 +105,9 @@ void tswrite(const char* str)
   {
     tputc(str[i], tcolor);
   }
+}
+
+const uint16_t* tgetbuf()
+{
+  return tbuffer;
 }
