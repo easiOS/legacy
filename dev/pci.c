@@ -7,6 +7,8 @@
 #include <string.h>
 #include <dev/pci/ne2k_pci.h>
 #include <dev/pci/pcnet3.h>
+#include <dev/pci/ehci.h>
+#include <dev/pci/virtboxgfx.h>
 
 struct _pci_device {
   uint16_t vendor;
@@ -25,7 +27,9 @@ struct _pci_device {
     {0x8086, 0x3576, "Intel Host-AGP Bridge", NULL},
     {0x1022, 0x2000, "PCnet LANCE PCI Ethernet Controller", &pcnet3init},
     {0x8086, 0x7113, "PIIX4/4E/4M Power Management Controller", NULL},
-    {0x8086, 0x265c, "USB 2.0 EHCI Controller", NULL},
+    {0x8086, 0x265c, "USB 2.0 EHCI Controller", &ehciinit},
+    {0x80ee, 0xbeef, "Virtualbox Graphics Adapter", &vbgfxinit},
+    {0x80ee, 0x7145, "Virtualbox Graphics Adapter", &vbgfxinit},
     {}
 };
 
@@ -46,6 +50,23 @@ uint16_t pci_config_read_word(uint8_t bus, uint8_t slot, uint8_t func, uint8_t o
   io_wait();
   uint32_t in = inl(0xCFC);
   t = (uint16_t)((in >> ((offset & 2) * 8)) & 0xffff);
+  return t;
+}
+
+uint32_t pci_config_read_dword(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset)
+{
+  uint32_t addr;
+  uint32_t lbus = (uint32_t)bus;
+  uint32_t lslot = (uint32_t)slot;
+  uint32_t lfunc = (uint32_t)func;
+  uint32_t t = 0;
+
+  addr = (uint32_t)((lbus<<16) | (lslot << 11) | (lfunc << 8) |
+          (offset & 0xfc) | ((uint32_t)0x80000000));
+  outl(PCI_PORT_CONF_ADDR, addr);
+  io_wait();
+  uint32_t in = inl(0xCFC);
+  t = ((in >> ((offset & 2) * 8)));
   return t;
 }
 
@@ -84,7 +105,7 @@ void pciinit()
   puts("Probing PCI bus...\n");
   for(int bus = 0; bus < 4; bus++)
   {
-    for(int slot = 0; slot < 0xf; slot++)
+    for(int slot = 0; slot < 0xff; slot++)
     {
       char b[16];
       memset(b, 0, 16);

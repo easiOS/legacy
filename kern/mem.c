@@ -1,217 +1,368 @@
-#include <mem.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
+#include <multiboot2.h>
+#include <dtables.h>
+#include <kernel.h>
 
-/*
-    2014 Leonard Kevin McGuire Jr (www.kmcg3413.net) (kmcg3413@gmail.com)
-*/
-typedef struct _KHEAPBLOCKBM {
-	struct _KHEAPBLOCKBM	                *next;
-	uint32_t					size;
-	uint32_t					used;
-	uint32_t					bsize;
-  uint32_t                                  lfb;
-} KHEAPBLOCKBM;
+typedef struct DList DList;
+struct DList {
+    DList *next;
+    DList *prev;
+};
 
-typedef struct _KHEAPBM {
-	KHEAPBLOCKBM			*fblock;
-} KHEAPBM;
-
-void k_heapBMInit(KHEAPBM *heap) {
-	heap->fblock = 0;
+// initialize a one element DList
+static inline void dlist_init(DList *dlist) {
+	//printf("%s(%p)\n", __FUNCTION__, dlist);
+    dlist->next = dlist;
+    dlist->prev = dlist;
 }
 
-int k_heapBMAddBlock(KHEAPBM *heap, uint32_t* addr, uint32_t size, uint32_t bsize) {
-	KHEAPBLOCKBM		*b;
-	uint32_t				bcnt;
-	uint32_t				x;
-	uint8_t				*bm;
+// insert d2 after d1
+static inline void dlist_insert_after(DList *d1, DList *d2) {
+	//printf("%s(%p, %p)\n", __FUNCTION__, d1, d2);
+    DList *n1 = d1->next;
+    DList *e2 = d2->prev;
 
-	b = (KHEAPBLOCKBM*)addr;
-	b->size = size - sizeof(KHEAPBLOCKBM);
-	b->bsize = bsize;
-
-	b->next = heap->fblock;
-	heap->fblock = b;
-
-	bcnt = size / bsize;
-	bm = (uint8_t*)&b[1];
-	/* clear bitmap */
-	for (x = 0; x < bcnt; ++x) {
-			bm[x] = 0;
-	}
-	/* reserve room for bitmap */
-	bcnt = (bcnt / bsize) * bsize < bcnt ? bcnt / bsize + 1 : bcnt / bsize;
-	for (x = 0; x < bcnt; ++x) {
-			bm[x] = 5;
-	}
-	b->lfb = bcnt - 1;
-
-	b->used = bcnt;
-
-	return 1;
+    d1->next = d2;
+    d2->prev = d1;
+    e2->next = n1;
+    n1->prev = e2;
 }
 
-static uint8_t k_heapBMGetNID(uint8_t a, uint8_t b) {
-	uint8_t		c;
-	for (c = a + 1; c == b || c == 0; ++c);
-	return c;
+// insert d2 before d1
+static inline void dlist_insert_before(DList *d1, DList *d2) {
+	//printf("%s(%p, %p)\n", __FUNCTION__, d1, d2);
+    DList *e1 = d1->prev;
+    DList *e2 = d2->prev;
+
+    e1->next = d2;
+    d2->prev = e1;
+    e2->next = d1;
+    d1->prev = e2;
 }
 
-void *k_heapBMAlloc(KHEAPBM *heap, uint32_t size) {
-	KHEAPBLOCKBM		*b;
-	uint8_t				*bm;
-	uint32_t				bcnt;
-	uint32_t				x, y, z;
-	uint32_t				bneed;
-	uint8_t				nid;
+// remove d from the list
+static inline void dlist_remove(DList *d) {
+	//printf("%s(%p)\n", __FUNCTION__, d);
+    d->prev->next = d->next;
+    d->next->prev = d->prev;
+    d->next = d;
+    d->prev = d;
+}
 
-	/* iterate blocks */
-	for (b = heap->fblock; b; b = b->next) {
-		/* check if block has enough room */
-		if (b->size - (b->used * b->bsize) >= size) {
+// push d2 to the front of the d1p list
+static inline void dlist_push(DList **d1p, DList *d2) {
+	//printf("%s(%p, %p)\n", __FUNCTION__, d1p, d2);
+    if (*d1p != NULL) {
+	dlist_insert_before(*d1p, d2);
+    }
+    *d1p = d2;
+}
 
-			bcnt = b->size / b->bsize;
-			bneed = (size / b->bsize) * b->bsize < size ? size / b->bsize + 1 : size / b->bsize;
-			bm = (uint8_t*)&b[1];
+// pop the front of the dp list
+static inline DList * dlist_pop(DList **dp) {
+	//printf("%s(%p)\n", __FUNCTION__, dp);
+    DList *d1 = *dp;
+    DList *d2 = d1->next;
+    dlist_remove(d1);
+    if (d1 == d2) {
+	*dp = NULL;
+    } else {
+	*dp = d2;
+    }
+    return d1;
+}
 
-			for (x = (b->lfb + 1 >= bcnt ? 0 : b->lfb + 1); x != b->lfb; ++x) {
-				/* just wrap around */
-				if (x >= bcnt) {
-					x = 0;
-				}
+// remove d2 from the list, advancing d1p if needed
+static inline void dlist_remove_from(DList **d1p, DList *d2) {
+	//printf("%s(%p, %p)\n", __FUNCTION__, d1p, d2);
+    if (*d1p == d2) {
+	dlist_pop(d1p);
+    } else {
+	dlist_remove(d2);
+    }
+}
 
-				if (bm[x] == 0) {
-					/* count free blocks */
-					for (y = 0; bm[x + y] == 0 && y < bneed && (x + y) < bcnt; ++y);
+#define CONTAINER(C, l, v) ((C*)(((char*)v) - (intptr_t)&(((C*)0)->l)))
+#define OFFSETOF(TYPE, MEMBER)  __builtin_offsetof (TYPE, MEMBER)
 
-					/* we have enough, now allocate them */
-					if (y == bneed) {
-						/* find ID that does not match left or right */
-						nid = k_heapBMGetNID(bm[x - 1], bm[x + y]);
+#define DLIST_INIT(v, l) dlist_init(&v->l)
 
-						/* allocate by setting id */
-						for (z = 0; z < y; ++z) {
-							bm[x + z] = nid;
-						}
+#define DLIST_REMOVE_FROM(h, d, l)					\
+    {									\
+	typeof(**h) **h_ = h, *d_ = d;					\
+	DList *head = &(*h_)->l;					\
+	dlist_remove_from(&head, &d_->l);					\
+	if (head == NULL) {						\
+	    *h_ = NULL;							\
+	} else {							\
+	    *h_ = CONTAINER(typeof(**h), l, head);			\
+	}								\
+    }
 
-						/* optimization */
-						b->lfb = (x + bneed) - 2;
+#define DLIST_PUSH(h, v, l)						\
+    {									\
+	typeof(*v) **h_ = h, *v_ = v;					\
+	DList *head = &(*h_)->l;					\
+	if (*h_ == NULL) head = NULL;					\
+	dlist_push(&head, &v_->l);					\
+	*h_ = CONTAINER(typeof(*v), l, head);				\
+    }
 
-						/* count used blocks NOT bytes */
-						b->used += y;
+#define DLIST_POP(h, l)							\
+    ({									\
+	typeof(**h) **h_ = h;						\
+	DList *head = &(*h_)->l;					\
+	DList *res = dlist_pop(&head);					\
+	if (head == NULL) {						\
+	    *h_ = NULL;							\
+	} else {							\
+	    *h_ = CONTAINER(typeof(**h), l, head);			\
+	}								\
+	CONTAINER(typeof(**h), l, res);					\
+    })
 
-						return (void*)(x * b->bsize + (uint32_t*)&b[1]);
-					}
+#define DLIST_ITERATOR_BEGIN(h, l, it)					\
+    {									\
+        typeof(*h) *h_ = h;						\
+	DList *last_##it = h_->l.prev, *iter_##it = &h_->l, *next_##it;	\
+	do {								\
+	    if (iter_##it == last_##it) {				\
+		next_##it = NULL;					\
+	    } else {							\
+		next_##it = iter_##it->next;				\
+	    }								\
+	    typeof(*h)* it = CONTAINER(typeof(*h), l, iter_##it);
 
-					/* x will be incremented by one ONCE more in our FOR loop */
-					x += (y - 1);
-					continue;
-				}
-			}
+#define DLIST_ITERATOR_END(it)						\
+	} while((iter_##it = next_##it));				\
+    }
+
+#define DLIST_ITERATOR_REMOVE_FROM(h, it, l) DLIST_REMOVE_FROM(h, iter_##it, l)
+
+typedef struct Chunk Chunk;
+struct Chunk {
+    DList all;
+    int used;
+    union {
+	char data[0];
+	DList free;
+    };
+};
+
+enum {
+    NUM_SIZES = 32,
+    ALIGN = 4,
+    MIN_SIZE = sizeof(DList),
+    HEADER_SIZE = OFFSETOF(Chunk, data),
+};
+
+Chunk *free_chunk[NUM_SIZES] = { NULL };
+size_t mem_free = 0;
+size_t mem_used = 0;
+size_t mem_meta = 0;
+Chunk *first = NULL;
+Chunk *last = NULL;
+
+static void memory_chunk_init(Chunk *chunk) {
+	//printf("%s(%p)\n", __FUNCTION__, chunk);
+    DLIST_INIT(chunk, all);
+    chunk->used = 0;
+    DLIST_INIT(chunk, free);
+}
+
+static size_t memory_chunk_size(const Chunk *chunk) {
+	//printf("%s(%p)\n", __FUNCTION__, chunk);
+    char *end = (char*)(chunk->all.next);
+    char *start = (char*)(&chunk->all);
+    return (end - start) - HEADER_SIZE;
+}
+
+static int memory_chunk_slot(size_t size) {
+    int n = -1;
+    while(size > 0) {
+	++n;
+	size /= 2;
+    }
+    return n;
+}
+
+void mrvn_memory_init(void *mem, size_t size) {
+    char *mem_start = (char *)(((intptr_t)mem + ALIGN - 1) & (~(ALIGN - 1)));
+    char *mem_end = (char *)(((intptr_t)mem + size) & (~(ALIGN - 1)));
+    first = (Chunk*)mem_start;
+    Chunk *second = first + 1;
+    last = ((Chunk*)mem_end) - 1;
+    memory_chunk_init(first);
+    memory_chunk_init(second);
+    memory_chunk_init(last);
+    dlist_insert_after(&first->all, &second->all);
+    dlist_insert_after(&second->all, &last->all);
+    // make first/last as used so they never get merged
+    first->used = 1;
+    last->used = 1;
+
+    size_t len = memory_chunk_size(second);
+    int n = memory_chunk_slot(len);
+    //printf("%s(%p, %#lx) : adding chunk %#lx [%d]\n", __FUNCTION__, mem, size, len, n);
+    DLIST_PUSH(&free_chunk[n], second, free);
+    mem_free = len - HEADER_SIZE;
+    mem_meta = sizeof(Chunk) * 2 + HEADER_SIZE;
+}
+
+void *mrvn_malloc(size_t size) {
+    //printf("%s(%#lx)\n", __FUNCTION__, size);
+    size = (size + ALIGN - 1) & (~(ALIGN - 1));
+
+	if (size < MIN_SIZE) size = MIN_SIZE;
+
+	int n = memory_chunk_slot(size - 1) + 1;
+
+	if (n >= NUM_SIZES) return NULL;
+
+	while(!free_chunk[n]) {
+		++n;
+		if (n >= NUM_SIZES) return NULL;
+    }
+
+	Chunk *chunk = DLIST_POP(&free_chunk[n], free);
+    size_t size2 = memory_chunk_size(chunk);
+	//printf("@ %p [%#lx]\n", chunk, size2);
+    size_t len = 0;
+
+	if (size + sizeof(Chunk) <= size2) {
+		Chunk *chunk2 = (Chunk*)(((char*)chunk) + HEADER_SIZE + size);
+		memory_chunk_init(chunk2);
+		dlist_insert_after(&chunk->all, &chunk2->all);
+		len = memory_chunk_size(chunk2);
+		int n = memory_chunk_slot(len);
+		//printf("  adding chunk @ %p %#lx [%d]\n", chunk2, len, n);
+		DLIST_PUSH(&free_chunk[n], chunk2, free);
+		mem_meta += HEADER_SIZE;
+		mem_free += len - HEADER_SIZE;
+    }
+
+	chunk->used = 1;
+    //memset(chunk->data, 0xAA, size);
+	//printf("AAAA\n");
+    mem_free -= size2;
+    mem_used += size2 - len - HEADER_SIZE;
+    //printf("  = %p [%p]\n", chunk->data, chunk);
+    return chunk->data;
+}
+
+static void remove_free(Chunk *chunk) {
+    size_t len = memory_chunk_size(chunk);
+    int n = memory_chunk_slot(len);
+    //printf("%s(%p) : removing chunk %#lx [%d]\n", __FUNCTION__, chunk, len, n);
+    DLIST_REMOVE_FROM(&free_chunk[n], chunk, free);
+    mem_free -= len - HEADER_SIZE;
+}
+
+static void push_free(Chunk *chunk) {
+    size_t len = memory_chunk_size(chunk);
+    int n = memory_chunk_slot(len);
+    //printf("%s(%p) : adding chunk %#lx [%d]\n", __FUNCTION__, chunk, len, n);
+    DLIST_PUSH(&free_chunk[n], chunk, free);
+    mem_free += len - HEADER_SIZE;
+}
+
+void mrvn_free(void *mem) {
+    Chunk *chunk = (Chunk*)((char*)mem - HEADER_SIZE);
+    Chunk *next = CONTAINER(Chunk, all, chunk->all.next);
+    Chunk *prev = CONTAINER(Chunk, all, chunk->all.prev);
+
+	//printf("%s(%p): @%p %#lx [%d]\n", __FUNCTION__, mem, chunk, memory_chunk_size(chunk), memory_chunk_slot(memory_chunk_size(chunk)));
+    mem_used -= memory_chunk_size(chunk);
+
+    if (next->used == 0) {
+		// merge in next
+		remove_free(next);
+		dlist_remove(&next->all);
+		//memset(next, 0xDD, sizeof(Chunk));
+		mem_meta -= HEADER_SIZE;
+		mem_free += HEADER_SIZE;
+    }
+    if (prev->used == 0) {
+		// merge to prev
+		remove_free(prev);
+		dlist_remove(&chunk->all);
+		//memset(chunk, 0xDD, sizeof(Chunk));
+		push_free(prev);
+		mem_meta -= HEADER_SIZE;
+		mem_free += HEADER_SIZE;
+    } else {
+		// make chunk as free
+		chunk->used = 0;
+		DLIST_INIT(chunk, free);
+		push_free(chunk);
+    }
+}
+
+#define MEM_SIZE (1024*1024*256)
+char MEM[MEM_SIZE] = { 0 };
+
+#define MAX_BLOCK (1024*1024)
+#define NUM_SLOTS 1024
+void *slot[NUM_SLOTS] = { NULL };
+
+void check(void) {
+	int	i;
+    Chunk *t = last;
+
+	DLIST_ITERATOR_BEGIN(first, all, it) {
+    if(CONTAINER(Chunk, all, it->all.prev) != t)
+		{
+      char buf[64];
+      puts("Assertion in file "); puts(__FILE__); puts(" on line ");
+      puts(itoa(__LINE__, buf, 10)); putc('\n');
+      registers_t regs;
+      kpanic("Assertion^^^", regs);
+    }
+		t = it;
+    } DLIST_ITERATOR_END(it);
+
+    for(i = 0; i < NUM_SIZES; ++i) {
+		if (free_chunk[i]) {
+			t = CONTAINER(Chunk, free, free_chunk[i]->free.prev);
+			DLIST_ITERATOR_BEGIN(free_chunk[i], free, it) {
+      if(CONTAINER(Chunk, free, it->free.prev) != t)
+      {
+        char buf[64];
+        puts("Assertion in file "); puts(__FILE__); puts(" on line ");
+        puts(itoa(__LINE__, buf, 10)); putc('\n');
+        registers_t regs;
+        kpanic("Assertion^^^", regs);
+      }
+			t = it;
+			} DLIST_ITERATOR_END(it);
 		}
-	}
-
-	return 0;
+    }
 }
-
-void k_heapBMFree(KHEAPBM *heap, void *ptr) {
-	KHEAPBLOCKBM		*b;
-	uint32_t*				ptroff;
-	uint32_t				bi, x;
-	uint8_t				*bm;
-	uint8_t				id;
-	uint32_t				max;
-
-	for (b = heap->fblock; b; b = b->next) {
-		if ((uint32_t*)ptr > (uint32_t*)b && (uint32_t*)ptr < (uint32_t*)b + b->size) {
-			/* found block */
-			ptroff = (uint32_t*)((uint32_t*)ptr - (uint32_t*)&b[1]);  /* get offset to get block */
-			/* block offset in BM */
-			bi = (uint32_t)ptroff / b->bsize;
-			/* .. */
-			bm = (uint8_t*)&b[1];
-			/* clear allocation */
-			id = bm[bi];
-			/* oddly.. GCC did not optimize this */
-			max = b->size / b->bsize;
-			for (x = bi; bm[x] == id && x < max; ++x) {
-				bm[x] = 0;
-			}
-			/* update free block count */
-			b->used -= x - bi;
-			return;
-		}
-	}
-
-	/* this error needs to be raised or reported somehow */
-	return;
-}
-
-KHEAPBM kheap;
 
 void memmgmt_init(struct multiboot_mmap_entry* mmap, int mmap_size)
 {
-  puts("Heap initialization...");
-  if(kheap.fblock == NULL)
-  {
-    k_heapBMInit(&kheap);
-  }
+  char b[64];
   for(int i = 0; i < mmap_size; i++)
   {
+    puts("mmap entry #"); puts(itoa(i, b, 10));
+		puts("\n    addr: 0x"); puts(itoa(mmap[i].addr, b, 16));
+		puts("\n    len:  "); puts(itoa(mmap[i].len, b, 10));
+		puts("\n    type: "); puts(itoa(mmap[i].type, b, 10)); putc('\n');
     if(mmap[i].type == 1)
     {
-      k_heapBMAddBlock(&kheap, (uint32_t*)(uint32_t)mmap[i].addr, mmap[i].len, 16);
-      putc('.');
-      break;
+      mrvn_memory_init((void*)(uint32_t)mmap[i].addr, mmap[i].len);
     }
   }
-  puts("done!\n");
-  /*int found = 0;
-  for(int i = 0; i < mmap_size; i++)
-  {
-    if(mmap[i].type == 1)
-    {
-      if(found)
-      {
-        mmgmt_conf.address = mmap[i].addr;
-        mmgmt_conf.blocks_n = mmap[i].len / 16384;
-        if(mmgmt_conf.blocks_n > 2048)
-        {
-          mmgmt_conf.blocks_n = 2048;
-        }
-      }
-      else
-      {
-        found = 1;
-      }
-    }
-    //mmap_entry += (mmap_entry->len + sizeof(struct multiboot_mmap_entry));
-  }
-  if(found && mmgmt_conf.address == 0)
-  {
-    puts("Memory Manager init failed, free block not found\n");
-  }
-  else
-  {
-    char buffer[64];
-    puts("Memory Manager set up with parameters: \n  Address: ");
-    itoa(mmgmt_conf.address, buffer, 16);
-    puts(buffer);
-    puts("\n  Number of 16k blocks: ");
-    itoa(mmgmt_conf.blocks_n, buffer, 10);
-    puts(buffer);
-    putc('\n');
-  }*/
 }
 
 void* mmgmt_alloc(size_t size)
 {
-  return k_heapBMAlloc(&kheap, size);
+  return (void*)mrvn_malloc(size);
 }
-
 void mmgmt_free(void* ptr)
 {
-  k_heapBMFree(&kheap, ptr);
+  mrvn_free(ptr);
 }
