@@ -37,6 +37,7 @@ void terminal_event(struct keyevent* ke, struct mouseevent* me, ep_window* w)
 void terminal_spawn()
 {
   ep_window* w = eelphant_create_window();
+  if(!w) return;
   strcpy(w->title, "Terminal");
   w->x = 50;
   w->y = 50;

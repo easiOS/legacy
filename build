@@ -31,12 +31,13 @@ SOURCES=["kern/boot.s", "kern/kernel.c", "kern/text.c", "dev/serial.c",
          "kern/video.c", "kern/libc/stdio.c", "kern/libc/string.c",
          "kern/dtables.c", "kern/dtablesa.s", "kern/int.s", "dev/timer.c",
          "kern/libc/stdlib.c", "dev/kbd.c", "kern/mem.c", "dev/mouse.c",
-         "kern/libc/time.c", "kern/krandom.c", "dev/pci.c",
+         "kern/libc/time.c", "kern/krandom.c", "dev/pci.c", "kern/md5.c",
+         "kern/users.c",
          "kern/dma.c", "dev/pci/virtboxgfx.c",
          "kshell/kshell.c",
          "dev/pci/ne2k_pci.c", "dev/ethernet.c", "dev/pci/pcnet3.c",
          "dev/pci/ehci.c", "dev/graphics.c",
-         "eelphant/eelphant.c", "eelphant/terminal.c"]
+         "eelphant/eelphant.c", "eelphant/terminal.c", "eelphant/msgbox.c"]
 
 def build():
     print("=== \033[95mStarting build...\033[0m ===")

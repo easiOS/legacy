@@ -21,18 +21,17 @@ rgb_t color;
 
 uint16_t fb_font[128][16] = {
   [33] = {
+    0,0,0,
+    0b0110000000000000,
+    0b0110000000000000,
+    0b0110000000000000,
+    0b0110000000000000,
+    0b0110000000000000,
+    0b0110000000000000,
+    0b0110000000000000,
     0,
-    0,
-    0x0F00,
-    0x0F00,
-    0x0F00,
-    0x0F00,
-    0x0F00,
-    0x0F00,
-    0x0F00,
-    0,
-    0x0F00,
-    0x0F00,
+    0b0110000000000000,
+    0b0110000000000000,
     0, 0, 0
   },
   [34] = {
@@ -1298,7 +1297,7 @@ void vd_print(int64_t x, int64_t y, const char* str, int64_t* xe, int64_t* ye)
         break;
       case '\n':
         x2 = x;
-        y2++;
+        y2+=16;
         break;
       case '\t':
         x2 += 24;
@@ -1309,7 +1308,7 @@ void vd_print(int64_t x, int64_t y, const char* str, int64_t* xe, int64_t* ye)
         break;
     }
     i++;
-    x2 += 8;
+    x2 += 10;
   }
   if(xe != NULL) *xe = x2;
   if(ye != NULL) *ye = y2;

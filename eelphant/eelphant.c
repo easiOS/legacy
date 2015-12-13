@@ -22,12 +22,14 @@
 #include <dev/pci.h>
 
 #include "terminal.h"
+#include "msgbox.h"
 
 int32_t ep_mx = 20, ep_my = 20;
 size_t ep_sw, ep_sh;
 ep_window windows[16];
 uint32_t date[6];
-ep_window* window_active;
+ep_window* window_active = NULL;
+ep_window* window_active_cmd = NULL;
 time_t last_frame_time = 60;
 time_t frame_time = 60;
 int ep_restart = 0;
@@ -126,14 +128,17 @@ void eelphant_event(time_t dt)
   struct keyevent* ke = kbdpoll();
   while(ke != NULL)
   {
-    for(int i = 0; i < 16; i++)
+    if(window_active)
+      if(window_active->event)
+        window_active->event(ke, NULL, window_active);
+    /*for(int i = 0; i < 16; i++)
     {
       if(windows[i].flags & 1)
       {
         if(windows[i].event)
           windows[i].event(ke, NULL, &windows[i]);
       }
-    }
+    }*/
   if(ke && !ke->release)
   {
     if(ke->shift)
@@ -188,6 +193,15 @@ void eelphant_event(time_t dt)
         break;
       case 0x38: //left alt (cmd)
         cmd_active = !cmd_active;
+        if(cmd_active)
+        {
+          window_active_cmd = window_active;
+          window_active = NULL;
+        }
+        else
+        {
+          window_active = window_active_cmd;
+        }
         break;
       case 0x48: //cursor up
         if(window_active)
@@ -214,10 +228,13 @@ void eelphant_event(time_t dt)
         }
         break;
       case 0x1C: //enter
-        eelphant_eval(cmd_buf);
-        cmd_buf_i = 0;
-        memset(cmd_buf, 0, 64);
-        cmd_active = false;
+        if(cmd_active)
+        {
+          eelphant_eval(cmd_buf);
+          cmd_buf_i = 0;
+          memset(cmd_buf, 0, 64);
+          cmd_active = false;
+        }
         break;
       case 0x0E: //backspace
         cmd_buf_i = 0;
@@ -253,14 +270,17 @@ void eelphant_event(time_t dt)
 void eelphant_update(time_t dt)
 {
   frame_time = dt;
-  for(int i = 0; i < 16; i++)
+  /*for(int i = 0; i < 16; i++)
   {
     if(windows[i].flags & 1)
     {
       if(windows[i].update)
         windows[i].update((uint64_t)dt, &windows[i]);
     }
-  }
+  }*/
+  if(window_active)
+    if(window_active->update)
+      window_active->update(dt, window_active);
   /*if(windows[0].flags >> 6 & 1)
   {
     windows[0].x+=10 * (dt / 10);
@@ -286,7 +306,7 @@ void eelphant_draw()
   vsetcol(60, 108, 164, 255);
   vcls();
   vsetcol(255,255,255,255);
-  vd_print(ep_sw - 150, ep_sh - 20, "EasiOS Professional", NULL, NULL);
+  vd_print(ep_sw - 190, ep_sh - 30, "EasiOS Professional", NULL, NULL);
   //draw windows
   int draw_order[16];
   for(int i = 0; i < 16; i++) draw_order[i] = i;
@@ -331,19 +351,21 @@ void eelphant_draw()
         vsetcol(12, 37, 108, 255);
       else
         vsetcol(189, 195, 199, 200);
-      vd_rectangle(FILL, w->x, w->y - 32, w->w, 32);
+      vd_rectangle(FILL, w->x, w->y - 24, w->w, 24);
       vsetcol(252, 252, 252, 255);
-      vd_rectangle(LINE, w->x, w->y - 32, w->w, 32);
+      vd_rectangle(LINE, w->x, w->y - 24, w->w, 24);
       vsetcol(255, 255, 255, 255);
-      vd_print(w->x + 8, w->y - 26, w->title, NULL, NULL);
+      vd_print(w->x + 8, w->y - 20, w->title, NULL, NULL);
       vsetcol(212, 212, 204, 255);
-      vd_rectangle(FILL, w->x+w->w - 32, w->y - 32, 32, 32);
+      vd_rectangle(FILL, w->x+w->w - 32, w->y - 24, 32, 24);
       vsetcol(252, 252, 252, 255);
-      vd_rectangle(LINE, w->x+w->w - 32, w->y - 32, 32, 32);
+      vd_rectangle(LINE, w->x+w->w - 32, w->y - 24, 32, 24);
+      vsetcol(0,0,0,255);
+      vd_print(w->x+w->w - 20, w->y - 18, "X", NULL, NULL);
       //vsetcol(236, 240, 241, 255);
       vsetcol(w->bg.r, w->bg.g, w->bg.b, w->bg.a);
       vd_rectangle(FILL, w->x, w->y, w->w, w->h);
-      if(w->draw)
+      if(w->draw && w == window_active)
       {
         w->draw(w->x, w->y, w);
       }
@@ -448,6 +470,7 @@ int eelphant_main(int64_t width, int64_t height)
   window_active = test;
   strcpy(test->title, "Test Window");*/
   puts("Entering loop\n");
+  msgbox_show("Welcome to EasiOS Professional!", "EasiOS", NONE, 0);
   while(true)
   {
     now = ticks();
