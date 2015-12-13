@@ -143,25 +143,25 @@ void eelphant_event(time_t dt)
         case 0x48:
           if(window_active)
           {
-            window_active->h-=(dt>window_active->h ? window_active->h : dt);
+            window_active->h-=50;
           }
           break;
         case 0x4B:
           if(window_active)
           {
-            window_active->w-=(dt>window_active->w ? window_active->w : dt);
+            window_active->w-=50;
           }
           break;
         case 0x4D:
           if(window_active)
           {
-            window_active->w+=(dt>window_active->w ? window_active->w : dt);
+            window_active->w+=50;
           }
           break;
         case 0x50:
           if(window_active)
           {
-            window_active->h+=(dt>window_active->h ? window_active->h : dt);;
+            window_active->h+=50;
           }
           break;
       }
@@ -192,25 +192,25 @@ void eelphant_event(time_t dt)
       case 0x48: //cursor up
         if(window_active)
         {
-          window_active->y-=(dt>window_active->h ? window_active->h : dt);
+          window_active->y-=25;
         }
         break;
       case 0x4B: //cursor left
         if(window_active)
         {
-          window_active->x-= (dt>window_active->w ? window_active->w : dt);
+          window_active->x-= 25;
         }
         break;
       case 0x4D: //cursor right
         if(window_active)
         {
-          window_active->x+= (dt>window_active->w ? window_active->w : dt);;
+          window_active->x+= 25;
         }
         break;
       case 0x50: //cursor down
         if(window_active)
         {
-          window_active->y+= (dt>window_active->h ? window_active->h : dt);;
+          window_active->y+= 25;
         }
         break;
       case 0x1C: //enter
@@ -283,8 +283,10 @@ void eelphant_update(time_t dt)
 void eelphant_draw()
 {
   //draw desktop
-  vsetcol(149, 165, 166, 255);
+  vsetcol(60, 108, 164, 255);
   vcls();
+  vsetcol(255,255,255,255);
+  vd_print(ep_sw - 150, ep_sh - 20, "EasiOS Professional", NULL, NULL);
   //draw windows
   int draw_order[16];
   for(int i = 0; i < 16; i++) draw_order[i] = i;
@@ -326,17 +328,17 @@ void eelphant_draw()
     if(w->flags & 1 && w->w > 0 && w->h > 0) //active
     {
       if(w == window_active)
-        vsetcol(44, 62, 80, 255);
+        vsetcol(12, 37, 108, 255);
       else
         vsetcol(189, 195, 199, 200);
       vd_rectangle(FILL, w->x, w->y - 32, w->w, 32);
-      vsetcol(52, 73, 94, 255);
+      vsetcol(252, 252, 252, 255);
       vd_rectangle(LINE, w->x, w->y - 32, w->w, 32);
-      vsetcol(236, 240, 241, 255);
+      vsetcol(255, 255, 255, 255);
       vd_print(w->x + 8, w->y - 26, w->title, NULL, NULL);
-      vsetcol(231, 76, 60, 255);
+      vsetcol(212, 212, 204, 255);
       vd_rectangle(FILL, w->x+w->w - 32, w->y - 32, 32, 32);
-      vsetcol(192, 57, 43, 255);
+      vsetcol(252, 252, 252, 255);
       vd_rectangle(LINE, w->x+w->w - 32, w->y - 32, 32, 32);
       //vsetcol(236, 240, 241, 255);
       vsetcol(w->bg.r, w->bg.g, w->bg.b, w->bg.a);
@@ -356,9 +358,9 @@ void eelphant_draw()
   //vsetcol(22, 160, 133, 255);
   //vd_bitmap16(cursor, ep_mx, ep_my, 8);
   //draw command bar
-  vsetcol(52, 73, 94, 255);
+  vsetcol(212, 212, 204, 255);
   vd_rectangle(FILL, 0, 0, 1024, 28);
-  vsetcol(44, 62, 80, 255);
+  vsetcol(252, 252, 252, 255);
   vd_rectangle(LINE, 0, 0, 1024, 28);
   if(cmd_active)
   {
@@ -369,7 +371,7 @@ void eelphant_draw()
         vplot(i, j);
     }
   }
-  vsetcol(236, 240, 241, 255);
+  vsetcol(4, 4, 4, 255);
   int64_t datex, datey;
   char b[16];
   itoa(date[0], b, 10);
@@ -389,12 +391,12 @@ void eelphant_draw()
   vd_print(datex, datey, ":", &datex, &datey);
   itoa(date[5], b, 10);
   vd_print(datex, datey, b, &datex, &datey);
-  vsetcol(255, 0, 0, 150);
-  frame_time = (frame_time ? frame_time : 1);
-  vd_print(10, ep_sh - 32, itoa(1000 / frame_time, b, 10), &datex, &datey);
-  vd_print(datex, datey, " FPS - FRAME TIME: ", &datex, &datey);
-  vd_print(datex, datey, itoa(last_frame_time, b, 10), NULL, NULL);
-  vsetcol(44, 62, 80, 255);
+  //vsetcol(255, 0, 0, 150);
+  //frame_time = (frame_time ? frame_time : 1);
+  //vd_print(10, ep_sh - 32, itoa(1000 / frame_time, b, 10), &datex, &datey);
+  //vd_print(datex, datey, " FPS - FRAME TIME: ", &datex, &datey);
+  //vd_print(datex, datey, itoa(last_frame_time, b, 10), NULL, NULL);
+  vsetcol(252, 252, 252, 255);
   vd_print(4, 10, cmd_buf, NULL, NULL);
   vswap();
   last_frame_time = frame_time;

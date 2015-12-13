@@ -17,7 +17,7 @@ void terminal_update(uint64_t dt, ep_window* w)
 
 void terminal_draw(uint64_t bx, uint64_t by, ep_window* w)
 {
-  vsetcol(39, 174, 96, 255);
+  vsetcol(192, 192, 192, 255);
   char asd[2];
   int64_t lx = bx, ly = by;
   for(int i = 0; i < 2000; i++)
@@ -39,7 +39,7 @@ void terminal_spawn()
   ep_window* w = eelphant_create_window();
   strcpy(w->title, "Terminal");
   w->x = 50;
-  w->y = 35;
+  w->y = 50;
   w->w = 750;
   w->h = 500;
   w->load = &terminal_load;
@@ -47,10 +47,10 @@ void terminal_spawn()
   w->draw = &terminal_draw;
   w->event = &terminal_event;
   w->z = 0;
-  w->bg.r = 44;
-  w->bg.g = 62;
-  w->bg.b = 80;
-  w->bg.a = 180;
+  w->bg.r = 0;
+  w->bg.g = 0;
+  w->bg.b = 0;
+  w->bg.a = 255;
   w->load(w);
   eelphant_switch_active(w);
 }
