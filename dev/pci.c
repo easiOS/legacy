@@ -31,6 +31,13 @@ struct _pci_device {
     {0x80ee, 0xbeef, "Virtualbox Graphics Adapter", &vbgfxinit},
     {0x80ee, 0x7145, "Virtualbox Graphics Adapter", &vbgfxinit},
     {0x1106, 0x3371, "VIA Chrome 9 HC", NULL},
+    {0x8086, 0x3575, "Host-Hub I/F Bridge / SDRAM Controller", NULL},
+    {0x8086, 0x2482, "USB Controller", NULL},
+    {0x8086, 0x2448, "Hub Interface to PCI Bridge", NULL},
+    {0x8086, 0x248c, "LPC Interface or ISA bridge", NULL},
+    {0x1002, 0x4c59, "ATI Mobility Radeon AGP", NULL},
+    {0x104c, 0xac51, "Texas Instruments 1420 PCI2CB", NULL},
+    {0x125d, 0x1988, "ESS Allegro Audio", NULL},
     {}
 };
 
