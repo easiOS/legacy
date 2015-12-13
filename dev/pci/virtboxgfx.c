@@ -71,13 +71,23 @@ void vbgfxinit(uint8_t bus, uint8_t slot)
       pci_config_write_word(bus, slot, 0, 0x06, 0); //disconnect device
     return;
   }
-  vbgfx_set_res(1024, 768);
+  vga_card* v = graphics_add_card();
+  if(v == NULL) return;
+  v->vendor = vendor;
+  v->device = device;
+  strcpy(v->name, "VBoxVideo");
+  v->data[0] = iobase;
+  v->bus = bus; v->slot = slot;
+  v->set_mode = &vbgfx_set_res;
+  vbgfx_set_res(v, 1024, 768, 32);
 }
 
-void vbgfx_set_res(uint32_t w, uint32_t h)
+void vbgfx_set_res(vga_card* v, int64_t w, int64_t h, uint8_t bpp)
 {
-  if(!iobase) return;
+  if(!v) return;
+  if(!v->data[0]) return;
   if(w * h > 1440000) return;
+  uint32_t iobase = v->data[0];
   outw(iobase + VBGFX_IO_INDEX, VBGFX_INDEX_ENABLE);
   outw(iobase + VBGFX_IO_DATA, 0); //disable VBE extensions
   //write resolution
@@ -87,22 +97,22 @@ void vbgfx_set_res(uint32_t w, uint32_t h)
   outw(iobase + VBGFX_IO_DATA, h);
   //write bpp
   outw(iobase + VBGFX_IO_INDEX, VBGFX_INDEX_BPP);
-  outw(iobase + VBGFX_IO_DATA, 32);
+  outw(iobase + VBGFX_IO_DATA, bpp);
   //reset video module
   vdestroy();
   //enable VBE extensions and LFB
   outw(iobase + VBGFX_IO_INDEX, VBGFX_INDEX_ENABLE);
   outw(iobase + VBGFX_IO_DATA, 1 | 0x40);
   //init video module
-  int64_t width, height, bpp;
-  uint32_t lfb_addr = pci_config_read_dword(vbgfx_bus, vbgfx_slot, 0, 0x10) & ~0xF;
+  int64_t width, height, bppix;
+  uint32_t lfb_addr = pci_config_read_dword(v->bus, v->slot, 0, 0x10) & ~0xF;
   outw(iobase + VBGFX_IO_INDEX, VBGFX_INDEX_XRES);
   width = inw(iobase + VBGFX_IO_DATA);
   outw(iobase + VBGFX_IO_INDEX, VBGFX_INDEX_YRES);
   height = inw(iobase + VBGFX_IO_DATA);
   outw(iobase + VBGFX_IO_INDEX, VBGFX_INDEX_BPP);
-  bpp = inl(iobase + VBGFX_IO_DATA);
-  vinit(width, height, bpp, w * 4, lfb_addr);
+  bppix = inl(iobase + VBGFX_IO_DATA);
+  vinit(width, height, bppix, w * 4, lfb_addr);
 }
 
 int vbgfx_isinit()

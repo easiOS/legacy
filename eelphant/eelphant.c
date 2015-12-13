@@ -19,6 +19,7 @@
 #include <text.h>
 #include <dev/pci/virtboxgfx.h>
 #include <kernel.h>
+#include <dev/pci.h>
 
 #include "terminal.h"
 
@@ -82,7 +83,8 @@ void eelphant_eval(char* cmd)
     if(vbgfx_isinit())
     {
       puts("setting res...\n");
-      vbgfx_set_res(w, h);
+      //vbgfx_set_res(w, h);
+      graphics_set_mode(w, h, 32);
       ep_restart = 1;
     }
     else
@@ -100,6 +102,10 @@ void eelphant_eval(char* cmd)
       vswap();
     }
     reboot("Requested by user");
+  }
+  CMDCMP("lspci")
+  {
+    pci_ls();
   }
 }
 
