@@ -47,10 +47,10 @@ void terminal_spawn()
   w->draw = &terminal_draw;
   w->event = &terminal_event;
   w->z = 0;
-  w->bg.r = 0;
-  w->bg.g = 0;
-  w->bg.b = 0;
-  w->bg.a = 255;
+  w->bg.r = 44;
+  w->bg.g = 62;
+  w->bg.b = 80;
+  w->bg.a = 180;
   w->load(w);
   eelphant_switch_active(w);
 }

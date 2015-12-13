@@ -18,6 +18,7 @@
 #include <dev/kbd.h>
 #include <text.h>
 #include <dev/pci/virtboxgfx.h>
+#include <kernel.h>
 
 #include "terminal.h"
 
@@ -89,6 +90,16 @@ void eelphant_eval(char* cmd)
       puts("eelphant: `resolution\' only works in VirtualBox, QEMU or Bochs\n");
     }
     return;
+  }
+  CMDCMP("reboot")
+  {
+    for(int i = 0; i < 256; i+=32)
+    {
+      vsetcol(44, 62, 80, i);
+      vcls();
+      vswap();
+    }
+    reboot("Requested by user");
   }
 }
 

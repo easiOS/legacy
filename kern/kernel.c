@@ -223,4 +223,25 @@ void kmain(uint32_t magic, uint32_t mbp)
     ret = eelphant_main(w, h);
   } while (ret);
   puts("eelphant returned with 0\n");
+  reboot("Eelphant exited\n");
+}
+
+void reboot(const char* reason)
+{
+  uint8_t temp;
+  puts("\n\n");
+  puts("The system is going down for reboot NOW!\n");
+  puts(reason); puts("\n\n\n");
+  uint64_t now = ticks();
+  while(ticks() - now < 2000);
+  asm volatile("cli");
+  do {
+    temp = inb(0x64);
+    if((temp & 1) != 0)
+      inb(0x60);
+  } while((temp & 2) != 0);
+  outb(0x64, 0xFE);
+  loop:
+  asm volatile("hlt");
+  goto loop;
 }
