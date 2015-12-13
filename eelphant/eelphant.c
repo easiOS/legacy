@@ -28,6 +28,7 @@ uint32_t date[6];
 ep_window* window_active;
 time_t last_frame_time = 60;
 time_t frame_time = 60;
+int ep_restart = 0;
 
 char cmd_buf[64];
 int cmd_buf_i = 0;
@@ -50,7 +51,6 @@ void eelphant_eval(char* cmd)
 {
   char* args[8];
   int argc = 0;
-  puts("eval loafsz\n");
   char cmd_copy[64];
   memcpy(cmd_copy, cmd, 64);
   int cmdlen = -1;
@@ -58,17 +58,11 @@ void eelphant_eval(char* cmd)
   cmdlen++;
   char b[64];
   puts("CMDLEN: "); puts(itoa(cmdlen, b, 10));putc('\n');
-  char* cmdptr = &cmd_copy[0];
-  for(int i = 0; i < cmdlen; i++)
+  char* token = strtok(cmd_copy, " ");
+  while(token)
   {
-    if(cmd_copy[i] == ' ' || cmd_copy[i] == '\0')
-    {
-      cmd_copy[i] = '\0';
-      puts(cmdptr); putc('\n');
-      args[argc++] = cmdptr;
-      cmdptr += i + 1;
-      if(argc >= 8) break;
-    }
+    args[argc++] = token;
+    token = strtok(NULL, " ");
   }
   #define CMDCMP(str) if(strcmp(args[0], str) == 0)
   CMDCMP("terminal")
@@ -78,9 +72,7 @@ void eelphant_eval(char* cmd)
   }
   CMDCMP("resolution")
   {
-    puts("hey\n");
     if(argc < 2) return;
-    puts("hey yo\n");
     int w = 0, h = 0;
     w = atoi(args[1]);
     h = atoi(args[2]);
@@ -90,6 +82,7 @@ void eelphant_eval(char* cmd)
     {
       puts("setting res...\n");
       vbgfx_set_res(w, h);
+      ep_restart = 1;
     }
     else
     {
@@ -418,10 +411,11 @@ void eelphant_destroy_window(ep_window* w)
   w->event = NULL;
 }
 
-void eelphant_main(int64_t width, int64_t height)
+int eelphant_main(int64_t width, int64_t height)
 {
   puts("Eelphant Window Manager v0\n");
-  memset(windows, 0, 16*sizeof(ep_window));
+  ep_restart = 0;
+  //memset(windows, 0, 16*sizeof(ep_window));
   ep_sw = width;
   ep_sh = height;
   time_t last, now;
@@ -442,7 +436,12 @@ void eelphant_main(int64_t width, int64_t height)
     eelphant_update(now - last);
     eelphant_draw();
     last = now;
+    if(ep_restart)
+    {
+      return 1;
+    }
   }
+  return 0;
 }
 
 void eelphant_switch_active(ep_window* w)

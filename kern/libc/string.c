@@ -76,31 +76,62 @@ void* memcpy(void* dest, const void* src, size_t count) {
   return dest;
 }
 
-char* strtok(char* str, const char* delimiters)
-{
-    static int currIndex = 0;
-    if(!str || !delimiters || str[currIndex] == '\0')
-      return NULL;
-    char *W = (char *)malloc(sizeof(char)*100);
-    int i = currIndex, k = 0, j = 0;
-    while (str[i] != '\0')
-    {
-      j = 0;
-      while (delimiters[j] != '\0')
-      {
-        if (str[i] != delimiters[j])
-          W[k] = str[i];
-        else
-          goto It;
-        j++;
-      }
-      i++;
-      k++;
+char* sp = NULL;
+
+char* strtok(char* str, const char* delimiters) {
+
+    int i = 0;
+    int len = strlen(delimiters);
+
+    /* check in the delimiters */
+    if(len == 0){}
+
+    /* if the original string has nothing left */
+    if(!str && !sp)
+        return NULL;
+
+    /* initialize the sp during the first call */
+    if(str && !sp)
+        sp = str;
+
+    /* find the start of the substring, skip delimiters */
+    char* p_start = sp;
+    while(1) {
+        for(i = 0; i < len; i ++) {
+            if(*p_start == delimiters[i]) {
+                p_start ++;
+                break;
+            }
+        }
+
+        if(i == len) {
+               sp = p_start;
+               break;
+        }
     }
-It:
-    W[i] = 0;
-    currIndex = i+1;
-    return W;
+
+    /* return NULL if nothing left */
+    if(*sp == '\0') {
+        sp = NULL;
+        return sp;
+    }
+
+    /* find the end of the substring, and
+        replace the delimiter with null */
+    while(*sp != '\0') {
+        for(i = 0; i < len; i ++) {
+            if(*sp == delimiters[i]) {
+                *sp = '\0';
+                break;
+            }
+        }
+
+        sp ++;
+        if (i < len)
+            break;
+    }
+
+    return p_start;
 }
 
 size_t strspn (const char *str1, const char *str2)

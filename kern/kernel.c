@@ -217,5 +217,10 @@ void kmain(uint32_t magic, uint32_t mbp)
     puts("Cannot start Eelphant: no video. Falling back to kernel shell\n");
     kshell_main();
   }
-  eelphant_main(w, h);
+  int ret = 0;
+  do
+  {
+    ret = eelphant_main(w, h);
+  } while (ret);
+  puts("eelphant returned with 0\n");
 }

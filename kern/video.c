@@ -1212,17 +1212,14 @@ void vinit(int64_t width, int64_t height, int64_t bpp, int64_t pitch, uint64_t a
   color.g = 255;
   color.b = 255;
   color.a = 255;
-  /*puts("lo");
   for(int64_t y = 0; y < fbh; y++)
   {
     for(int64_t x = 0; x < fbw; x++)
     {
-      fb[y * width + x] = 0;
+      fb[y * width + x] = 149 << 16 | 165 << 8 | 166;
       fbb[y * width + x] = 0;
     }
-    putc(',');
   }
-  puts("op\n");*/
 }
 
 void vdestroy()
