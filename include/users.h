@@ -9,7 +9,7 @@ struct eos_user {
   uint8_t uid;
   uint32_t privileges;
   char un[64];
-  char pw_md5[128];
+  char pw[128];
 } __attribute__((packed));
 
 struct eos_user_header {
@@ -19,5 +19,6 @@ struct eos_user_header {
 } __attribute__((packed));
 
 void eos_users_init(struct eos_user_header* h);
+int eos_users_auth(const char* username, const char* password);
 
 #endif

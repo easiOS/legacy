@@ -17,15 +17,27 @@ void eos_users_init(struct eos_user_header* h)
   for(int i = 0; i < h->users_n; i++)
   {
     puts("  Username: "); puts(users[i].un);
-    puts("  Password hash: ");
-    char b[32];
-    for(int j = 0; j < 4; j++)
-    {
-      int num = ((uint32_t*)(users[i].pw_md5))[j];
-      puts(itoa(num, b, 16));
-    }
-    putc('\n');
+    puts("\n  Password: "); puts(users[i].pw);
     puts("\n--------------------\n");
   }
   users_n = h->users_n;
+}
+
+int eos_users_auth(const char* username, const char* password)
+{
+  int ret = 1; //0 - OK, 1 - User not found, 2 - Bad Password
+  for(int i = 0; i < users_n; i++)
+  {
+    if(strcmp(username, users[i].un) == 0)
+    {
+      if(strcmp(password, users[i].pw) == 0)
+      {
+        ret = 0;
+        break;
+      }
+      ret = 2;
+      break;
+    }
+  }
+  return ret;
 }

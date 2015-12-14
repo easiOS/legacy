@@ -24,14 +24,8 @@ int main(int argc, char** argv)
     printf("Username (max 64 chars): ");
     scanf("%s", &inp);
     memcpy(user.un, inp, 64); memset(inp, 0, 64);
-    unsigned char digest[16];
-    MD5_CTX context;
-    MD5_Init(&context);
     printf("Password: ");
-    char password[128];
-    scanf("%s", &password);
-    MD5_Update(&context, &password[0], strlen(password));
-    MD5_Final((unsigned char*)&user.pw_md5, &context);
+    scanf("%s", &user.pw);
     users = realloc(users, sizeof(eos_user)* (n + 1));
     memcpy(&users[n], &user, sizeof(eos_user));
     n++;
