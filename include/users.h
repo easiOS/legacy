@@ -6,12 +6,10 @@
 typedef struct eos_user eos_user;
 
 struct eos_user {
+  uint8_t uid;
+  uint32_t privileges;
   char un[64];
   char pw_md5[128];
-  char fullname[64];
-  int building, room;
-  char phone[32];
-  char other[64];
 } __attribute__((packed));
 
 struct eos_user_header {

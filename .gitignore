@@ -1,4 +1,5 @@
 legacy/
 *.o
-easios.bin
+*.bin
 easios.iso
+*.euf

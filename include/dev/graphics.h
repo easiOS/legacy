@@ -17,5 +17,6 @@ struct vga_card {
 
 vga_card* graphics_add_card();
 void graphics_set_mode(int64_t w, int64_t h, uint8_t bpp);
+void graphics_swap_buffer(void* ptr);
 
 #endif

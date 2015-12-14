@@ -26,3 +26,8 @@ void graphics_set_mode(int64_t w, int64_t h, uint8_t bpp)
     gfx_devices[i].set_mode(&gfx_devices[i], w, h, bpp);
   }
 }
+
+void graphics_swap_buffer(void* ptr)
+{
+  
+}

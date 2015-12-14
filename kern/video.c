@@ -11,6 +11,7 @@
 #include <video.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <dev/graphics.h>
 
 uint32_t* fb;
 //uint32_t fbb[786432];
@@ -1382,6 +1383,7 @@ void vswap()
     {
       fbbyte[y * fbp + x] = fbbbyte[y * fbp + x];
     }
+  
   //asm volatile("sti");
 }
 
