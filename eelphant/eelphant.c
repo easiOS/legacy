@@ -23,10 +23,13 @@
 
 #include "terminal.h"
 #include "msgbox.h"
+#include "loginwin.h"
+
+#define EP_MAX_WINDOWS 32
 
 int32_t ep_mx = 20, ep_my = 20;
 size_t ep_sw, ep_sh;
-ep_window windows[16];
+ep_window windows[EP_MAX_WINDOWS];
 uint32_t date[6];
 ep_window* window_active = NULL;
 ep_window* window_active_cmd = NULL;
@@ -180,7 +183,7 @@ void eelphant_event(time_t dt)
     switch(ke->keycode)
     {
       case 0x0F: //tab
-          for(int i = 0; i < 16; i++)
+          for(int i = 0; i < EP_MAX_WINDOWS; i++)
           {
             windows[i].z = 10;
             if(&windows[i] != window_active && windows[i].flags & 1)
@@ -245,7 +248,7 @@ void eelphant_event(time_t dt)
         {
           eelphant_destroy_window(window_active);
           window_active = NULL;
-          for(int i = 0; i < 16; i++)
+          for(int i = 0; i < EP_MAX_WINDOWS; i++)
           {
             if(windows[i].flags & 1)
             {
@@ -308,11 +311,11 @@ void eelphant_draw()
   vsetcol(255,255,255,255);
   vd_print(ep_sw - 190, ep_sh - 30, "EasiOS Professional", NULL, NULL);
   //draw windows
-  int draw_order[16];
-  for(int i = 0; i < 16; i++) draw_order[i] = i;
+  int draw_order[EP_MAX_WINDOWS];
+  for(int i = 0; i < EP_MAX_WINDOWS; i++) draw_order[i] = i;
   //order window drawing
   int begin = 0;
-  int end = 15;
+  int end = EP_MAX_WINDOWS-1;
   bool swapped;
   do
   {
@@ -342,7 +345,7 @@ void eelphant_draw()
     }
     begin++;
   } while(swapped);
-  for(int i = 0; i < 16; i++)
+  for(int i = 0; i < EP_MAX_WINDOWS; i++)
   {
     ep_window* w = &windows[draw_order[i]];
     if(w->flags & 1 && w->w > 0 && w->h > 0) //active
@@ -426,7 +429,7 @@ void eelphant_draw()
 
 ep_window* eelphant_create_window()
 {
-  for(int i = 0; i < 16; i++)
+  for(int i = 0; i < EP_MAX_WINDOWS; i++)
   {
     if(!(windows[i].flags & 1))
     {
@@ -439,6 +442,8 @@ ep_window* eelphant_create_window()
 
 void eelphant_destroy_window(ep_window* w)
 {
+  if(!w) return;
+  if(w->unload) w->unload(w);
   w->flags = 0;
   w->w = 0;
   w->h = 0;
@@ -450,26 +455,40 @@ void eelphant_destroy_window(ep_window* w)
   w->update = NULL;
   w->draw = NULL;
   w->event = NULL;
+  w->unload = NULL;
 }
 
 int eelphant_main(int64_t width, int64_t height)
 {
   puts("Eelphant Window Manager v0\n");
   ep_restart = 0;
-  //memset(windows, 0, 16*sizeof(ep_window));
   ep_sw = width;
   ep_sh = height;
   time_t last, now;
   last = ticks();
   lastmouse = time(NULL);
-  /*ep_window* test = eelphant_create_window();
-  test->x = 20;
-  test->y = 70;
-  test->w = 640;
-  test->h = 480;
-  window_active = test;
-  strcpy(test->title, "Test Window");*/
   puts("Entering loop\n");
+  /*ep_window* loginw = eelphant_spawn_loginwin();
+  while(true && loginw)
+  {
+    now = ticks();
+    struct keyevent* ke = kbdpoll();
+    while(ke != NULL)
+    {
+      if(loginw)
+        if(loginw->event)
+          loginw->event(ke, NULL, loginw);
+      ke = kbdpoll();
+      putc('*');
+    }
+    //eelphant_update(now - last);
+    eelphant_draw(now - last);
+    cmd_active = false;
+    last = now;
+    if(loginw->userdata[4] == 0x1234C0CA) break;
+  }
+  puts("Entering loop\n");
+  eelphant_destroy_window(loginw);*/
   msgbox_show("Welcome to EasiOS Professional!", "EasiOS", NONE, 0);
   while(true)
   {
@@ -488,6 +507,6 @@ int eelphant_main(int64_t width, int64_t height)
 
 void eelphant_switch_active(ep_window* w)
 {
-  puts("switching window..\n");
+  if(!w) return;
   window_active = w;
 }

@@ -18,6 +18,7 @@ struct ep_window {
   ///rrrr F
   ///F - focused
   void (*load)(ep_window*); //init function(ptr to window)
+  void (*unload)(ep_window*); //destructor(ptr to window)
   void (*update)(uint64_t, ep_window*); //update function (delta time, ptr to window)
   void (*draw)(uint64_t, uint64_t, ep_window*); //draw function (window coordinates, ptr to window)
   void (*event)(struct keyevent*, struct mouseevent*, ep_window*); //event handler function(ptr to keyevent, ptr to mouseevent, ptr to window)

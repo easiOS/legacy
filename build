@@ -37,7 +37,8 @@ SOURCES=["kern/boot.s", "kern/kernel.c", "kern/text.c", "dev/serial.c",
          "kshell/kshell.c",
          "dev/pci/ne2k_pci.c", "dev/ethernet.c", "dev/pci/pcnet3.c",
          "dev/pci/ehci.c", "dev/graphics.c",
-         "eelphant/eelphant.c", "eelphant/terminal.c", "eelphant/msgbox.c"]
+         "eelphant/eelphant.c", "eelphant/terminal.c", "eelphant/msgbox.c",
+         "eelphant/loginwin.c"]
 
 def build():
     print("=== \033[95mStarting build...\033[0m ===")
