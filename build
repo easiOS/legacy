@@ -15,6 +15,8 @@ AFLAGS="-felf32 -o $OUTPUT $INPUT"
 EXECUTABLE="easios.bin"
 ISO="easios.iso"
 LDFLAGS="-T linker.ld -o $OUTPUT -ffreestanding -O2 -nostdlib $INPUT -lgcc"
+PO2MOC="msgfmt"
+PO2MOCFLAGS="-o $OUTPUT $INPUT"
 
 EXT = {
     "c" : {
@@ -24,6 +26,10 @@ EXT = {
     "s" : {
         "C" : AS,
         "F" : AFLAGS
+    },
+    "po" : {
+        "C" : PO2MOC,
+        "F" : PO2MOCFLAGS
     }
 }
 
@@ -38,13 +44,14 @@ SOURCES=["kern/boot.s", "kern/kernel.c", "kern/text.c", "dev/serial.c",
          "dev/pci/ne2k_pci.c", "dev/ethernet.c", "dev/pci/pcnet3.c",
          "dev/pci/ehci.c", "dev/graphics.c",
          "eelphant/eelphant.c", "eelphant/terminal.c", "eelphant/msgbox.c",
-         "eelphant/loginwin.c"]
+         "eelphant/loginwin.c",
+         "iso/boot/grub/locale/eos.po"]
 
 def build():
     print("=== \033[95mStarting build...\033[0m ===")
     OBJECTS = []
     for f in SOURCES:
-        print("Building " + f)
+        print("Compiling " + f)
         if not os.path.isfile(f):
             print("File " + f + " doesn't exists, exiting.")
             sys.exit(0)
@@ -54,6 +61,7 @@ def build():
         fout = ".".join(tmpfname)
 
         fext = fname[len(fname)-1]
+        if not fext in ["c", "s"]: continue
         if not fext in EXT:
             print("Unknown file extension " + fext + ", exiting.")
             sys.exit(0)
@@ -109,6 +117,9 @@ def run():
     if os.path.isfile(ISO):
         subprocess.run(args=["qemu-system-i386", "-serial", "stdio", "-cdrom", ISO])
 
+def transl():
+    if os.path.isfile("iso/boot/grub/locale/eos.po"):
+        subprocess.run(args=[PO2MOC]+PO2MOCFLAGS.replace("$INPUT", "iso/boot/grub/locale/eos.po").replace("$OUTPUT", "iso/boot/grub/locale/eos.mo").split())
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
@@ -120,5 +131,9 @@ if __name__ == "__main__":
             iso()
         if "run" in sys.argv:
             run()
+        if "transl" in sys.argv:
+            transl()
     else:
         build()
+        transl()
+        iso()
