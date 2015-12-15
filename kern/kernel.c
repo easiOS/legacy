@@ -27,6 +27,7 @@
 #include <dev/ethernet.h>
 #include <kshell.h>
 #include <users.h>
+#include <vfs.h>
 
 #define KERNEL_NAME "EasiOS v0.3.2"
 
@@ -173,7 +174,7 @@ void multiboot_enum(uint32_t mbp)
         if(*(uint32_t*)tagmod->mod_start == 0xC0C0A123)
         {
           puts("  EasiOS VFS detected\n");
-          //TODO: load
+          vfs_process((void*)tagmod->mod_start);
           continue;
         }
         if(*(uint32_t*)tagmod->mod_start == 0x0237C0C0)
