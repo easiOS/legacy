@@ -52,18 +52,20 @@ void kpanic(const char* msg, registers_t regs)
   puts("drawn rectangle\n");
   vswap();
   puts("swapped\n");
-  vd_print(100, 250, "Your PC ran into a problem and needs a restart.\n\
-  We're just collecting some error info and then you can restart.", NULL, NULL);
+  int64_t fx, fy;
+  vd_print(100, 250, "Your PC ran into a problem and needs a restart.", &fx, &fy);
+  vd_print(100, fy + 20, "We're just collecting some error info and then you can restart.", &fx, &fy);
   vswap();
   puts("swapped\n");
   int64_t px, py;
-  vd_print(100, 270, "If you'd like to know more, you can search\n\
-  online later for this error: ", &px, &py);
+  vd_print(100, fy + 30, "If you'd like to know more, you can search online later for this error: ", &px, &py);
   vswap();
   puts("swapped\n");
-  vd_print(px, py, msg, NULL, NULL);
+  vd_print(100, py + 20, msg, NULL, NULL);
   vswap();
+  hlt_loop:
   asm("hlt");
+  goto hlt_loop;
 }
 
 void multiboot_enum(uint32_t mbp)
