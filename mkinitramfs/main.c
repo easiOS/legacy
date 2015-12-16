@@ -16,59 +16,20 @@
 #define FS_SYMLINK     0x06
 #define FS_MOUNTPOINT  0x08
 
-struct initramfs_node {
-  char name[128];
-  uint16_t flags; // 0x01 = FILE, 0x02 = DIR
-};
-
-struct initramfs_directory {
-  char name[128];
-  uint16_t flags;
-  uint32_t subnode_n;
-  struct initramfs_node nodes[0];
-} __attribute__((packed));
-
 struct initramfs_file {
   char name[128];
   uint16_t flags;
   uint32_t size;
-  uint8_t data[0];
 } __attribute__((packed));
 
 struct initramfs_header {
   uint32_t magic; //0xC0C0A123
-  struct initramfs_directory root;
-} __attribute__((packed)) header;
+  uint32_t count;
+  struct initramfs_file files[32];
+} __attribute__((packed));
 
 int main(int argc, char** argv)
 {
-  if(argc > 1)
-  {
-    printf("Opening ramfs: ");
-    FILE* ramfs = fopen("initramfs.bin", "rb");
-    if(!ramfs) return 1;
-    fread(&header, sizeof(struct initramfs_header), 1, ramfs);
-    if(header.magic != 0xC0C0A123) return 2;
-    printf("valid!\n");
-    struct initramfs_file f;
-    for(int i = 0; i < header.root.subnode_n; i++)
-    {
-      if(feof(ramfs))
-      {
-        printf("RAMFS EOF WTF\n");
-        break;
-      }
-      memset(&f, 0, sizeof(struct initramfs_file));
-      printf("File:\n");
-      fread(&f, sizeof(struct initramfs_file), 1, ramfs);
-      printf("\tName: %s\n", f.name);
-      printf("\tSize: %u\n", f.size);
-      printf("NYILACSKA: %u\n", ftell(ramfs));
-      fseek(ramfs, ftell(ramfs) + f.size, SEEK_SET);
-    }
-    fclose(ramfs);
-    return 0;
-  }
   FILE* outfile = fopen("initramfs.bin", "wb");
   if(!outfile) return 1;
   DIR* dir;
@@ -84,18 +45,18 @@ int main(int argc, char** argv)
   } while(entry = readdir(dir));
   closedir(dir);
   printf("Filecount: %d\n", filecount);
-  header.root.subnode_n = filecount;
+  header.count = filecount;
   header.magic = 0xC0C0A123;
   fwrite(&header, sizeof(struct initramfs_header), 1, outfile);
   //second round
   dir = opendir("initramfs");
   entry = readdir(dir);
+  uint32_t i = 0;
   do
   {
     if(entry->d_type == DT_REG)
     {
-      struct initramfs_file file;
-      strcpy(file.name, entry->d_name);
+      struct initramfs_file* hf = &(header.files[i]);
       char fn[256];
       memset(fn, 0, 256);
       strcat(fn, "initramfs/");
