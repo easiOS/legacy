@@ -55,7 +55,7 @@ void serwrite(uint16_t port, char a)
   }
   else
     outb(port, a);
-  io_wait();
+  //io_wait();
 }
 
 bool sertxempty(uint16_t port)

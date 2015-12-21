@@ -28,11 +28,51 @@
 #include <kshell.h>
 #include <users.h>
 #include <vfs.h>
+#include <acpi.h>
+#include <stdarg.h>
 
 #define KERNEL_NAME "EasiOS v0.3.2"
 
 const char* cmdline = NULL;
 uint16_t text_buffer[2000];
+
+size_t eos_write(int fd, void* buf, size_t len)
+{
+  size_t ret = 0;
+  if(fd == 1)
+  {
+    char* cbuf = (char*)buf;
+    int i;
+    for(i = 0; i < len; i++)
+    {
+      putc(cbuf[i]);
+    }
+    ret = i;
+  }
+  return ret;
+}
+
+asm("eos_syscall_start:");
+
+int eos_syscall(uint32_t id, ...)
+{
+  //puts("SYSCALL!!!!\n");
+  int ret = 0;
+  va_list ap;
+  va_start(ap, id);
+  switch(id)
+  {
+    case 0: //write
+    {
+      ret = eos_write(va_arg(ap, int), va_arg(ap, void*), va_arg(ap, size_t));
+      break;
+    }
+  }
+  va_end(ap);
+  return ret;
+}
+
+asm("eos_syscall_end:");
 
 void kpanic(const char* msg, registers_t regs)
 {
@@ -202,9 +242,37 @@ void multiboot_enum(uint32_t mbp)
   }
 }
 
+extern void topkek();
+
 void kmain(uint32_t magic, uint32_t mbp)
 {
+  char buffer[64];
   multiboot_enum(mbp);
+  puts("Detecting ACPI...");
+  struct rsdp_desc* rsdp_p = acpi_findrsdp();
+  if(rsdp_p)
+  {
+    puts("found: 0x"); puts(itoa((uint32_t)rsdp_p, buffer, 16));
+    putc('\n');
+    puts("OEM string: ");
+    for(int i = 0; i < 6; i++)
+    {
+      putc(rsdp_p->oemid[i]);
+    }
+    putc('\n');
+  }
+  else
+  {
+    puts("not found.\n");
+  }
+  int len;
+  asm ("movl eos_syscall_end - eos_syscall_start, %%eax\n\t"
+       "movl %%eax, %0\n\t"
+       :"=r"(len)
+       :
+       :"%eax"
+      );
+  memcpy((void*)0x100, (void*)&eos_syscall, len);
   init_descriptor_tables();
   timerinit(1000);
   read_rtc();
@@ -226,6 +294,7 @@ void kmain(uint32_t magic, uint32_t mbp)
   {
     puts("Cannot start Eelphant: no video. Falling back to kernel shell\n");
     kshell_main();
+    puts("kshell returned\n"); return;
   }
   int ret = 0;
   do

@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <dev/graphics.h>
+#include <dma.h>
 
 uint32_t* fb;
 //uint32_t fbb[786432];
@@ -21,6 +22,8 @@ uint8_t fbt;
 rgb_t color;
 
 uint16_t fb_font[128][16] = {
+  [0] = {0,},
+  [32] = {0,},
   [33] = {
     0,0,0,
     0b0110000000000000,
@@ -1220,6 +1223,11 @@ void vinit(int64_t width, int64_t height, int64_t bpp, int64_t pitch, uint64_t a
       fbb[y * width + x] = 0;
     }
   }
+  /*puts("Resetting DMA...");
+  dma_reset(1);
+  puts("done!\n");
+  dma_set_write(1);
+  dma_mask_channel(1);*/
 }
 
 void vdestroy()
@@ -1376,14 +1384,16 @@ void vd_line(int64_t x1, int64_t y1, int64_t x2, int64_t y2)
 void vswap()
 {
   //asm volatile("cli");
-  uint8_t* fbbyte = (uint8_t*)fb;
-  uint8_t* fbbbyte = (uint8_t*)fbb;
+  uint32_t* fbbyte = (uint32_t*)fb;
+  uint32_t* fbbbyte = (uint32_t*)fbb;
+  //float* fbbyte = (float*)fb;
+  //float* fbbbyte = (float*)fbb;
   for(int64_t y = 0; y < fbh; y++)
-    for(int64_t x = 0; x < fbp; x++)
+    for(int64_t x = 0; x < fbw; x++)
     {
-      fbbyte[y * fbp + x] = fbbbyte[y * fbp + x];
+      fbbyte[y * fbw + x] = fbbbyte[y * fbw + x];
     }
-  
+
   //asm volatile("sti");
 }
 

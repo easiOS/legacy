@@ -79,7 +79,7 @@ void vbgfxinit(uint8_t bus, uint8_t slot)
   v->data[0] = iobase;
   v->bus = bus; v->slot = slot;
   v->set_mode = &vbgfx_set_res;
-  vbgfx_set_res(v, 1024, 768, 32);
+  //vbgfx_set_res(v, 1024, 768, 32);
 }
 
 void vbgfx_set_res(vga_card* v, int64_t w, int64_t h, uint8_t bpp)

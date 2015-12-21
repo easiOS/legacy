@@ -153,3 +153,16 @@ size_t strspn (const char *str1, const char *str2)
 
   return count;
 }
+
+int memcmp(const void* ptr1, const void* ptr2, size_t num)
+{
+  const unsigned char *p1 = ptr1, *p2 = ptr2;
+  while(num--)
+  {
+    if(*p1 != *p2)
+      return *p1 - *p2;
+    else
+      p1++,p2++;
+  }
+  return 0;
+}

@@ -139,7 +139,6 @@ static void pcnet32_callback(registers_t regs)
 	puts("pcnet3: cb\n");
 	pcnet32_dwio_write_csr(iobase, 0, pcnet32_dwio_read_csr(iobase, 0) | 0x7f00);
 	pcnet32_dwio_write_csr(iobase, 4, pcnet32_dwio_read_csr(iobase, 4) | 0x26a);
-	outb(0x20, 0x20);
 }
 
 static int pcnet32_sendpacket(void* packet, size_t len)
@@ -190,8 +189,9 @@ void pcnet3init(uint8_t bus, uint8_t slot)
   uint32_t conf = pci_config_read_word(bus, slot, 0, 4) << 16 | pci_config_read_word(bus, slot, 0, 6);
   conf &= 0xFFFF0000;
   conf |= 0x5;
-  pci_config_write_word(bus, slot, 0, 4, (uint16_t) (conf >> 16));
-  pci_config_write_word(bus, slot, 0, 6, (uint16_t) conf);
+	pci_config_write_dword(bus, slot, 0,4, conf);
+  /*pci_config_write_word(bus, slot, 0, 4, (uint16_t) (conf >> 16));
+  pci_config_write_word(bus, slot, 0, 6, (uint16_t) conf);*/
   //get iobase
   uint32_t bar0 = (((uint32_t)pci_config_read_word(bus, slot, 0, 0x10)) << 16) | (pci_config_read_word(bus, slot, 0, 0x12) & 0xFFFF);
   itoa(bar0, b, 16);
@@ -228,80 +228,5 @@ void pcnet3init(uint8_t bus, uint8_t slot)
     puts(b); if(i != 5) putc(':');
   }
   putc('\n');
-	//puts("pcnet3: Register interrupt handler...");
-	//register_interrupt_handler(IRQ9, &pcnet32_callback);
-	//puts("done!\n");
-	//swstyle -> 2
-	puts("pcnet3: setting swtyle to 2\n");
-	uint32_t csr58 = pcnet32_dwio_read_csr(iobase, 58);
-	csr58 &= 0xfff0;
-	csr58 |= 2;
-	pcnet32_dwio_write_csr(iobase, 58, csr58);
-	//asel
-	puts("pcnet3: setting asel\n");
-	uint32_t bcr2 = pcnet32_dwio_read_bcr(iobase, 2);
-	bcr2 |= 0x2;
-	pcnet32_dwio_write_bcr(iobase, 2, bcr2);
-	puts("pcnet3: allocating buffers and descriptor entries\n");
-	rx_buffers = (uint32_t)malloc(1548 * 32);
-	tx_buffers = (uint32_t)malloc(1548 * 8);
-	rdes = (uint8_t*)malloc(32 * 16);
-	tdes = (uint8_t*)malloc(8 * 16);
-	for(int i = 0; i < 32; i++)
-	{
-		pcnet32_initde(rdes, i, 0);
-		if(i < 8)
-			pcnet32_initde(tdes, i, 1);
-	}
-	puts("pcnet3: writing init block address\n");
-	pcnet32_init_block.tlen_rlen = 0x30 << 8 | 0x50;
-	pcnet32_init_block.mode = 0;
-	pcnet32_init_block.rx_ring = (uint32_t)rdes;
-	pcnet32_init_block.tx_ring = (uint32_t)tdes;
-	pcnet32_dwio_write_csr(iobase, 1, (uint32_t)&pcnet32_init_block);
-	pcnet32_dwio_write_csr(iobase, 2, ((uint32_t)&pcnet32_init_block) >> 16);
-	uint32_t csr3 = pcnet32_dwio_read_csr(iobase, 3);
-	uint32_t csr4 = pcnet32_dwio_read_csr(iobase, 4);
-	//nullázások
-	csr3 &= ~(1 << 10 | 1 << 2);
-	//szettelések
-	csr3 |= 1 << 8;
-	csr4 |= 1 << 11 | 1 << 10;
-	pcnet32_dwio_write_csr(iobase, 3, csr3);
-	pcnet32_dwio_write_csr(iobase, 4, csr4);
-	uint32_t csr0 = pcnet32_dwio_read_csr(iobase, 0);
-	csr0 |= 1 | 1 << 6;
-	pcnet32_dwio_write_csr(iobase, 0, csr0);
-	puts("pcnet3: waiting for init.");
-	while(!(pcnet32_dwio_read_csr(iobase, 0) & 0x100));
-	puts("..done! Starting card...");
-	csr0 = pcnet32_dwio_read_csr(iobase, 0);
-	csr0 &= ~(1 | 1 << 2);
-	csr0 |= 1<<1;
-	pcnet32_dwio_write_csr(iobase, 0, csr0);
-	puts("done!\n");
-	puts("pcnet3: card successfully initialized!!\n");
-	dev->write = &pcnet32_sendpacket;
-	uint8_t fasz[] = {//0x55, 0x55, 0x55, 0x55,0x55, 0x55, 0x55, 0xD5,
-	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-	0,0,0,0,0,0,
-	0x06, 0x08,
-	//arp
-	0x01, 0x00,
-	0x00, 0x08,
-	0x06, 0x04,
-	0x02, 0x00,
-	0, 0,
-	0, 0,
-	0, 0,
-	192, 168,
-	2, 1,
-	0x08, 0x00,
-	0x27, 0x10,
-	0xFA, 0x52,
-	//0xBF, 0x4D, 0x45, 0xBE
-	};
-	dev->write(&fasz, sizeof(fasz) / sizeof(uint8_t));
-	puts("pcnet3: tested\n");
-	//asm("int $0x71");
+	
 }

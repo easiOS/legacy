@@ -68,6 +68,7 @@ void tputc(char a, uint8_t color)
       ty++;
       if(ty >= th) tscroll();
       tx = 0;
+      return;
     case '\b':
       tbuffer[ty * tw + tx] = ' ' | tcolor;
       tx--;
@@ -96,7 +97,7 @@ void tcls()
   for(size_t y = 0; y < th; y++)
     for(size_t x = 0; x < tw; x++)
     {
-      tbuffer[y * tw + x] = 0x20 | tcolor;
+      tbuffer[y * tw + x] = ' ' | tcolor;
     }
 }
 void tswrite(const char* str)

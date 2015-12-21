@@ -29,5 +29,19 @@ void graphics_set_mode(int64_t w, int64_t h, uint8_t bpp)
 
 void graphics_swap_buffer(void* ptr)
 {
-  
+
+}
+
+int graphics_available()
+{
+  int ret = 0;
+  for(int i = 0; i < MAX_GFX_N; i++)
+  {
+    if(gfx_devices[i].vendor)
+    {
+      ret = 1;
+      break;
+    }
+  }
+  return ret;
 }

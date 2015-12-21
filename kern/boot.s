@@ -52,8 +52,22 @@ multiboot_entry:
   cli
   hlt
 
+global topkek
+topkek:
+  push 1
+  push text
+  push text_end - text_start
+  call 0x100
+  add esp, 12
+  ret
+
 section .stack, nobits
 align 4
 stack_bottom:
   resb 0x4000
 stack_top:
+
+section .data
+text_start:
+text db "topkek", 13, 0
+text_end:

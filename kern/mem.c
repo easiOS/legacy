@@ -351,7 +351,7 @@ void memmgmt_init(struct multiboot_mmap_entry* mmap, int mmap_size)
 		puts("\n    addr: 0x"); puts(itoa(mmap[i].addr, b, 16));
 		puts("\n    len:  "); puts(itoa(mmap[i].len, b, 10));
 		puts("\n    type: "); puts(itoa(mmap[i].type, b, 10)); putc('\n');
-    if(mmap[i].type == 1)
+    if(i != 0 && mmap[i].type == 1)
     {
       mrvn_memory_init((void*)(uint32_t)mmap[i].addr, mmap[i].len);
     }

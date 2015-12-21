@@ -20,6 +20,7 @@
 #include <dev/pci/virtboxgfx.h>
 #include <kernel.h>
 #include <dev/pci.h>
+#include <acpi.h>
 
 #include "terminal.h"
 #include "msgbox.h"
@@ -85,7 +86,7 @@ void eelphant_eval(char* cmd)
     h = atoi(args[2]);
     puts(itoa(w, b, 10)); putc(' '); puts(itoa(h, b, 10)); putc('\n');
     if(w == 0 || h == 0) return;
-    if(vbgfx_isinit())
+    if(graphics_available())
     {
       puts("setting res...\n");
       //vbgfx_set_res(w, h);
@@ -94,7 +95,7 @@ void eelphant_eval(char* cmd)
     }
     else
     {
-      puts("eelphant: `resolution\' only works in VirtualBox, QEMU or Bochs\n");
+      puts("resolution: no graphics card available\n");
     }
     return;
   }
@@ -111,6 +112,23 @@ void eelphant_eval(char* cmd)
   CMDCMP("lspci")
   {
     pci_ls();
+  }
+  CMDCMP("lsacpi")
+  {
+    struct rsdp_desc* rsdp_d = acpi_getrsdp();
+    if(!rsdp_d)
+    {
+      puts("lsacpi: no ACPI\n");
+      return;
+    }
+    puts("=========\n");
+    puts("OEM ID: ");
+    for(int i = 0; i < 6; i++) putc(rsdp_d->oemid[i]);
+    putc('\n');
+    puts("RSDT OEM ID: ");
+    for(int i = 0; i < 6; i++) putc(rsdp_d->rsdt->OEMID[i]);
+    putc('\n');
+    puts("=========\n");
   }
 }
 
@@ -458,8 +476,11 @@ void eelphant_destroy_window(ep_window* w)
   w->unload = NULL;
 }
 
+int draw_avg = 0;
+
 int eelphant_main(int64_t width, int64_t height)
 {
+  char b[64];
   puts("Eelphant Window Manager v0\n");
   ep_restart = 0;
   ep_sw = width;
@@ -496,6 +517,9 @@ int eelphant_main(int64_t width, int64_t height)
     eelphant_event(now - last);
     eelphant_update(now - last);
     eelphant_draw();
+    draw_avg = (draw_avg + now - last) / 2;
+    vsetcol(255, 0, 0, 255);
+    vd_print(10, 400, itoa(draw_avg, b, 10), NULL, NULL);
     last = now;
     if(ep_restart)
     {
