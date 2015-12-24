@@ -195,4 +195,8 @@ void irq_handler(registers_t regs)
        isr_t handler = interrupt_handlers[regs.int_no];
        handler(regs);
    }
+   else
+   {
+     printf("\n[!!!] Unhandled interrupt: %d\n", regs.int_no);
+   }
 }
