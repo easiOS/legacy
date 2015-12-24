@@ -25,6 +25,7 @@
 #include <dev/pci.h>
 #include <tar.h>
 #include <dev/ethernet.h>
+#include <dev/net_loopback.h>
 #include <kshell.h>
 #include <users.h>
 #include <vfs.h>
@@ -252,8 +253,7 @@ void kmain(uint32_t magic, uint32_t mbp)
   struct rsdp_desc* rsdp_p = acpi_findrsdp();
   if(rsdp_p)
   {
-    puts("found: 0x"); puts(itoa((uint32_t)rsdp_p, buffer, 16));
-    putc('\n');
+    printf("Found: %x\n", (uint32_t)rsdp_p);
     puts("OEM string: ");
     for(int i = 0; i < 6; i++)
     {
@@ -265,17 +265,18 @@ void kmain(uint32_t magic, uint32_t mbp)
   {
     puts("not found.\n");
   }
-  int len;
+  /*int len;
   asm ("movl eos_syscall_end - eos_syscall_start, %%eax\n\t"
        "movl %%eax, %0\n\t"
        :"=r"(len)
        :
        :"%eax"
       );
-  memcpy((void*)0x100, (void*)&eos_syscall, len);
+  memcpy((void*)0x100, (void*)&eos_syscall, len);*/
   init_descriptor_tables();
   timerinit(1000);
   read_rtc();
+  nlb_init();
   kbdinit();
   mouseinit();
   //ideinit();
@@ -284,10 +285,11 @@ void kmain(uint32_t magic, uint32_t mbp)
   while(time(NULL) == 0);
   krandom_get();
   ethernet_list();
-  puts("Welcome to ");
-  puts(KERNEL_NAME);
-  puts("!\n");
+  printf("Welcome to %s!\n", KERNEL_NAME);
   puts("Copyright (c) 2015, Daniel (Easimer) Meszaros\nAll rights reserved.\n");
+  //ping test
+  uint8_t localip[4] = {127, 0, 0, 1};
+  icmp_send_ping_req(localip, localip);
   size_t w = vgetw();
   size_t h = vgeth();
   if(w == 0 || h == 0)
@@ -301,7 +303,7 @@ void kmain(uint32_t magic, uint32_t mbp)
   {
     ret = eelphant_main(w, h);
   } while (ret);
-  puts("eelphant returned with 0\n");
+  printf("eelphant returned with %d\n", ret);
   reboot("Eelphant exited\n");
 }
 

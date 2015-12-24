@@ -9,6 +9,7 @@
 #include <dev/pci/pcnet3.h>
 #include <dev/pci/ehci.h>
 #include <dev/pci/virtboxgfx.h>
+#include <dev/pci/virtio-net.h>
 
 struct _pci_device {
   uint16_t vendor;
@@ -38,6 +39,7 @@ struct _pci_device {
     {0x1002, 0x4c59, "ATI Mobility Radeon AGP", NULL},
     {0x104c, 0xac51, "Texas Instruments 1420 PCI2CB", NULL},
     {0x125d, 0x1988, "ESS Allegro Audio", NULL},
+    {0x1af4, 0x1000, "VirtIO Network Card", &virtionetinit},
     {}
 };
 

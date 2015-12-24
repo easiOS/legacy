@@ -6,6 +6,7 @@
 #include <string.h>
 #include <dev/ethernet.h>
 #include <dtables.h>
+#include <dev/timer.h>
 
 #define REG_APROM0 0x00
 #define REG_APROM4 0x04
@@ -40,14 +41,15 @@ struct pcnet32_tx_head {
 
 struct pcnet32_init_block {
 	uint16_t	mode;
-	uint16_t	tlen_rlen;
+	uint8_t	rlen;
+	uint8_t	tlen;
 	uint8_t	phys_addr[6];
 	uint16_t	reserved;
 	uint32_t	filter[2];
 	/* Receive and transmit ring base, along with extra bits. */
 	uint32_t	rx_ring;
 	uint32_t	tx_ring;
-} pcnet32_init_block;
+} __attribute__((packed, aligned(4))) pcnet32_init_block;
 
 uint32_t rx_buffers, tx_buffers;
 uint8_t* rdes, *tdes;
@@ -134,36 +136,48 @@ void pcnet32_initde(uint8_t* des, int idx, int is_tx)
 		des[idx * 16 + 7] = 0x80;
 }
 
-static void pcnet32_callback(registers_t regs)
+void pcnet32_callback()
 {
-	puts("pcnet3: cb\n");
-	pcnet32_dwio_write_csr(iobase, 0, pcnet32_dwio_read_csr(iobase, 0) | 0x7f00);
-	pcnet32_dwio_write_csr(iobase, 4, pcnet32_dwio_read_csr(iobase, 4) | 0x26a);
+	if(!iobase) return;
+	int nah = 1;
+	for(int i = 0; i < 32; i++)
+	{
+		if(pcnet32_driverowns(rdes, i))
+		{
+			nah = 0;
+		}
+	}
+	if(nah) return;
+	puts("pcnet32: cb\n");
+	uint16_t plen = *(uint16_t *)&rdes[rx_buffer_ptr * 16 + 8];
+	void *pbuf = (void *)(rx_buffers + rx_buffer_ptr * 1548);
+	ethernet_frame_t* ethf = (ethernet_frame_t*)pbuf;
+	puts("pcnet32: dest mac: ");
+	for(int i = 0; i < 6; i++)
+	{
+		char buffer[8];
+		puts(itoa(ethf->hwaddr_dest[i], buffer, 16)); putc(':');
+	}
+	putc('\n');
+	rdes[rx_buffer_ptr * 8 + 7] = 0x80;
+	rx_buffer_ptr = pcnet32_nextrxidx(rx_buffer_ptr);
 }
 
 static int pcnet32_sendpacket(void* packet, size_t len)
 {
 	if(!pcnet32_driverowns(tdes, tx_buffer_ptr))
 	{
-		puts("pcnet3: driver doesn't own txbuffer de\n");
 		return 0;
 	}
-	puts("pcnet3: copying data to buffer...");
-	//tdes[tx_buffer_ptr * 16] = (uint32_t)packet;
-	memcpy((void *)(tx_buffers + tx_buffer_ptr * 16), packet, len);
+	memcpy((void*)(tx_buffers + tx_buffer_ptr * 1548), packet, len);
 	tdes[tx_buffer_ptr * 16 + 7] |= 0x2;
 	tdes[tx_buffer_ptr * 16 + 7] |= 0x1;
-	puts("set de flags...");
 	uint16_t bcnt = (uint16_t)(-len);
-  bcnt &= 0xfff;
-  bcnt |= 0xf000;
-	puts("set de...");
-  *(uint16_t *)&tdes[tx_buffer_ptr * 16 + 4] = bcnt;
+	bcnt &= 0xfff;
+	bcnt |= 0xf000;
+	*(uint16_t *)&tdes[tx_buffer_ptr * 16 + 4] = bcnt;
 	tdes[tx_buffer_ptr * 16 + 7] |= 0x80;
-	//while(tdes[tx_buffer_ptr * 16 + 7] | 0x80);
-	//pcnet32_dwio_write_csr(iobase, 0, 0x48);
 	tx_buffer_ptr = pcnet32_nexttxidx(tx_buffer_ptr);
-	puts("done!\n");
 	return len;
 }
 
@@ -171,18 +185,18 @@ void pcnet3init(uint8_t bus, uint8_t slot)
 {
   //uint32_t iobase;
   char b[64];
-  puts("Initializing pcnet3 on PCI bus:slot "); itoa(bus, b, 10);
+  puts("Initializing pcnet32 on PCI bus:slot "); itoa(bus, b, 10);
   puts(b); putc(':'); itoa(slot, b, 10); puts(b); putc('\n');
   uint16_t vendor = pci_config_read_word(bus, slot, 0, 0);
   if(vendor == 0xFFFF)
   {
-    puts("pcnet3: init failed: device not found on specified bus.slot\n");
+    puts("pcnet32: init failed: device not found on specified bus.slot\n");
     return;
   }
   uint16_t device = pci_config_read_word(bus, slot, 0, 2);
   if(vendor != 0x1022 || device != 0x2000)
   {
-    puts("pcnet3: init failed: device is not compatible\n");
+    puts("pcnet32: init failed: device is not compatible\n");
     return;
   }
   //config
@@ -195,30 +209,30 @@ void pcnet3init(uint8_t bus, uint8_t slot)
   //get iobase
   uint32_t bar0 = (((uint32_t)pci_config_read_word(bus, slot, 0, 0x10)) << 16) | (pci_config_read_word(bus, slot, 0, 0x12) & 0xFFFF);
   itoa(bar0, b, 16);
-  puts("pcnet3: BAR0 address: ");
+  puts("pcnet32: BAR0 address: ");
   puts(b);
   putc('\n');
   iobase = ((bar0 >> 16) & 0xFFFFFFFC);
   if(inb(iobase) == 0xFF)
   {
-    puts("pcnet3: what teh hell\n");
+    puts("pcnet32: what teh hell\n");
     return;
   }
   itoa(iobase, b, 16);
-  puts("pcnet3: IO base addr: "); puts(b); putc('\n');
+  puts("pcnet32: IO base addr: "); puts(b); putc('\n');
   struct ethernet_device* dev = ethernet_allocate();
 	dev->flags |= 1;
   dev->iobase = iobase;
   dev->irq = 9;
 	//pci_config_write_byte(bus, slot, 0, 0x3f, 9);
-  puts("pcnet3: switching to 32-bit mode\n");
+  puts("pcnet32: switching to 32-bit mode\n");
   //set to 32-bit mode
   inl(iobase + 0x18);
   inw(iobase + 0x14);
 	//sleep(10);
 	outl(iobase + REG_RDP, 0);
   //get MAC
-  puts("pcnet3: MAC address: ");
+  puts("pcnet32: MAC address: ");
   for(int i = 0; i < 6; i++)
   {
     int macaddr = inb(iobase + REG_APROM0 + i);
@@ -228,5 +242,84 @@ void pcnet3init(uint8_t bus, uint8_t slot)
     puts(b); if(i != 5) putc(':');
   }
   putc('\n');
-	
+	uint32_t csr58 = pcnet32_dwio_read_csr(iobase, 58);
+	csr58 &= 0xfff0;
+	csr58 |= 2;
+	pcnet32_dwio_write_csr(iobase, 58, csr58);
+	uint32_t bcr2 = pcnet32_dwio_read_csr(iobase, 2);
+	bcr2 |= 0x2;
+	pcnet32_dwio_write_csr(iobase, 2, bcr2);
+	//ring buffers
+	puts("pcnet32: initializing ring buffers: allocating descriptors...");
+	rdes = (uint8_t*)malloc(32*16);
+	tdes = (uint8_t*)malloc(8*16);
+	puts("done, initializing descriptors...");
+	for(int i = 0; i < 32; i++)
+	{
+		if(i < 8)
+		{
+			pcnet32_initde(tdes, i, 1);
+		}
+		pcnet32_initde(rdes, i, 0);
+	}
+	puts("done, allocating buffers...");
+	rx_buffers = (uint32_t)malloc(1548*32);
+	tx_buffers = (uint32_t)malloc(1548*8);
+	puts("done.\npcnet32: setting up card registers: setting init block...");
+	//card regs setup
+	pcnet32_init_block.tlen = 0x30;
+	pcnet32_init_block.rlen = 0x50;
+	pcnet32_init_block.rx_ring = rx_buffers;
+	pcnet32_init_block.tx_ring = tx_buffers;
+	puts("done, writing address...");
+	pcnet32_dwio_write_csr(iobase, 1, (uint16_t)(uint32_t)&pcnet32_init_block);
+	pcnet32_dwio_write_csr(iobase, 2, (uint16_t)(((uint32_t)&pcnet32_init_block) >> 16));
+	puts("done.\npcnet32: disabling interrupts...");
+	//stuff
+	uint32_t csr3 = pcnet32_dwio_read_csr(iobase, 3);
+	csr3 &= ~(1 << 10);
+	csr3 &= ~(1 << 9);
+	csr3 |= (1 << 8);
+	csr3 &= ~(1 << 2);
+	pcnet32_dwio_write_csr(iobase, 3, csr3);
+	puts("done, enabling auto-padding...");
+	uint32_t csr4 = pcnet32_dwio_read_csr(iobase, 4);
+	csr4 |= (1 << 11);
+	pcnet32_dwio_write_csr(iobase, 4, csr4);
+	puts("done, setting CSR0 bit 0...");
+	uint32_t csr0 = pcnet32_dwio_read_csr(iobase, 0);
+	csr0 |= 1;
+	pcnet32_dwio_write_csr(iobase, 0, csr0);
+	puts("done.\npcnet32: waiting for init...");
+	while(!(pcnet32_dwio_read_csr(iobase, 0) & (1 << 8)))
+	{
+		putc('.');
+		sleep(100);
+	}
+	puts("done!\n");
+	csr0 = pcnet32_dwio_read_csr(iobase, 0);
+	csr0 &= ~1;
+	csr0 &= ~(1 << 2);
+	csr0 |= (1 << 1);
+	pcnet32_dwio_write_csr(iobase, 0, csr0);
+	puts("pcnet32: no init, no stop, start\n");
+	dev->write = &pcnet32_sendpacket;
+
+	strcpy(dev->name, "pcnet32");
+
+	dev->ipv4_address[0] = 0xC0;
+	dev->ipv4_address[1] = 0xA8;
+	dev->ipv4_address[2] = 0x02;
+	dev->ipv4_address[3] = 0x01;
+
+	dev->ipv4_netmask[0] = 0xFF;
+	dev->ipv4_netmask[1] = 0xFF;
+	dev->ipv4_netmask[2] = 0x00;
+	dev->ipv4_netmask[3] = 0x00;
+
+	dev->ipv4_gateway[0] = 0xC0;
+	dev->ipv4_gateway[1] = 0xA8;
+	dev->ipv4_gateway[2] = 0x00;
+	dev->ipv4_gateway[3] = 0x01;
+	//while(1) ethernet_send_arp(dev);
 }

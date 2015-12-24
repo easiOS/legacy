@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAX_ETH_N 2
+#define MAX_ETH_N 8
 
 struct ethernet_device ethernet_devices[MAX_ETH_N];
 
@@ -12,6 +12,7 @@ struct ethernet_device* ethernet_allocate()
   for(int i = 0; i < MAX_ETH_N; i++)
   {
     if(ethernet_devices[i].flags & 1) continue;
+    ethernet_devices[i].flags = 1;
     return &ethernet_devices[i];
   }
   return NULL;
@@ -55,4 +56,43 @@ void ethernet_list()
     }
     puts("\n----------------\n");
   }
+}
+
+int ethernet_send_arp(struct ethernet_device* dev)
+{
+  struct {
+      ethernet_frame_t ethf;
+      arp_packet_t arpp;
+  } __attribute__((packed)) pckt;
+  puts("ethernet: building ARP packet...");
+  for(int i = 0; i < 6; i++)
+  {
+    pckt.ethf.hwaddr_src[i] = dev->mac[i];
+    pckt.ethf.hwaddr_dest[i] = 0xFF;
+  }
+  pckt.ethf.ethertype = 0x0806;
+  pckt.arpp.htype = 1;
+  pckt.arpp.ptype = 0x0800;
+  pckt.arpp.hlen = 6;
+  pckt.arpp.plen = 4;
+  pckt.arpp.op = 2;
+  for(int i = 0; i < 6; i++)
+  {
+    ((uint8_t*)&pckt.arpp.sha0)[i] = dev->mac[i];
+    ((uint8_t*)&pckt.arpp.tha0)[i] = dev->mac[i];
+  }
+  for(int i = 0; i < 4; i++)
+  {
+    ((uint8_t*)&pckt.arpp.spa0)[i] = dev->ipv4_address[i];
+    ((uint8_t*)&pckt.arpp.tpa0)[i] = dev->ipv4_address[i];
+  }
+  puts("sending...");
+  dev->write(&pckt, sizeof(pckt), dev);
+  puts("sent!\n");
+  return 0;
+}
+
+const struct ethernet_device* ethernet_getif(int id)
+{
+  return (const struct ethernet_device*)&ethernet_devices[id];
 }

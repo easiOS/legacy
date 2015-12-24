@@ -42,10 +42,12 @@ SOURCES=["kern/boot.s", "kern/kernel.c", "kern/text.c", "dev/serial.c",
          "kern/dma.c", "dev/pci/virtboxgfx.c",
          "kshell/kshell.c",
          "dev/pci/ne2k_pci.c", "dev/ethernet.c", "dev/pci/pcnet3.c",
-         "dev/pci/ehci.c", "dev/graphics.c",
+         "dev/pci/ehci.c", "dev/graphics.c", "dev/net_loopback.c",
+         "dev/pci/virtio-net.c",
          "eelphant/eelphant.c", "eelphant/terminal.c", "eelphant/msgbox.c",
          "eelphant/loginwin.c",
          "iso/boot/grub/locale/eos.po",
+         "net/icmp.c", "net/ipv4.c", "net/routing.c",
          #"kern/fs/fat32.c"]
          ]
 
