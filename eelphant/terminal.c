@@ -18,14 +18,15 @@ void terminal_update(uint64_t dt, ep_window* w)
 void terminal_draw(uint64_t bx, uint64_t by, ep_window* w)
 {
   vsetcol(192, 192, 192, 255);
-  char asd[2];
-  int64_t lx = bx, ly = by;
-  for(int i = 0; i < 2000; i++)
+  char asd[81];
+  for(int i = 0; i < 25; i++)
   {
-    if((i + 1) % 80 == 0 && i != 0){ ly += 16; lx = bx; }
-    asd[0] = ((uint16_t*)(w->userdata[0]))[i] & 0b1111111;
-    if(asd[0] < 32 || asd[0] > 127) continue;
-    vd_print(lx, ly, asd, &lx, &ly);
+    memset(asd, 0, 81);
+    for(int j = 0; j < 80; j++)
+    {
+      asd[j] = ((uint16_t*)w->userdata[0])[i * 80 + j] & 0b1111111;
+    }
+    vd_print(bx + 5, by + i * 16, asd, NULL, NULL);
   }
 }
 

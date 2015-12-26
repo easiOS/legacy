@@ -166,7 +166,6 @@ static const char* errorstr[] = {"Division by zero", "Debug exception",
 
 void isr_handler(registers_t regs)
 {
-  kpanic(errorstr[regs.int_no], regs);
    if (interrupt_handlers[regs.int_no] != 0 && regs.int_no < 32)
     {
         isr_t handler = interrupt_handlers[regs.int_no];

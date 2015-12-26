@@ -16,10 +16,12 @@
 
 uint32_t* fb;
 //uint32_t fbb[786432];
-uint32_t fbb[1440000]; //maximum resolution: 1600x900 or equivalent
+uint32_t __attribute__((aligned(4)))fbb[1440000]; //maximum resolution: 1600x900 or equivalent
 int64_t fbw = 0, fbh = 0, fbbpp = 0, fbp = 0;
 uint8_t fbt;
 rgb_t color;
+
+typedef struct { unsigned char dummy [32]; } DT;
 
 uint16_t fb_font[128][16] = {
   [0] = {0,},
@@ -1297,8 +1299,8 @@ void vd_print(int64_t x, int64_t y, const char* str, int64_t* xe, int64_t* ye)
   int i = 0;
   while(str[i] != '\0')
   {
-    if(str[i] < 32 && (str[i] != 9 || str[i] != 10 || str[i] != 11 || str[i] != 13) && str[i] != 127) continue;
-    if(str[i] == 0 || str[i] > 127) break;
+    /*if(str[i] < 32 && (str[i] != 9 || str[i] != 10 || str[i] != 11 || str[i] != 13) && str[i] != 127) continue;
+    if(str[i] == 0 || str[i] > 127) break;*/
     switch(str[i])
     {
       case '\r':
@@ -1312,8 +1314,11 @@ void vd_print(int64_t x, int64_t y, const char* str, int64_t* xe, int64_t* ye)
         x2 += 24;
         break;
       default:
-        if(fb_font[(int)str[i]] != NULL)
-          vd_bitmap16(fb_font[(int)str[i]], x2, y2, 16);
+        if(i > 31 || i < 127)
+        {
+          if(fb_font[(int)str[i]] != NULL)
+            vd_bitmap16(fb_font[(int)str[i]], x2, y2, 16);
+        }
         break;
     }
     i++;
@@ -1388,12 +1393,10 @@ void vswap()
   uint32_t* fbbbyte = (uint32_t*)fbb;
   //float* fbbyte = (float*)fb;
   //float* fbbbyte = (float*)fbb;
-  for(int64_t y = 0; y < fbh; y++)
-    for(int64_t x = 0; x < fbw; x++)
-    {
-      fbbyte[y * fbw + x] = fbbbyte[y * fbw + x];
-    }
-
+  for(int64_t i = 0; i < fbw * fbh; i++)
+  {
+    fbbyte[i] = fbbbyte[i];
+  }
   //asm volatile("sti");
 }
 
@@ -1415,6 +1418,35 @@ void vd_bitmap32(uint32_t* bitmap, int64_t x, int64_t y, int64_t h)
     for(int j = 31; j > 0; j--)
     {
       if(bitmap[i] >> j & 1) vplot(x + 32 - j, y + i);
+    }
+  }
+}
+
+void vd_circle(int x0, int y0, int radius)
+{
+  if(radius < 1) return;
+  int x = radius;
+  int y = 0;
+  int deco2 = 1 - x;
+  while(y <= x)
+  {
+    vplot(x + x0, y + y0);
+    vplot( y + x0,  x + y0);
+    vplot(-x + x0,  y + y0);
+    vplot(-y + x0,  x + y0);
+    vplot(-x + x0, -y + y0);
+    vplot(-y + x0, -x + y0);
+    vplot( x + x0, -y + y0);
+    vplot( y + x0, -x + y0);
+    y++;
+    if(deco2 <= 0)
+    {
+      deco2 += 2*y+1;
+    }
+    else
+    {
+      x--;
+      deco2 += 2 * (y - x) + 1;
     }
   }
 }

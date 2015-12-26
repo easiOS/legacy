@@ -31,49 +31,19 @@
 #include <vfs.h>
 #include <acpi.h>
 #include <stdarg.h>
+#include <cpuid.h>
+
+struct cpu_desc cpu_desc;
 
 #define KERNEL_NAME "EasiOS v0.3.2"
 
 const char* cmdline = NULL;
-uint16_t text_buffer[2000];
+uint16_t __attribute__((aligned(4))) text_buffer[2000];
 
-size_t eos_write(int fd, void* buf, size_t len)
+void gpf(registers_t regs)
 {
-  size_t ret = 0;
-  if(fd == 1)
-  {
-    char* cbuf = (char*)buf;
-    int i;
-    for(i = 0; i < len; i++)
-    {
-      putc(cbuf[i]);
-    }
-    ret = i;
-  }
-  return ret;
+  printf("[%d] General protection fault (%d)\n", ticks(), regs.err_code);
 }
-
-asm("eos_syscall_start:");
-
-int eos_syscall(uint32_t id, ...)
-{
-  //puts("SYSCALL!!!!\n");
-  int ret = 0;
-  va_list ap;
-  va_start(ap, id);
-  switch(id)
-  {
-    case 0: //write
-    {
-      ret = eos_write(va_arg(ap, int), va_arg(ap, void*), va_arg(ap, size_t));
-      break;
-    }
-  }
-  va_end(ap);
-  return ret;
-}
-
-asm("eos_syscall_end:");
 
 void kpanic(const char* msg, registers_t regs)
 {
@@ -243,12 +213,58 @@ void multiboot_enum(uint32_t mbp)
   }
 }
 
-extern void topkek();
+extern void sse_enable(void);
+
+void cpu_check_features()
+{
+  puts("=============\n");
+  unsigned int a = 0, b = 0, c = 0, d = 0;
+  __get_cpuid (0, &a, &b, &c, &d);
+  memcpy(&cpu_desc.vendor[0], &b, 4);
+  memcpy(&cpu_desc.vendor[4], &d, 4);
+  memcpy(&cpu_desc.vendor[8], &c, 4);
+  printf("CPU Vendor: %s\n", cpu_desc.vendor);
+  __get_cpuid (0x80000000, &a, &b, &c, &d);
+  if(a >= 0x80000004)
+  {
+    for(unsigned int i = 0x80000002; i < 0x80000005; i++)
+    {
+      __get_cpuid(i, &a, &b, &c, &d);
+      memcpy(&cpu_desc.brand[(i - 0x80000002) * 16], &a, 4);
+      memcpy(&cpu_desc.brand[(i - 0x80000002) * 16 + 4], &b, 4);
+      memcpy(&cpu_desc.brand[(i - 0x80000002) * 16 + 8], &c, 4);
+      memcpy(&cpu_desc.brand[(i - 0x80000002) * 16 + 12], &d, 4);
+    }
+    printf("CPU Brand: %s\n", cpu_desc.brand);
+  }
+  puts("CPU Features:\n");
+  __get_cpuid (1, &a, &b, &c, &d);
+  cpu_desc.features1 = d;
+  cpu_desc.features2 = c;
+  #define CPUFEATREQ 1
+  int cpu_required_features1[CPUFEATREQ] = {bit_SSE};
+  for(int i = 0; i < CPUFEATREQ; i++)
+  {
+    if(!(cpu_desc.features1 & cpu_required_features1[i]))
+    {
+      registers_t regs;
+      kpanic("CPU unsupported", regs);
+    }
+  }
+  sse_enable();
+  puts("\n=============\n");
+}
+
+struct cpu_desc* get_cpu_desc(void)
+{
+  return &cpu_desc;
+}
 
 void kmain(uint32_t magic, uint32_t mbp)
 {
   char buffer[64];
   multiboot_enum(mbp);
+  cpu_check_features();
   puts("Detecting ACPI...");
   struct rsdp_desc* rsdp_p = acpi_findrsdp();
   if(rsdp_p)
@@ -265,15 +281,8 @@ void kmain(uint32_t magic, uint32_t mbp)
   {
     puts("not found.\n");
   }
-  /*int len;
-  asm ("movl eos_syscall_end - eos_syscall_start, %%eax\n\t"
-       "movl %%eax, %0\n\t"
-       :"=r"(len)
-       :
-       :"%eax"
-      );
-  memcpy((void*)0x100, (void*)&eos_syscall, len);*/
   init_descriptor_tables();
+  register_interrupt_handler(13, &gpf);
   timerinit(1000);
   read_rtc();
   nlb_init();
