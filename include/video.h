@@ -38,7 +38,7 @@ typedef struct {
 void vinit(int64_t width, int64_t height, int64_t bpp, int64_t pitch, uint64_t addr);
 void vdestroy();
 void vplot(int64_t x, int64_t y);
-void vd_circle(int64_t x, int64_t y, int64_t r, int64_t segments);
+void vd_circle(int x0, int y0, int radius);
 void vsetcol(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 rgb_t vgetcol();
 void vcls();

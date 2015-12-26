@@ -65,7 +65,7 @@ void eelphant_eval(char* cmd)
   for(int i = 0; cmd_copy[i] != '\0'; cmdlen = i++);
   cmdlen++;
   char b[64];
-  puts("CMDLEN: "); puts(itoa(cmdlen, b, 10));putc('\n');
+  //puts("CMDLEN: "); puts(itoa(cmdlen, b, 10));putc('\n');
   char* token = strtok(cmd_copy, " ");
   while(token)
   {
@@ -112,6 +112,7 @@ void eelphant_eval(char* cmd)
   CMDCMP("lspci")
   {
     pci_ls();
+    return;
   }
   CMDCMP("lsacpi")
   {
@@ -129,6 +130,22 @@ void eelphant_eval(char* cmd)
     for(int i = 0; i < 6; i++) putc(rsdp_d->rsdt->OEMID[i]);
     putc('\n');
     puts("=========\n");
+    return;
+  }
+  CMDCMP("lscpu")
+  {
+    puts("\n========\nlscpu\n");
+    struct cpu_desc* cpud = get_cpu_desc();
+    printf("CPU Vendor: %s\n", cpud->vendor);
+    printf("CPU Brand: %s\n", cpud->brand);
+    printf("Features: %d, %d\n", cpud->features1, cpud->features2);
+    puts("========\n");
+    return;
+  }
+  CMDCMP("eclock")
+  {
+    eclock_spawn();
+    return;
   }
 }
 

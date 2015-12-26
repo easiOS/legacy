@@ -163,7 +163,7 @@ void pcnet32_callback()
 	rx_buffer_ptr = pcnet32_nextrxidx(rx_buffer_ptr);
 }
 
-static int pcnet32_sendpacket(void* packet, size_t len)
+static int pcnet32_sendpacket(void* packet, size_t len, eth_dev_t* dev)
 {
 	if(!pcnet32_driverowns(tdes, tx_buffer_ptr))
 	{

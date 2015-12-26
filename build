@@ -35,6 +35,7 @@ EXT = {
 
 SOURCES=["kern/boot.s", "kern/kernel.c", "kern/text.c", "dev/serial.c",
          "kern/video.c", "kern/libc/stdio.c", "kern/libc/string.c",
+         "kern/libc/math.c",
          "kern/dtables.c", "kern/dtablesa.s", "kern/int.s", "dev/timer.c",
          "kern/libc/stdlib.c", "dev/kbd.c", "kern/mem.c", "dev/mouse.c",
          "kern/libc/time.c", "kern/krandom.c", "dev/pci.c", "kern/md5.c",
@@ -45,7 +46,7 @@ SOURCES=["kern/boot.s", "kern/kernel.c", "kern/text.c", "dev/serial.c",
          "dev/pci/ehci.c", "dev/graphics.c", "dev/net_loopback.c",
          "dev/pci/virtio-net.c",
          "eelphant/eelphant.c", "eelphant/terminal.c", "eelphant/msgbox.c",
-         "eelphant/loginwin.c",
+         "eelphant/loginwin.c", "eelphant/eclock.c",
          "iso/boot/grub/locale/eos.po",
          "net/icmp.c", "net/ipv4.c", "net/routing.c",
          #"kern/fs/fat32.c"]

@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+typedef struct ethernet_device eth_dev_t;
+
 struct ethernet_device {
   uint32_t flags;
   char name[8];
@@ -14,10 +16,10 @@ struct ethernet_device {
   uint16_t iobase;
   uint8_t irq;
   void* custom;
-  int (*write)(void*, size_t, void*); //write int bytes from pointer
-  int (*read)(void*, size_t, void*); //read int bytes to pointer
-  int (*available)(void*); //is there anything in the recv buffers
-  int (*full)(void*); //are transmit buffers full
+  int (*write)(void*, size_t, eth_dev_t*); //write int bytes from pointer
+  int (*read)(void*, eth_dev_t*); //read int number of packages to pointer
+  int (*available)(eth_dev_t*); //is there anything in the recv buffers
+  int (*full)(eth_dev_t*); //are transmit buffers full
 };
 
 typedef struct ethernet_frame {
