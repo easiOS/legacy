@@ -10,6 +10,8 @@
 #include <dev/pci/ehci.h>
 #include <dev/pci/virtboxgfx.h>
 #include <dev/pci/virtio-net.h>
+#include <dev/pci/debugdrv.h>
+#include <dev/pci/amd_rv100.h>
 
 struct _pci_device {
   uint16_t vendor;
@@ -36,7 +38,7 @@ struct _pci_device {
     {0x8086, 0x2482, "USB Controller", NULL},
     {0x8086, 0x2448, "Hub Interface to PCI Bridge", NULL},
     {0x8086, 0x248c, "LPC Interface or ISA bridge", NULL},
-    {0x1002, 0x4c59, "ATI Mobility Radeon AGP", NULL},
+    {0x1002, 0x4c59, "ATI Mobility Radeon AGP", &amdrv100init},
     {0x104c, 0xac51, "Texas Instruments 1420 PCI2CB", NULL},
     {0x125d, 0x1988, "ESS Allegro Audio", NULL},
     {0x1af4, 0x1000, "VirtIO Network Card", &virtionetinit},

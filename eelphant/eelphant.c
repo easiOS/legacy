@@ -18,6 +18,7 @@
 #include <dev/kbd.h>
 #include <text.h>
 #include <dev/pci/virtboxgfx.h>
+#include <dev/pci/debugdrv.h>
 #include <kernel.h>
 #include <dev/pci.h>
 #include <acpi.h>
@@ -25,6 +26,8 @@
 #include "terminal.h"
 #include "msgbox.h"
 #include "loginwin.h"
+#include "eclock.h"
+#include "notepad.h"
 
 #define EP_MAX_WINDOWS 32
 
@@ -145,6 +148,20 @@ void eelphant_eval(char* cmd)
   CMDCMP("eclock")
   {
     eclock_spawn();
+    return;
+  }
+  CMDCMP("notepad")
+  {
+    notepad_spawn();
+    return;
+  }
+  CMDCMP("pcidbg")
+  {
+    puts("pcidbg\n");
+    if(argc < 2) return;
+    int bus = atoi(args[1]);
+    int slot = atoi(args[2]);
+    pciddrvinit(bus, slot);
     return;
   }
 }

@@ -27,7 +27,7 @@ void eclock_draw(uint64_t bx, uint64_t by, ep_window* w)
   for(int i = 0; i < 12; i++)
   {
     vplot(x, y);
-    x += 
+    //x += 
   }
 }
 

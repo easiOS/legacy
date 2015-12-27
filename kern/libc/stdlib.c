@@ -45,7 +45,7 @@ char* itoa(int64_t n, char* s, int base)
 
 void* malloc(size_t size)
 {
-  puts("Enter malloc\n");
+  //puts("Enter malloc\n");
   if(size <= 0){ puts("malloc: Size less than zero\n"); return 0;}
   /*uint32_t db = size / 16384 + 1;
   int n = -1;
@@ -87,10 +87,10 @@ void* malloc(size_t size)
   else
     puts("malloc(): out of memory\n");*/
   uint32_t address = (uint32_t)mmgmt_alloc(size);
-  char b[16];
-  puts(itoa(address, b, 16));
-  putc('\n');
-  puts("Exit malloc\n");
+  //char b[16];
+  //puts(itoa(address, b, 16));
+  //putc('\n');
+  //puts("Exit malloc\n");
   return (void*)address;
 }
 
