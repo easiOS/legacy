@@ -133,74 +133,49 @@ void pci_ls()
   {
     for(int slot = 0; slot < 32; slot++)
     {
-      char b[16];
-      memset(b, 0, 16);
       uint16_t vendor = pci_config_read_word(bus, slot, 0, 0);
       if(vendor == 0xffff)
       {
         continue;
       }
-      puts("  "); itoa(bus, b, 16); puts(b);
-      putc(':'); itoa(slot, b, 16); puts(b);
-      puts(": ");
       uint16_t device = pci_config_read_word(bus, slot, 0, 2);
-      puts("Vendor: 0x"); puts(itoa(vendor, b, 16));
-      puts(" Device: 0x"); puts(itoa(device, b, 16));
-      puts(" - ");
+      printf("  %x:%x - Vendor: 0x%x Device: 0x%x - ", bus, slot, vendor, device);
       struct _pci_device* pdptr = &_pci_devices[0];
       while(pdptr->vendor != 0)
       {
         if(pdptr->vendor == vendor && pdptr->device == device)
         {
-          puts(pdptr->name); putc('\n');
+          puts(pdptr->name);
           break;
         }
         pdptr++;
       }
-      if(pdptr->vendor == 0)
-      {
-        puts("Unknown\n");
-      }
+      putc('\n');
     }
   }
 }
 
 void pciinit()
 {
-  puts("Probing PCI bus...\n");
   for(int bus = 0; bus < 256; bus++)
   {
     for(int slot = 0; slot < 32; slot++)
     {
-      char b[16];
-      memset(b, 0, 16);
       uint16_t vendor = pci_config_read_word(bus, slot, 0, 0);
       if(vendor == 0xffff)
       {
-        //puts("No device\n");
         continue;
       }
-      puts("  "); itoa(bus, b, 16); puts(b);
-      putc(':'); itoa(slot, b, 16); puts(b);
-      puts(": ");
       uint16_t device = pci_config_read_word(bus, slot, 0, 2);
-      puts("Vendor: 0x"); itoa(vendor, b, 16); puts(b);
-      puts(" Device: 0x"); itoa(device, b, 16); puts(b);
-      puts(" - ");
       struct _pci_device* pdptr = &_pci_devices[0];
       while(pdptr->vendor != 0)
       {
         if(pdptr->vendor == vendor && pdptr->device == device)
         {
-          puts(pdptr->name); putc('\n');
           if(pdptr->initfunc != NULL) pdptr->initfunc(bus, slot);
           break;
         }
         pdptr++;
-      }
-      if(pdptr->vendor == 0)
-      {
-        puts("Unknown\n");
       }
     }
   }

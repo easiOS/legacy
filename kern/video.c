@@ -1318,11 +1318,11 @@ void vd_print(int64_t x, int64_t y, const char* str, int64_t* xe, int64_t* ye)
         {
           if(fb_font[(int)str[i]] != NULL)
             vd_bitmap16(fb_font[(int)str[i]], x2, y2, 16);
+          x2 += 10;
         }
         break;
     }
     i++;
-    x2 += 10;
   }
   if(xe != NULL) *xe = x2;
   if(ye != NULL) *ye = y2;

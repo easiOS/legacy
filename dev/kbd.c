@@ -16,7 +16,7 @@ const char keys[] = {
   'i', 'o', 'p', '{', '}', '\n', 0, 'a', 's', 'd', 'f',
   'g', 'h', 'j', 'k', 'l', ';', '\'', '`', 0, '|', 'z', 'x',
   'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0, '*', 0, ' ',
-  [74] = '-', [78] = '+', [128] = 0
+  [74] = '-', [78] = '+', [127] = 0
 };
 
 const char keys_shift[] = {
@@ -25,7 +25,7 @@ const char keys_shift[] = {
   'I', 'O', 'P', '[', ']', '\n', 0, 'A', 'S', 'D', 'F',
   'G', 'H', 'J', 'K', 'L', ':', '\"', '~', 0, '\'', 'Z', 'X',
   'C', 'V', 'B', 'N', 'M', '<', '>', '?', 0, '*', 0, ' ',
-  [74] = '-', [78] = '+', [128] = 0
+  [74] = '-', [78] = '+', [127] = 0
 };
 
 static void kbdcallback(registers_t regs)
@@ -46,41 +46,30 @@ static void kbdcallback(registers_t regs)
     outb(0x61, a | 0x80);
     outb(0x61, a);
   }
-  switch(scancode)
+  int kc = scancode & ~0x80;
+  if(kc == 0x2a || kc == 0x36)
   {
-    case 0x1D: //lctrl/rctrl
-      ctrl = true;
-      break;
-    case 0x36: //rshift
-    case 0x2A: //lshift
-      shift = true;
-      break;
-    case 0x9D:
-      //ctrl = false;
-      break;
-    case 0xAA:
-    case 0xB6:
-      //shift = false;
-      break;
-    default:
-      if(keyevents_sp + 1 > 255) break;
-      e = &keyevents[++keyevents_sp];
-      e->keycode = scancode & ~0x80;
-      e->release = scancode & 0x80;
-      e->character = (shift ? keys_shift: keys)[scancode & ~0x80];
-      e->shift = shift;
-      e->ctrl = ctrl;
-      shift = false;
-      ctrl = false;
-      break;
+    shift = !(scancode & 0x80);
+    goto end;
   }
-  for(int i = 0; i < 256; i++)
+  if(kc == 0x1d)
   {
-    if(signals[i] != NULL)
-    {
-      *signals[i] = true;
-    }
+    ctrl = !(scancode & 0x80);
+    goto end;
   }
+  if(keyevents_sp + 1 <= 255)
+  {
+    e = &keyevents[++keyevents_sp];
+    e->keycode = kc;
+    e->release = scancode & 0x80;
+    char keychar = 0;
+    if(e->keycode < 78) keychar = (shift ? keys_shift: keys)[e->keycode];
+    e->character = keychar;
+    e->shift = shift;
+    e->ctrl = ctrl;
+    //printf("KEYEVENT: keycode: 0x%x/%d char: %d release: %d shift: %d ctrl: %d\n", kc, doublescan, e->character, e->release, e->shift, e->ctrl);
+  }
+end:
   outb(0x20, 0x20); //End of Interrupt
 }
 

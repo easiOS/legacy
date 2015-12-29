@@ -1,6 +1,7 @@
 #include <eelphant.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
 #include "msgbox.h"
 
 const uint16_t warn_icon[] = {
@@ -22,6 +23,11 @@ const uint16_t warn_icon[] = {
 void msgbox_load(ep_window* w)
 {
 
+}
+
+void msgbox_unload(ep_window* w)
+{
+  free((void*)w->userdata[2]);
 }
 
 void msgbox_update(uint64_t dt, ep_window* w)
@@ -67,25 +73,47 @@ int msgbox_show(const char* message, const char* title, enum MsgBoxType type, un
   if(!w) return -1;
   strcpy(w->title, title);
   w->x = 200; w->y = 200;
-  w->w = strlen(message) * 10 + 30;
-  w->h = 100;
+  w->h = 50;
+  //longest line length in message
+  int msglen = strlen(message);
+  int linemaxlen = 0;
+  int j = 0;
+  for(int i = 0; i < msglen; i++)
+  {
+    if(message[i] == '\n')
+    {
+      if(j > linemaxlen) linemaxlen = j;
+      j = 0;
+      continue;
+    }
+    if(message[i] == '\0')
+    {
+      if(j > linemaxlen) linemaxlen = j;
+      break;
+    }
+    j++;
+  }
+  w->w = linemaxlen * 12 + 30;
   w->z = 1000;
+  w->unload = &msgbox_unload;
   w->load = &msgbox_load;
   w->update =  &msgbox_update;
   w->draw = &msgbox_draw;
   w->event = &msgbox_event;
-  w->bg.r = 212;
-  w->bg.g = 212;
-  w->bg.b = 204;
-  w->bg.a = 255;
   w->userdata[0] = type;
   w->userdata[1] = buttons;
   char* msg = (char*)&w->userdata[2];
-  for(int i = 0; i < strlen(message); i++)
+  msglen = msglen > 250 ? 250 : msglen;
+  for(int i = 0; i < msglen; i++)
   {
-    if(message[i] == '\n') w->h += 16;
     msg[i] = message[i];
+    if(msg[i] == '\n') w->h += 16;
   }
+  msg[250] = '\0';
+  w->bg.r = 212;
+  w->bg.g = 212;
+  w->bg.b = 212;
+  w->bg.a = 255;
   w->load(w);
   eelphant_switch_active(w);
   return 0;

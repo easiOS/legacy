@@ -40,6 +40,7 @@ ep_window* window_active_cmd = NULL;
 time_t last_frame_time = 60;
 time_t frame_time = 60;
 int ep_restart = 0;
+int ep_cls = 1; //clear screen?
 
 char cmd_buf[64];
 int cmd_buf_i = 0;
@@ -75,6 +76,7 @@ void eelphant_eval(char* cmd)
     args[argc++] = token;
     token = strtok(NULL, " ");
   }
+  printf("CMD: %s\n", args[0]);
   #define CMDCMP(str) if(strcmp(args[0], str) == 0)
   CMDCMP("terminal")
   {
@@ -186,139 +188,116 @@ void eelphant_event(time_t dt)
     if(window_active)
       if(window_active->event)
         window_active->event(ke, NULL, window_active);
-    /*for(int i = 0; i < 16; i++)
+    if(!ke->release) //is pressed
     {
-      if(windows[i].flags & 1)
+      if(ke->ctrl)
       {
-        if(windows[i].event)
-          windows[i].event(ke, NULL, &windows[i]);
       }
-    }*/
-  if(ke && !ke->release)
-  {
-    if(ke->shift)
-    {
+      if(ke->shift) //is shift
+      {
+      }
+      if(ke->ctrl && ke->shift)
+      {
+      }
       switch(ke->keycode)
       {
-        case 0x48:
+        case 0x48: //keypad 8 (up)
+        {
           if(window_active)
           {
-            window_active->h-=50;
+            window_active->y -= 25;
+            ep_cls = 1;
           }
           break;
-        case 0x4B:
+        }
+        case 0x4b: //keypad 4 (left)
+        {
           if(window_active)
           {
-            window_active->w-=50;
+            window_active->x -= 25;
+            ep_cls = 1;
           }
           break;
-        case 0x4D:
+        }
+        case 0x50: //keypad 2 (right)
+        {
           if(window_active)
           {
-            window_active->w+=50;
+            window_active->y += 25;
+            ep_cls = 1;
           }
           break;
-        case 0x50:
+        }
+        case 0x4d: //keypad 6 (down)
+        {
           if(window_active)
           {
-            window_active->h+=50;
+            window_active->x += 25;
+            ep_cls = 1;
           }
           break;
-      }
-    } else if(ke->ctrl) {
-      switch(ke->keycode)
-      {
-        default:
-        break;
-      }
-    } else
-    switch(ke->keycode)
-    {
-      case 0x0F: //tab
-          for(int i = 0; i < EP_MAX_WINDOWS; i++)
-          {
-            windows[i].z = 10;
-            if(&windows[i] != window_active && windows[i].flags & 1)
+        }
+        case 0x0F: //tab
+            for(int i = 0; i < EP_MAX_WINDOWS; i++)
             {
-              windows[i].z = 1;
-              window_active = &windows[i];
-              break;
+              windows[i].z = 10;
+              if(&windows[i] != window_active && windows[i].flags & 1)
+              {
+                windows[i].z = 1;
+                window_active = &windows[i];
+                break;
+              }
             }
+          break;
+        case 0x38: //left alt (cmd)
+          cmd_active = !cmd_active;
+          if(cmd_active)
+          {
+            window_active_cmd = window_active;
+            window_active = NULL;
           }
-        break;
-      case 0x38: //left alt (cmd)
-        cmd_active = !cmd_active;
-        if(cmd_active)
-        {
-          window_active_cmd = window_active;
-          window_active = NULL;
-        }
-        else
-        {
-          window_active = window_active_cmd;
-        }
-        break;
-      case 0x48: //cursor up
-        if(window_active)
-        {
-          window_active->y-=25;
-        }
-        break;
-      case 0x4B: //cursor left
-        if(window_active)
-        {
-          window_active->x-= 25;
-        }
-        break;
-      case 0x4D: //cursor right
-        if(window_active)
-        {
-          window_active->x+= 25;
-        }
-        break;
-      case 0x50: //cursor down
-        if(window_active)
-        {
-          window_active->y+= 25;
-        }
-        break;
-      case 0x1C: //enter
-        if(cmd_active)
-        {
-          eelphant_eval(cmd_buf);
+          else
+          {
+            window_active = window_active_cmd;
+          }
+          break;
+        case 0x1C: //enter
+          if(cmd_active)
+          {
+            eelphant_eval(cmd_buf);
+            cmd_buf_i = 0;
+            memset(cmd_buf, 0, 64);
+            cmd_active = false;
+          }
+          break;
+        case 0x0E: //backspace
           cmd_buf_i = 0;
           memset(cmd_buf, 0, 64);
-          cmd_active = false;
-        }
-        break;
-      case 0x0E: //backspace
-        cmd_buf_i = 0;
-        memset(cmd_buf, 0, 64);
-        break;
-      case 0x01: //escape
-        if(window_active)
-        {
-          eelphant_destroy_window(window_active);
-          window_active = NULL;
-          for(int i = 0; i < EP_MAX_WINDOWS; i++)
+          break;
+        case 0x01: //escape
+          if(window_active)
           {
-            if(windows[i].flags & 1)
+            eelphant_destroy_window(window_active);
+            window_active = NULL;
+            for(int i = 0; i < EP_MAX_WINDOWS; i++)
             {
-              window_active = &windows[i];
+              if(windows[i].flags & 1)
+              {
+                window_active = &windows[i];
+              }
             }
           }
-        }
-        break;
-      default:
-        if(cmd_active)
-          if(cmd_buf_i < 64)
-            if(!ke->release)
-              if(ke->character)
-                cmd_buf[cmd_buf_i++] = ke->character;
-        break;
+          break;
+        default:
+          if(cmd_active)
+            if(cmd_buf_i < 64)
+              if(!ke->release)
+                if(ke->character)
+                  cmd_buf[cmd_buf_i++] = ke->character;
+          break;
+      }
     }
-  }
-  ke = kbdpoll();
+    ke = kbdpoll();
   }
 }
 
@@ -359,7 +338,11 @@ void eelphant_draw()
 {
   //draw desktop
   vsetcol(60, 108, 164, 255);
-  vcls();
+  if(ep_cls)
+  {
+    vcls();
+    ep_cls = 0;
+  }
   vsetcol(255,255,255,255);
   vd_print(ep_sw - 190, ep_sh - 30, "EasiOS Professional", NULL, NULL);
   //draw windows
@@ -508,6 +491,7 @@ void eelphant_destroy_window(ep_window* w)
   w->draw = NULL;
   w->event = NULL;
   w->unload = NULL;
+  ep_cls = 1;
 }
 
 int draw_avg = 0;
@@ -544,16 +528,16 @@ int eelphant_main(int64_t width, int64_t height)
   }
   puts("Entering loop\n");
   eelphant_destroy_window(loginw);*/
-  msgbox_show("Welcome to EasiOS Professional!", "EasiOS", NONE, 0);
+  msgbox_show("Welcome to EasiOS Professional!\n\nPress ALT to open the command bar\nMove windows using keypad cursors\nUse TAB to switch between windows\nPress ESCAPE to close the current window\nThank you and have a productive day!", "EasiOS", NONE, 0);
   while(true)
   {
     now = ticks();
     eelphant_event(now - last);
     eelphant_update(now - last);
     eelphant_draw();
-    draw_avg = (draw_avg + now - last) / 2;
+    /*draw_avg = (draw_avg + now - last) / 2;
     vsetcol(255, 0, 0, 255);
-    vd_print(10, 400, itoa(draw_avg, b, 10), NULL, NULL);
+    vd_print(10, 400, itoa(draw_avg, b, 10), NULL, NULL);*/
     last = now;
     if(ep_restart)
     {
