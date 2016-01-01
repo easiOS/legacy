@@ -3,18 +3,18 @@
 
 #include <stddef.h>
 
-void* memcpy(void* destination, const void* source, size_t num);
+void* memcpy(void* destination, const void* source, size_t num); //implemented
 void* memmove(void* destination, const void* source, size_t num);
-char* strcpy(char* destination, const char* source);
+char* strcpy(char* destination, const char* source); //implemented
 char* strncpy(char* destination, const char* source, size_t num);
 
 char* strcat(char* destination, const char* source); //implemented
 char* strncat(char* destination, const char* source, size_t num);
 
-int memcmp(const void* ptr1, const void* ptr2, size_t num);
+int memcmp(const void* ptr1, const void* ptr2, size_t num); //implemented
 int strcmp(const char* str1, const char* str2); //implemented
 int strcoll(const char* str1, const char* str2); //kinda implemented
-int strncmp(const char* str1, const char* str2, size_t num);
+int strncmp(const char* str1, const char* str2, size_t num); //implemented
 size_t strxfrm(char* destination, const char* source, size_t num);
 
 void* memchr(const void* ptr, int value, size_t num);
@@ -22,9 +22,9 @@ char* strchr(char* str, int character);
 size_t strcspn(const char* str1, const char* str2);
 char* strpbrk(char* str1, const char* str2);
 char* strrchr(char * str, int character);
-size_t strspn(const char* str1, const char* str2);
+size_t strspn(const char* str1, const char* str2); //implemented
 char* strstr(char* str1, const char* str2);
-char* strtok(char* str, const char* delimiters);
+char* strtok(char* str, const char* delimiters); //implemented
 void* memset(void* ptr, int value, size_t num); //implemented
 char* strerror (int errnum);
 size_t strlen(const char * str); //implemented
