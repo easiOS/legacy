@@ -1314,7 +1314,7 @@ void vd_print(int64_t x, int64_t y, const char* str, int64_t* xe, int64_t* ye)
         x2 += 24;
         break;
       default:
-        if(i > 31 || i < 127)
+        if(str[i] > 31 && str[i] < 127)
         {
           if(fb_font[(int)str[i]] != NULL)
             vd_bitmap16(fb_font[(int)str[i]], x2, y2, 16);
