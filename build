@@ -116,7 +116,7 @@ def iso():
     if not os.path.isdir("iso/boot"):
         os.mkdir("iso/boot")
     shutil.copy(EXECUTABLE, "iso/boot/")
-    subprocess.run(args=["grub-mkrescue", "-o", ISO, "iso"])
+    subprocess.run(args=["grub-mkrescue", "-d", "/usr/lib/grub/i386-pc/", "-o", ISO, "iso"])
 
 def run():
     if os.path.isfile(ISO):
