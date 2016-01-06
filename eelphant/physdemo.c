@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <eelphant.h>
 #include <video.h>
+#include <math.h>
+#include <string.h>
 
 #define T 0
 #define SX0 1
@@ -14,28 +16,46 @@
 
 void physdemo_load(ep_window* w)
 {
-  w->userdata[T] = 0;
-  w->userdata[SX0] = 10;
-  w->userdata[SY0] = 20;
-  w->userdata[VX] = 9;
-  w->userdata[VY] = 5;
-  w->userdata[SX] = 0;
-  w->userdata[SY] = 0;
+  float* ud = (float*)w->userdata;
+  ud[T] = 0.0;
+  ud[SX0] = 50.0;
+  ud[SY0] = 100.0;
+  ud[VX] = 15.0;
+  ud[VY] = 20.0;
+  ud[SX] = 50.0;
+  ud[SY] = 100.0;
 }
 
 void physdemo_update(uint64_t dt, ep_window* w)
 {
-  w->userdata[T] += dt;
+  if(!(w->flags >> 12 & 1)) return;
+  float* ud = (float*)w->userdata;
+  if(ud[SY] <= 30)
+  {
+    return;
+  }
+  ud[T] += (float)dt / 20.0;
+  ud[SX] = ud[SX0] + ud[VX] * ud[T];
+  ud[SY] = ud[SY0] + ud[VY] * ud[T] + -1.0 * ud[T] * ud[T];
 }
 
 void physdemo_draw(uint64_t bx, uint64_t by, ep_window* w)
 {
-
+  float* ud = (float*)w->userdata;
+  vsetcol(255, 0, 0, 255);
+  if(!(w->flags >> 12 & 1))
+  {
+    vd_print(bx + 10, bx + 10, "Press SPACE to start!", NULL, NULL);
+  }
+  vd_line(bx, by + w->h - 10, bx + w->w, by + w->h - 10);
+  vd_circle(bx + ud[SX], by + w->h - ud[SY], 20);
 }
 
 void physdemo_event(struct keyevent* ke, struct mouseevent* me, ep_window* w)
 {
-
+  if(!ke) return;
+  if(ke->character == ' ' && ke->release)
+    w->flags |= 1 << 12;
 }
 
 void physdemo_spawn()
@@ -52,9 +72,9 @@ void physdemo_spawn()
   w->draw = &physdemo_draw;
   w->event = &physdemo_event;
   w->z = 0;
-  w->bg.r = 212;
-  w->bg.g = 212;
-  w->bg.b = 212;
+  w->bg.r = 0;
+  w->bg.g = 0;
+  w->bg.b = 0;
   w->bg.a = 255;
   w->load(w);
   eelphant_switch_active(w);

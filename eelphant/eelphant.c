@@ -28,6 +28,7 @@
 #include "loginwin.h"
 #include "eclock.h"
 #include "notepad.h"
+#include "physdemo.h"
 
 #define EP_MAX_WINDOWS 32
 
@@ -164,6 +165,12 @@ void eelphant_eval(char* cmd)
     int bus = atoi(args[1]);
     int slot = atoi(args[2]);
     pciddrvinit(bus, slot);
+    return;
+  }
+  CMDCMP("phys") //we'll need a proper searching algorithm soon
+  {
+    puts("physics demo\n");
+    physdemo_spawn();
     return;
   }
 }
@@ -522,6 +529,7 @@ int eelphant_main(int64_t width, int64_t height)
   ep_sh = height;
   time_t last, now;
   last = ticks();
+  now = last;
   lastmouse = time(NULL);
   puts("Entering loop\n");
   /*ep_window* loginw = eelphant_spawn_loginwin();
@@ -548,6 +556,7 @@ int eelphant_main(int64_t width, int64_t height)
   msgbox_show("Welcome to EasiOS Professional!\n\nPress ALT to open the command bar\nMove windows using keypad cursors\nUse TAB to switch between windows\nPress ESCAPE to close the current window\nThank you and have a productive day!", "EasiOS", NONE, 0);
   while(true)
   {
+    last = now;
     now = ticks();
     eelphant_event(now - last);
     eelphant_update(now - last);
@@ -555,7 +564,6 @@ int eelphant_main(int64_t width, int64_t height)
     /*draw_avg = (draw_avg + now - last) / 2;
     vsetcol(255, 0, 0, 255);
     vd_print(10, 400, itoa(draw_avg, b, 10), NULL, NULL);*/
-    last = now;
     if(ep_restart)
     {
       return 1;
