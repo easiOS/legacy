@@ -434,7 +434,7 @@ void eelphant_draw()
   vsetcol(4, 4, 4, 255);
   int64_t datex, datey;
   char b[16];
-  itoa(date[0], b, 10);
+  /*itoa(date[0], b, 10);
   vd_print(ep_sw - 250, 5, b, &datex, &datey);
   vd_print(datex, datey, "/", &datex, &datey);
   itoa(date[1], b, 10);
@@ -450,6 +450,23 @@ void eelphant_draw()
   vd_print(datex, datey, b, &datex, &datey);
   vd_print(datex, datey, ":", &datex, &datey);
   itoa(date[5], b, 10);
+  vd_print(datex, datey, b, &datex, &datey);*/
+  itoa(date[3], b, 10);
+  if(b[1] == '\0')
+  {
+    b[1] = b[0];
+    b[0] = '0';
+    b[2] = '\0';
+  }
+  vd_print(ep_sw - 75, 5, b, &datex, &datey);
+  vd_print(datex, datey, ":", &datex, &datey);
+  itoa(date[4], b, 10);
+  if(b[1] == '\0')
+  {
+    b[1] = b[0];
+    b[0] = '0';
+    b[2] = '\0';
+  }
   vd_print(datex, datey, b, &datex, &datey);
   //vsetcol(255, 0, 0, 150);
   //frame_time = (frame_time ? frame_time : 1);
