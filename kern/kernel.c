@@ -182,7 +182,7 @@ void multiboot_enum(uint32_t mbp)
         struct multiboot_tag_module *tagmod =
           (struct multiboot_tag_module *)tag;
         puts("GRUB module detected!\n");
-        if(*(uint32_t*)tagmod->mod_start == 0xC0C0A123)
+        if(*(uint32_t*)tagmod->mod_start == 0x45524653)
         {
           puts("  EasiOS VFS detected\n");
           vfs_process((void*)tagmod->mod_start);

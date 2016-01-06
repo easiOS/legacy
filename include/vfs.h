@@ -48,6 +48,19 @@ void close_fs(fs_node_t *node);
 struct dirent *readdir_fs(fs_node_t *node, uint32_t index);
 fs_node_t *finddir_fs(fs_node_t *node, char *name);
 
+struct initramfs_file {
+  char name[128];
+  uint16_t flags;
+  uint32_t size;
+} __attribute__((packed));
+
+struct initramfs_header {
+  uint32_t magic; //0x45524653
+  uint32_t count;
+  struct initramfs_file files[0];
+} __attribute__((packed));
+
 void vfs_process(void* ptr);
+struct initramfs_header* vfs_open();
 
 #endif
