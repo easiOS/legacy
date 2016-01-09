@@ -34,7 +34,7 @@ void login_unload(ep_window* w)
     free((char*)w->userdata[1]);
 }
 
-void login_draw(uint64_t bx, uint64_t by, ep_window* w)
+void login_draw(int64_t bx, int64_t by, ep_window* w)
 {
   vd_print(bx + 20, by + 20, (char*)w->userdata[0], NULL, NULL);
   vd_print(bx + 20, by + 40, (char*)w->userdata[1], NULL, NULL);

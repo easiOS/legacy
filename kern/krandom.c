@@ -16,12 +16,8 @@ uint32_t krandom_get()
   if(kr_next == -1)
   {
     kr_next = time(NULL);
-    char buffer[64];
-    itoa(kr_next, buffer, 10);
-    puts("krandom seeded with ");
-    puts(buffer);
-    putc('\n');
+    printf("krandom seeded with %d\n", kr_next);
   }
-  kr_next = kr_next * 1103515245 + time(NULL);
+  kr_next = kr_next * 1103515245 + 12345;
   return ((kr_next/65536) % 32768) % 11;
 }

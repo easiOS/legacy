@@ -107,11 +107,13 @@ void eelphant_eval(char* cmd)
   }
   CMDCMP("reboot")
   {
-    for(int i = 0; i < 256; i+=32)
+    for(int y = 0; y < vheight(); y++)
     {
-      vsetcol(44, 62, 80, i);
-      vcls();
-      vswap();
+      for(int x = 0; x < vwidth(); x++)
+      {
+        vsetcol(krandom_get() % 256, krandom_get() % 256, krandom_get() % 256, 255);
+        vplot_nb(x, y);
+      }
     }
     reboot("Requested by user");
   }

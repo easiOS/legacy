@@ -19,7 +19,7 @@ void eclock_update(uint64_t dt, ep_window* w)
   w->h = 500;
 }
 
-void eclock_draw(uint64_t bx, uint64_t by, ep_window* w)
+void eclock_draw(int64_t bx, int64_t by, ep_window* w)
 {
   vsetcol(0, 0, 0, 255);
   vd_circle(bx + 250, by + 250, 225);

@@ -35,7 +35,7 @@ void msgbox_update(uint64_t dt, ep_window* w)
 
 }
 
-void msgbox_draw(uint64_t bx, uint64_t by, ep_window* w)
+void msgbox_draw(int64_t bx, int64_t by, ep_window* w)
 {
   switch(w->userdata[0])
   {

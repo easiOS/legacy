@@ -51,4 +51,10 @@ int64_t vgeth();
 void vswap();
 void vd_bitmap16(uint16_t* bitmap, int64_t x, int64_t y, int64_t h);
 void vd_bitmap32(uint32_t* bitmap, int64_t x, int64_t y, int64_t h);
+void vplot_nb(int64_t x, int64_t y);
+int vwidth(void);
+int vheight(void);
+uint32_t* bitmap16_to32(uint32_t* dest, uint16_t* src);
+void vd_print32(int64_t x, int64_t y, const char* str, int64_t* xe, int64_t* ye);
+
 #endif

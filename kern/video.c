@@ -1450,3 +1450,118 @@ void vd_circle(int x0, int y0, int radius)
     }
   }
 }
+
+int vwidth(void)
+{
+    return fbw;
+}
+
+int vheight(void)
+{
+    return fbh;
+}
+
+void vplot_nb(int64_t x, int64_t y) //Plot pixel, bypass double buffer. Faster, but uglier
+{
+  if(fb == NULL) return;
+  if(x < 0) return;
+  if(y < 0) return;
+  if(x >= fbw) return;
+  if(y >= fbh) return;
+  if(color.a == 0) return;
+  if(color.a == 255)
+  {
+    fb[y * fbw + x] = color.r << 16 | color.g << 8 | color.b;
+    fbb[y * fbw + x] = color.r << 16 | color.g << 8 | color.b;
+  }
+  else
+  {
+    uint8_t dr, dg, db, or, og, ob;
+    dr = fb[y * fbw + x] >> 16 & 0xFF;
+    dg = fb[y * fbw + x] >> 8 & 0xFF;
+    db = fb[y * fbw + x] & 0xFF;
+    uint8_t a = color.a + 1;
+    uint8_t ia = 256 - color.a;
+    or = (uint8_t)((a * color.r + ia * dr) >> 8);
+    og = (uint8_t)((a * color.g + ia * dg) >> 8);
+    ob = (uint8_t)((a * color.b + ia * db) >> 8);
+    fb[y * fbw + x] = or << 16 | og << 8 | ob;
+    fbb[y * fbw + x] = or << 16 | og << 8 | ob;
+  }
+}
+
+void vd_print32(int64_t x, int64_t y, const char* str, int64_t* xe, int64_t* ye)
+{
+  int64_t x2 = x;
+  int64_t y2 = y;
+  int i = 0;
+  uint32_t resized[32];
+  while(str[i] != '\0')
+  {
+    /*if(str[i] < 32 && (str[i] != 9 || str[i] != 10 || str[i] != 11 || str[i] != 13) && str[i] != 127) continue;
+    if(str[i] == 0 || str[i] > 127) break;*/
+    switch(str[i])
+    {
+      case '\r':
+        x2 = x;
+        break;
+      case '\n':
+        x2 = x;
+        y2+=16;
+        break;
+      case '\t':
+        x2 += 24;
+        break;
+      default:
+        if(str[i] > 31 && str[i] < 127)
+        {
+          if(fb_font[(int)str[i]] != NULL)
+          {
+            bitmap16_to32((uint32_t*)&resized, fb_font[(int)str[i]]);
+            vd_bitmap32((uint32_t*)&resized, x2, y2, 32);
+          }
+            vd_bitmap16(fb_font[(int)str[i]], x2, y2, 16);
+          x2 += 10;
+        }
+        break;
+    }
+    i++;
+  }
+  if(xe != NULL) *xe = x2;
+  if(ye != NULL) *ye = y2;
+}
+/*
+public int[] resizePixels(int[] pixels,int w1,int h1,int w2,int h2) {
+    int[] temp = new int[w2*h2] ;
+    // EDIT: added +1 to account for an early rounding problem
+    int x_ratio = (int)((w1<<16)/w2) +1;
+    int y_ratio = (int)((h1<<16)/h2) +1;
+    //int x_ratio = (int)((w1<<16)/w2) ;
+    //int y_ratio = (int)((h1<<16)/h2) ;
+    int x2, y2 ;
+    for (int i=0;i<h2;i++) {
+        for (int j=0;j<w2;j++) {
+            x2 = ((j*x_ratio)>>16) ;
+            y2 = ((i*y_ratio)>>16) ;
+            temp[(i*w2)+j] = pixels[(y2*w1)+x2] ;
+        }                
+    }                
+    return temp ;
+}
+*/
+uint32_t* bitmap16_to32(uint32_t* dest, uint16_t* src)
+{
+    int ratio_x = (int)((16 << 16) / 32) + 1;
+    int ratio_y = (int)((16 << 16) / 32) + 1;
+    int x, y;
+    for(int i = 0; i < 16; i++)
+    {
+        for(int j = 0; j < 16; j++)
+        {
+            x = (j * ratio_x) >> 16;
+            y = (i * ratio_y) >> 16;
+            dest[i * 32] |= ((src[y * 16] >> x) & 1) << j;
+        }
+    }
+    return dest;
+}

@@ -15,7 +15,7 @@ void terminal_update(uint64_t dt, ep_window* w)
 
 }
 
-void terminal_draw(uint64_t bx, uint64_t by, ep_window* w)
+void terminal_draw(int64_t bx, int64_t by, ep_window* w)
 {
   vsetcol(192, 192, 192, 255);
   char asd[81];
