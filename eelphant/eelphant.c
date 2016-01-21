@@ -47,6 +47,8 @@ char cmd_buf[64];
 int cmd_buf_i = 0;
 bool cmd_active = false;
 
+extern struct lua_apps lua_apps[16];
+
 const uint16_t cursor[] = {
   0b1111111100000000,
   0b1111111100000000,
@@ -175,6 +177,16 @@ void eelphant_eval(char* cmd)
     physdemo_spawn();
     return;
   }
+  for(int i = 0; i < 16; i++)
+  {
+    if(lua_apps[i].name[0] == '\0') continue;
+    if(strcmp(lua_apps[i].name, args[0]) == 0)
+    {
+      luavm_spawn(lua_apps[i].address);
+      return;
+    }
+  }
+  printf("eelphant: command not found: %s\n", args[0]);
 }
 
 void eelphant_event(time_t dt)

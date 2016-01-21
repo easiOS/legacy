@@ -43,6 +43,9 @@ multiboot_end:
 extern kmain
 
 multiboot_entry:
+  mov ecx, cr0
+  and ecx, 0x7FFFFFFF
+  mov cr0, ecx
   mov esp, stack_top
   push 0
   popf

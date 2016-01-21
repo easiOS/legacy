@@ -12,6 +12,12 @@ struct cpu_desc
   uint32_t features2;
 } __attribute__((packed, aligned(4)));
 
+struct lua_apps
+{
+	char name[32];
+	void* address;
+} __attribute__((packed, aligned(4)));
+
 void kpanic(const char* msg, registers_t regs);
 void reboot(const char* reason);
 struct cpu_desc* get_cpu_desc(void);

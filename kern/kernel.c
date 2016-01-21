@@ -39,6 +39,7 @@ struct cpu_desc cpu_desc;
 
 const char* cmdline = NULL;
 uint16_t __attribute__((aligned(4))) text_buffer[2000];
+struct lua_apps lua_apps[16];
 
 void gpf(registers_t regs)
 {
@@ -179,9 +180,10 @@ void multiboot_enum(uint32_t mbp)
 			}
       case MULTIBOOT_TAG_TYPE_MODULE:
       {
+        const char* luamagic = "\033Lua";
         struct multiboot_tag_module *tagmod =
           (struct multiboot_tag_module *)tag;
-        puts("GRUB module detected!\n");
+        printf("GRUB module detected (cmdline: %s)\n", tagmod->cmdline);
         if(*(uint32_t*)tagmod->mod_start == 0x45524653)
         {
           puts("  EasiOS VFS detected\n");
@@ -194,10 +196,22 @@ void multiboot_enum(uint32_t mbp)
           eos_users_init((struct eos_user_header*)tagmod->mod_start);
           continue;
         }
-        if(*(uint32_t*)tagmod->mod_start == 0x1B4C7561)
+        if(memcmp((uint32_t*)tagmod->mod_start, luamagic, 4) == 0)
         {
           puts("  Lua bytecode detected\n");
-          //TODO: load
+          if(tagmod->cmdline[0] == '\0')
+          {
+            puts("No name on cmdline, discarding.\n");
+            continue;
+          }
+          for(int i = 0; i < 16; i++)
+          {
+            if(lua_apps[i].address != NULL) continue;
+            lua_apps[i].address = (uint32_t*)tagmod->mod_start;
+            strcpy(lua_apps[i].name, tagmod->cmdline);
+            printf("    new lua app (ID#%d): %s at address 0x%x\n", i, lua_apps[i].name, lua_apps[i].address);
+            break;
+          }
           continue;
         }
         struct posix_header* tarmod = (struct posix_header*)tagmod->mod_start;
@@ -206,7 +220,9 @@ void multiboot_enum(uint32_t mbp)
            tarmod->magic[4] == 'r')
         {
           puts("  Tar file detected\n");
+          continue;
         }
+        puts("  Unknown\n");
         break;
       }
     }
@@ -262,7 +278,7 @@ struct cpu_desc* get_cpu_desc(void)
 
 void kmain(uint32_t magic, uint32_t mbp)
 {
-  char buffer[64];
+  memset(&lua_apps, 0, 16 * sizeof(struct lua_apps));
   multiboot_enum(mbp);
   cpu_check_features();
   puts("Detecting ACPI...");

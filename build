@@ -47,7 +47,7 @@ SOURCES=["kern/boot.s", "kern/kernel.c", "kern/text.c", "dev/serial.c",
          "dev/pci/virtio-net.c", "dev/pci/debugdrv.c", "dev/pci/amd_rv100.c",
          "eelphant/eelphant.c", "eelphant/terminal.c", "eelphant/msgbox.c",
          "eelphant/loginwin.c", "eelphant/eclock.c", "eelphant/notepad.c",
-         "eelphant/physdemo.c",
+         "eelphant/physdemo.c", "eelphant/luavm.c",
          "iso/boot/grub/locale/eos.po",
          "net/icmp.c", "net/ipv4.c", "net/routing.c",
          #"kern/fs/fat32.c"]
