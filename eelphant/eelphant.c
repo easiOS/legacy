@@ -568,6 +568,7 @@ int eelphant_main(int64_t width, int64_t height)
   }
   puts("Entering loop\n");
   eelphant_destroy_window(loginw);*/
+  efm_spawn();
   msgbox_show("Welcome to EasiOS Professional!\n\nPress ALT to open the command bar\nMove windows using keypad cursors\nUse TAB to switch between windows\nPress ESCAPE to close the current window\nThank you and have a productive day!", "EasiOS", NONE, 0);
   while(true)
   {

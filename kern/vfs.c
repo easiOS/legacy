@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <kernel.h>
+
+extern struct lua_apps lua_apps[16];
 
 fs_node_t* root = NULL;
 fs_node_t* initramfs = NULL;
@@ -32,7 +35,20 @@ void vfs_process(void* ptr)
     puts("File:\n");
     printf("  Name: %s*\n", file->name);
     printf("  Size: %d bytes\n", file->size);
+    void* data = f + sizeof(struct initramfs_file);
     f += sizeof(struct initramfs_file) + file->size;
+    if(memcmp(data, "\033Lua", 4) == 0)
+    {
+      printf("Lua executable detected\n");
+      for(int j = 0; j < 16; j++)
+      {
+        if(lua_apps[j].address != NULL) continue;
+        lua_apps[j].address = data;
+        strcpy(lua_apps[j].name, file->name);
+        printf("    new lua app (ID#%d): %s at address 0x%x\n", j, lua_apps[j].name, lua_apps[j].address);
+        break;
+      }
+    }
   }
   initramfs_header = vfs;
 }
