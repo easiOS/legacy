@@ -496,7 +496,6 @@ void eelphant_draw()
   //vd_print(datex, datey, itoa(last_frame_time, b, 10), NULL, NULL);
   vsetcol(252, 252, 252, 255);
   vd_print(4, 10, cmd_buf, NULL, NULL);
-  vswap();
   last_frame_time = frame_time;
 }
 
@@ -573,8 +572,9 @@ int eelphant_main(int64_t width, int64_t height)
     last = now;
     now = ticks();
     eelphant_event(now - last);
-    eelphant_update(now - last);
     eelphant_draw();
+    eelphant_update(now - last);
+    vswap();
     /*draw_avg = (draw_avg + now - last) / 2;
     vsetcol(255, 0, 0, 255);
     vd_print(10, 400, itoa(draw_avg, b, 10), NULL, NULL);*/

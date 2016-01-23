@@ -1,3 +1,4 @@
+#include <config.h>
 #include <stdio.h>
 #define _GNU_SOURCE
 #include <string.h>
@@ -16,7 +17,7 @@
 #include <eelphant.h>
 #endif /* __linux__ */
 
-#define LUAVM_DEBUG
+
 
 #ifdef LUAVM_DEBUG
 #define luavm_inf(format, ...) printf("[luaVM INF] " format "\n", ##__VA_ARGS__)
@@ -36,8 +37,11 @@ LVM_DEFINE_SYSCALL(luavm_tostring);
 LVM_DEFINE_SYSCALL(luavm_setwindow_bg);
 LVM_DEFINE_SYSCALL(luavm_sin);
 LVM_DEFINE_SYSCALL(luavm_cos);
+LVM_DEFINE_SYSCALL(luavm_video_plot);
+LVM_DEFINE_SYSCALL(luavm_video_setcol);
+LVM_DEFINE_SYSCALL(luavm_video_rect);
 
-#define SYSCALLN 5
+#define SYSCALLN 8
 
 struct {
   const char* name;
@@ -48,7 +52,10 @@ struct {
   {"tostring", 1, &luavm_tostring},
   {"setwin_bg", 2, &luavm_setwindow_bg},
   {"sin", 3, &luavm_sin},
-  {"cos", 4, &luavm_cos}
+  {"cos", 4, &luavm_cos},
+  {"vplot", 5, &luavm_video_plot},
+  {"vsetcol", 6, &luavm_video_setcol},
+  {"vdrect", 7, &luavm_video_rect}
 };
 
 #ifdef __linux__
@@ -148,17 +155,12 @@ void luavm_update(uint64_t dt, ep_window* w)
   if(!(w->flags >> 1 & 1)) return;
   luavm_state* s = (luavm_state*)w->userdata[0];
   uint32_t* instr = (uint32_t*)((uint32_t)s->code_ptr);
-  for(int i = 0; i < dt && ((w->flags >> 1) & 1); i++)
+  while(s->ip < s->code_n && ((w->flags >> 1) & 1))
   {
-    if(s->ip + i >= s->code_n)
-    {
-      luavm_inf("execution finished");
-      w->flags &= ~(1 << 1);
-      break;
-    }
-    luavm_exec(s, instr[s->ip + i]);
+    luavm_exec(s, instr[s->ip]);
+    s->ip++;
   }
-  s->ip += dt;
+  s->ip = 0;
 } 
 
 void luavm_draw(int64_t bx, int64_t by, ep_window* w)
@@ -499,4 +501,29 @@ void luavm_cos(luavm_state* state, uint32_t reg)
 {
   double* args = (double*)&state->registers[reg];
   args[0] = cos(args[1]);
+}
+
+void luavm_video_plot(luavm_state* state, uint32_t reg)
+{
+  int wx = state->window->x, wy = state->window->y;
+  double* args = (double*)&state->registers[reg];
+  vplot(wx + (int)args[1], wy + (int)args[2]);
+}
+
+void luavm_video_setcol(luavm_state* state, uint32_t reg)
+{
+  double* args = (double*)&state->registers[reg];
+  vsetcol((int)args[1], (int)args[2], (int)args[3], (int)args[4]);
+}
+
+void luavm_video_rect(luavm_state* state, uint32_t reg)
+{
+  int wx = state->window->x, wy = state->window->y;
+  double* args = (double*)&state->registers[reg];
+  int drawmode = (int)args[1];
+  int x = (int)args[2];
+  int y = (int)args[3];
+  int w = (int)args[4];
+  int h = (int)args[5];
+  vd_rectangle(drawmode, wx + x, wy + y, w, h);
 }

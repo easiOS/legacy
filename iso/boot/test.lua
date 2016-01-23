@@ -1,3 +1,2 @@
-a = sin(2) * 100
-puts(tostring(a))
-puts("\n")
+vsetcol(255, 0, 0, 255)
+vdrect(0, 10, 10, 100, 50)
