@@ -22,6 +22,7 @@
 #include <kernel.h>
 #include <dev/pci.h>
 #include <acpi.h>
+#include <krandom.h>
 
 #include "terminal.h"
 #include "msgbox.h"
@@ -29,6 +30,7 @@
 #include "eclock.h"
 #include "notepad.h"
 #include "physdemo.h"
+#include "luavm.h"
 
 #define EP_MAX_WINDOWS 32
 
@@ -72,7 +74,8 @@ void eelphant_eval(char* cmd)
   for(int i = 0; cmd_copy[i] != '\0'; cmdlen = i++);
   cmdlen++;
   char b[64];
-  //puts("CMDLEN: "); puts(itoa(cmdlen, b, 10));putc('\n');
+  itoa(cmdlen, b, 10);
+  printf("CMDLEN: %d\n", b);
   char* token = strtok(cmd_copy, " ");
   while(token)
   {
@@ -535,7 +538,6 @@ int draw_avg = 0;
 
 int eelphant_main(int64_t width, int64_t height)
 {
-  char b[64];
   puts("Eelphant Window Manager v0\n");
   ep_restart = 0;
   ep_sw = width;
