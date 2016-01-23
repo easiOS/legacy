@@ -1,3 +1,10 @@
+/* EasiOS luavm.c
+ * ----------------
+ * Author(s): Daniel (Easimer) Meszaros
+ * ----------------
+ * Description: Lua 5.1 bytecode interpreter
+ */
+
 #include <config.h>
 #include <stdio.h>
 #define _GNU_SOURCE
@@ -22,14 +29,13 @@
 #ifdef LUAVM_DEBUG
 #define luavm_inf(format, ...) printf("[luaVM INF] " format "\n", ##__VA_ARGS__)
 #define luavm_war(format, ...) printf("[luaVM WAR] " format "\n", ##__VA_ARGS__)
-#define luavm_err(format, ...) printf("[luaVM ERR] " format "\n", ##__VA_ARGS__)
-#define luavm_fat(format, ...) printf("[luaVM FAT] " format "\n", ##__VA_ARGS__)
 #else /* LUAVM_DEBUG */
 #define luavm_inf(format, ...)
 #define luavm_war(format, ...)
-#define luavm_err(format, ...)
-#define luavm_fat(format, ...)
 #endif /* LUAVM_DEBUG */
+
+#define luavm_err(format, ...) printf("[luaVM ERR] " format "\n", ##__VA_ARGS__)
+#define luavm_fat(format, ...) printf("[luaVM FAT] " format "\n", ##__VA_ARGS__)
 
 #define LVM_DEFINE_SYSCALL(name) void name (luavm_state* state, uint32_t reg);
 LVM_DEFINE_SYSCALL(luavm_puts);
@@ -233,7 +239,6 @@ void luavm_spawn(lheader_t* f) //spawn a luavm and it's window
   for(int i = 0; i < vm_state->const_n; i++)
   {
     int len = 0;
-    uint64_t debug;
     switch(*kptr)
     {
       case 0:
@@ -314,10 +319,13 @@ void luavm_exec(luavm_state* state, uint32_t instruction)
   ra = regs[a];
   rb = regs[b];
   rc = regs[c];
-  double ka, kb, kc;
-  if(a > 255) ka = *(double*)(&state->constants[a - 256].data);
-  if(b > 255) kb = *(double*)(&state->constants[b - 256].data);
-  if(c > 255) kc = *(double*)(&state->constants[c - 256].data);
+  double /*ka,*/ kb, kc;
+  //double* ad = (double*)&state->constants[a - 256].data;
+  double* bd = (double*)&state->constants[b - 256].data;
+  double* cd = (double*)&state->constants[c - 256].data;
+  //if(a > 255) ka = *ad;
+  if(b > 255) kb = *bd;
+  if(c > 255) kc = *cd;
   double cb = (b > 255) ? kb : rb;
   double cc = (c > 255) ? kc : rc;
   switch(opcode)
@@ -475,7 +483,7 @@ void luavm_tostring(luavm_state* state, uint32_t reg)
   uint64_t* argsi64 = (uint64_t*)args;
   char* buf = (char*)malloc(64);
   snprintf(buf, 64, "%d", (int)args[1]);
-  argsi64[0] = buf;
+  argsi64[0] = (uint32_t)buf;
 }
 
 void luavm_setwindow_bg(luavm_state* state, uint32_t reg)
