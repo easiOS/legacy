@@ -166,6 +166,14 @@ void pciinit()
       {
         continue;
       }
+      
+      //detect ide device
+      if((pci_config_read_word(bus, slot, 0, 0xA) & 0xFF) == 0x01 && (pci_config_read_word(bus, slot, 0, 0xB) & 0xFF) == 0x01)
+      {
+        ide_init(bus, slot);
+        continue;
+      }
+
       uint16_t device = pci_config_read_word(bus, slot, 0, 2);
       struct _pci_device* pdptr = &_pci_devices[0];
       while(pdptr->vendor != 0)

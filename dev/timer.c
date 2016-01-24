@@ -164,7 +164,7 @@ void timerinit(uint32_t frequency)
     puts("done.\n");
 }
 
-void sleep(uint32_t millis)
+void __sleep(uint32_t millis)
 {
     uint32_t start = ticks();
     uint32_t now = ticks();
@@ -173,6 +173,11 @@ void sleep(uint32_t millis)
         now = ticks();
         puts("");
     }
+}
+
+void sleep(uint32_t millis)
+{
+  __sleep(millis);
 }
 ///RTC (CMOS)
 //Request Port: 0x70

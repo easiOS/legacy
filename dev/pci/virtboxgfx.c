@@ -40,25 +40,16 @@ void vbgfxinit(uint8_t bus, uint8_t slot)
   }
   vbgfx_bus = bus;
   vbgfx_slot = slot;
-  uint32_t bar0, bar1, bar2, bar3, bar4, bar5;
+  /*uint32_t bar0, bar1, bar2, bar3, bar4, bar5;
   bar0 = pci_config_read_dword(bus, slot, 0, 0x10);
-  puts("vbgfx: bar0: 0x"); puts(itoa(bar0, b, 16)); putc('\n');
   bar1 = pci_config_read_dword(bus, slot, 0, 0x14);
-  puts("vbgfx: bar1: 0x"); puts(itoa(bar1, b, 16)); putc('\n');
   bar2 = pci_config_read_dword(bus, slot, 0, 0x18);
-  puts("vbgfx: bar2: 0x"); puts(itoa(bar2, b, 16)); putc('\n');
   bar3 = pci_config_read_dword(bus, slot, 0, 0x1C);
-  puts("vbgfx: bar3: 0x"); puts(itoa(bar3, b, 16)); putc('\n');
   bar4 = pci_config_read_dword(bus, slot, 0, 0x20);
-  puts("vbgfx: bar4: 0x"); puts(itoa(bar4, b, 16)); putc('\n');
   bar5 = pci_config_read_dword(bus, slot, 0, 0x24);
-  puts("vbgfx: bar5: 0x"); puts(itoa(bar5, b, 16)); putc('\n');
   uint8_t progif = pci_config_read_word(bus, slot, 0, 0xA) >> 8;
-  puts("vbgfx: progif: 0x"); puts(itoa(progif, b, 16)); putc('\n');
   uint8_t status = pci_config_read_word(bus, slot, 0, 0x4);
-  uint8_t cmd = pci_config_read_word(bus, slot, 0, 0x6);
-  puts("vbgfx: status: 0b"); puts(itoa(status, b, 2)); puts(" cmd: 0b");
-  puts(itoa(cmd, b, 2)); putc('\n');
+  uint8_t cmd = pci_config_read_word(bus, slot, 0, 0x6);*/
   iobase = 0x01CE;
   uint16_t ver;
   outw(iobase + VBGFX_IO_INDEX, VBGFX_INDEX_ID);

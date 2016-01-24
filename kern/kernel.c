@@ -41,11 +41,6 @@ const char* cmdline = NULL;
 uint16_t __attribute__((aligned(4))) text_buffer[2000];
 struct lua_apps lua_apps[16];
 
-void gpf(registers_t regs)
-{
-  printf("[%d] General protection fault (%d)\n", ticks(), regs.err_code);
-}
-
 void kpanic(const char* msg, registers_t regs)
 {
   asm volatile("cli");
@@ -298,16 +293,15 @@ void kmain(uint32_t magic, uint32_t mbp)
     puts("not found.\n");
   }
   init_descriptor_tables();
-  register_interrupt_handler(13, &gpf);
   timerinit(1000);
   read_rtc();
   nlb_init();
   kbdinit();
   mouseinit();
   //ideinit();
-  pciinit();
   asm volatile("sti");
   while(time(NULL) == 0);
+  pciinit();
   krandom_get();
   ethernet_list();
   printf("Welcome to %s!\n", KERNEL_NAME);
