@@ -174,3 +174,61 @@ int strncmp(const char *_l, const char *_r, size_t n)
 	for (; *l && *r && n && *l == *r ; l++, r++, n--);
 	return *l - *r;
 }
+
+char *strrchr(char *s, int c)
+{
+  char* ss = s;
+    char* ret=0;
+    do {
+        if( *ss == (char)c )
+            ret=ss;
+    } while(*ss++);
+    return ret;
+}
+
+char* strchr(char* str, int character)
+{
+  int l = strlen(str);
+  for(int i = 0; i < l; i++)
+  {
+    if(str[i] == character)
+      return str + i;
+  }
+  return NULL;
+}
+
+char* strncpy(char *dst, const char* src, size_t n)
+{
+char *temp = dst;
+while (n-- && (*dst++ = *src++));
+return temp;
+}
+
+char tolower(char c)
+{
+  return (c < 91 && c >= 65 ? c + 32 : c > 97 ? c - 32 : c);
+}
+
+int strncasecmp(const char *s1, const char *s2, size_t n)
+{
+  const char* ps1 = s1;
+  const char* ps2 = s2;
+  int cmpval;
+  if(!ps1) return 0;
+  if(!ps2) return 0;
+  if(n != 0)
+  {
+    do
+    {
+      cmpval = tolower(*ps1) - tolower(*ps2);
+      if(cmpval != 0)
+      {
+        return cmpval;
+      }
+      ++ps1;
+      ++ps2;
+      if(*ps1 == 0) break;
+    } while(--n != 0);
+  }
+  return 0;
+}

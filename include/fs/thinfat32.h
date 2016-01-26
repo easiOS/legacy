@@ -6,7 +6,7 @@
 
 
 #define TF_MAX_PATH 256
-#define TF_FILE_HANDLES 5
+#define TF_FILE_HANDLES 64
 
 #define TF_FLAG_DIRTY 0x01
 #define TF_FLAG_OPEN 0x02
@@ -26,12 +26,12 @@
 
 #define TF_ATTR_DIRECTORY 0x10
 //  #define TF_DEBUG 1
-
+#define DEBUG 1
 
 #ifdef DEBUG
 
-    #define dbg_printf(...) /*printf(__VA_ARGS__)*/
-    #define dbg_printHex(x,y) /*printHex(x,y)*/
+    #define dbg_printf(...) printf(__VA_ARGS__)
+    #define dbg_printHex(x,y) printHex(x,y)
 
 #ifdef TF_DEBUG
 typedef struct struct_TFStats {
@@ -39,28 +39,28 @@ typedef struct struct_TFStats {
     unsigned long sector_writes;
 } TFStats;
 
-    #define tf_printf(...) /*printf(__VA_ARGS__)*/
-    #define tf_printHex(x,y) /*printHex(x,y)*/
+    #define tf_printf(...) printf(__VA_ARGS__)
+    #define tf_printHex(x,y) printHex(x,y)
 #else
-    #define tf_printf(...)
+    #define tf_printf(...) 
     #define tf_printHex(x,y)
 #endif  // TF_DEBUG
 
 #else   // DEBUG
     #define dbg_printf(...)
     #define dbg_printHex(x,y)
-    #define tf_printf(...)
+    #define tf_printf(...) 
     #define tf_printHex(x,y)
 #endif  // DEBUG
 
 #define LSN(CN, bpb) SSA + ((CN-2) * bpb->SectorsPerCluster)
 
 #ifndef min
-#define min(x,y)  (x<y)? x:y
-#define max(x,y)  (x>y)? x:y
+#define min(x,y)  (x<y)? x:y  
+#define max(x,y)  (x>y)? x:y  
 #endif
 
-
+    
 // Ultimately, once the filesystem is checked for consistency, you only need a few
 // things to keep it up and running.  These are:
 // 1) The type (fat16 or fat32, no fat12 support)
@@ -77,6 +77,7 @@ typedef struct struct_tfinfo {
     uint32_t firstDataSector;
     uint32_t totalSectors;
     uint16_t reservedSectors;
+    uint8_t driveid;
     // "LIVE" DATA
     uint32_t currentSector;
     uint8_t sectorFlags;

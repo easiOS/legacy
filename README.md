@@ -1,10 +1,12 @@
+*„Lasciate ogni speranza, voi ch'entrate.”*
+
 # easiOS
-easiOS is an in-development operating system for x86.
+easiOS is an in-development <span title="lol :-D :-D :DDD">operating system</span> for x86.
 
 ## Features
 * Multi-user
 * Cooperative software multitasking
-* Keyboard oriented window manager with Windows 2000 inspired design
+* Keyboard oriented window manager with design inspired by the ﻿ＡＥＳＴＨＥＴＩＣＳ of Windows 2000
 * Lua 5.1 bytecode as executable
 * Multiboot2 compliant
 

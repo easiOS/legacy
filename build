@@ -51,8 +51,10 @@ SOURCES=["kern/boot.s", "kern/kernel.c", "kern/text.c", "dev/serial.c",
          "eelphant/physdemo.c", "eelphant/luavm.c", "eelphant/efm.c",
          "iso/boot/grub/locale/eos.po",
          "net/icmp.c", "net/ipv4.c", "net/routing.c",
-         #"kern/fs/fat32.c"]
+         "kern/fs/fat32.c"
          ]
+
+NOWARN = ["kern/fs/fat32.c"]
 
 def build():
     print("=== \033[95mStarting build...\033[0m ===")
@@ -82,6 +84,8 @@ def build():
             flags = flags.replace("$OUTPUT", fout)
         else:
             flags += " " + fout
+        if f in NOWARN:
+            flags += " -w"
         subprocess.run(args=[cc]+flags.split(), check=True)
         OBJECTS.append(fout)
     print("=== \033[95mLinking...\033[0m ===")

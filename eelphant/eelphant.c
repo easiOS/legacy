@@ -23,6 +23,7 @@
 #include <dev/pci.h>
 #include <acpi.h>
 #include <krandom.h>
+#include <fs/thinfat32.h>
 
 #include "terminal.h"
 #include "msgbox.h"
@@ -74,8 +75,7 @@ void eelphant_eval(char* cmd)
   for(int i = 0; cmd_copy[i] != '\0'; cmdlen = i++);
   cmdlen++;
   char b[64];
-  itoa(cmdlen, b, 10);
-  printf("CMDLEN: %d\n", b);
+  printf("CMDLEN: %d\n", cmdlen);
   char* token = strtok(cmd_copy, " ");
   while(token)
   {
@@ -180,6 +180,7 @@ void eelphant_eval(char* cmd)
     physdemo_spawn();
     return;
   }
+  puts("Searching on initrd...\n");
   for(int i = 0; i < 16; i++)
   {
     if(lua_apps[i].name[0] == '\0') continue;
@@ -188,6 +189,16 @@ void eelphant_eval(char* cmd)
       luavm_spawn(lua_apps[i].address);
       return;
     }
+  }
+  puts("Searching on disk...\n");
+  char buffer[256];
+  memset(buffer, 0, 256);
+  TFFile* f = tf_fopen(args[0], "r");
+  if(f)
+  {
+    printf("Executable found on disk!\n");
+    tf_fclose(f);
+    return;
   }
   printf("eelphant: command not found: %s\n", args[0]);
 }

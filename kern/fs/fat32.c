@@ -1,43 +1,9 @@
-/*
-Thin FAT32
-Copyright (c) 2009-2013 Ryan Sturmer
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-*/
 
 #include <string.h>
 #include <stdio.h>
 #include <fs/thinfat32.h>
 #include <fs/thinternal.h>
-
-// USERLAND
-int read_sector(uint8_t *data, uint32_t sector) {
-    /*FILE *fp;
-    fp = fopen("test.fat32", "r+b");
-    fseek(fp, sector*512, 0);
-    fread(data, 1, 512, fp);
-    fclose(fp);*/
-    //TODO: reading from VFS
-    return 0;
-}
-
-int write_sector(uint8_t *data, uint32_t blocknum) {
-    /*FILE *fp;
-    fp = fopen("test.fat32", "r+");
-    fseek(fp, blocknum*512, 0);
-    fwrite(data, 1, 512, fp);
-    fclose(fp);*/
-    return 0;
-}
-
+#include <dev/disk.h>
 
 //#define TF_DEBUG
 
@@ -46,6 +12,21 @@ TFFile tf_file_handles[TF_FILE_HANDLES];
 #ifdef TF_DEBUG
 TFStats tf_stats;
 #endif
+
+// USERLAND
+
+extern struct eos_drives drives[4];
+
+int read_sector(uint8_t *data, uint32_t sector) {
+    printf("\nnigga tryna read sector %d of drive %d\n", drives[tf_info.driveid].address.phys.lbs + sector, tf_info.driveid);
+    ide_read_sector(drives[tf_info.driveid].address.phys.lbs + sector, data, 1, 0);
+    return 0;
+}
+
+int write_sector(uint8_t *data, uint32_t blocknum) {
+    //ide_write_sector(drives[tf_info.driveid].address.phys.lbs + blocknum, data, 1, 0);
+    return 0;
+}
 
 /*
  * Fetch a single sector from disk.
@@ -62,21 +43,21 @@ TFStats tf_stats;
 int tf_fetch(uint32_t sector) {
     int rc=0;
     // Don't actually do the fetch if we already have it in memory
-    if(sector == tf_info.currentSector)
+    if(sector == tf_info.currentSector) 
     {
         return 0;
     }
-
+    
     // If the sector we already have prefetched is dirty, write it before reading out the new one
     if(tf_info.sectorFlags & TF_FLAG_DIRTY) {
         rc |= tf_store();
-
+        
         dbg_printf("\r\n[DEBUG-tf_fetch] Current sector (%d) dirty... storing to disk.", tf_info.currentSector);
         #ifdef TF_DEBUG
         tf_stats.sector_writes += 1;
         #endif
     }
-
+    
     dbg_printf("\r\n[DEBUG-tf_fetch] Fetching sector (%d) from disk.", sector);
     #ifdef TF_DEBUG
     tf_stats.sector_reads += 1;
@@ -122,7 +103,7 @@ int tf_init() {
 
     // Cast to a BPB, so we can extract relevant data
     bpb = (BPB_struct *) tf_info.buffer;
-
+    
     /* Some sanity checks to make sure we're really dealing with FAT here
      * see fatgen103.pdf pg. 9ff. for details */
 
@@ -163,7 +144,7 @@ int tf_init() {
     cluster_count             = data_sectors/tf_info.sectorsPerCluster;
     tf_info.reservedSectors   = bpb->ReservedSectorCount;
     tf_info.firstDataSector    = bpb->ReservedSectorCount + (bpb->NumFATs * fat_size) + root_dir_sectors;
-
+    
     // Now that we know the total count of clusters, we can compute the FAT type
     if(cluster_count < 65525)
     {
@@ -190,7 +171,7 @@ int tf_init() {
     } while(e.msdos.filename[0] != '\x00');
     tf_fclose(fp);
     tf_info.rootDirectorySize = temp;
-
+    
     dbg_printf("\r\n[DEBUG-tf_init] Size of root directory: %d bytes", tf_info.rootDirectorySize);
     #ifdef TF_DEBUG
     tf_fetch(0);
@@ -199,7 +180,7 @@ int tf_init() {
     tf_fclose(fp);
     tf_release_handle(fp);
     dbg_printf("\r\ntf_init() successful...\r\n");
-    return 0;
+    return 0;    
 }
 
 /*
@@ -223,7 +204,7 @@ uint32_t tf_get_fat_entry(uint32_t cluster) {
  * Sets the fat entry on disk for a given cluster to the specified value.
  * ARGS
  *   cluster - The cluster number for which to set the FAT entry
- *     value - The new value for the FAT entry
+ *     value - The new value for the FAT entry  
  * SIDE EFFECTS
  *   Fetches whatever sector happens to contain the pertinent fat entry (if it's not already in memory)
  * RETURN
@@ -277,7 +258,7 @@ uint32_t tf_first_sector(uint32_t cluster) {
 uint8_t *tf_walk(uint8_t *filename, TFFile *fp) {
     FatFileEntry entry;
     tf_printf("\r\n  [DEBUG-tf_walk] Walking path '%s'", filename);
-
+    
     // We're out of path. this walk is COMPLETE
     if(*filename == '/') {
         filename++;
@@ -364,7 +345,7 @@ void tf_choose_sfn(uint8_t *dest, uint8_t *src, TFFile *fp)
     TFFile xfile;
     // throwaway fp that doesn't muck with the original
     memcpy( &xfile, fp, sizeof(TFFile) );
-
+    
     dbg_printf("\r\n[DEBUG-tf_choose_sfn] Trialing SFN's:  ");
     while (1)
     {
@@ -378,9 +359,9 @@ void tf_choose_sfn(uint8_t *dest, uint8_t *src, TFFile *fp)
             memcpy(temp+9, dest+8, 3);
             temp[8] = '.';
             temp[12] = 0;
-
+            
             dbg_printf("'%s'   ", temp);
-
+            
             if (0 > tf_find_file( &xfile, temp ) )
             {
                 //tf_
@@ -392,8 +373,8 @@ void tf_choose_sfn(uint8_t *dest, uint8_t *src, TFFile *fp)
             dbg_printf("trying again with index:", num);
             num++;
             break;
-
-
+            
+            
         case -1: // error
             dbg_printf("\r\n[DEBUG-tf_choose_sfn] error selecting short filename!");
             return;
@@ -414,7 +395,7 @@ int tf_shorten_filename(uint8_t *dest, uint8_t *src, uint8_t num) {
     int i;
     int lossy_flag=0;
     uint8_t *tmp;
-
+    
     #ifdef TF_DEBUG
     uint8_t *orig_dest = dest;
     uint8_t *orig_src = src;
@@ -425,7 +406,7 @@ int tf_shorten_filename(uint8_t *dest, uint8_t *src, uint8_t num) {
     // copy the extension
     for (i=0; i<3; i++)
     {
-        while (tmp!=0 && *tmp!= 0 && !(*tmp <0x7f && *tmp>20
+        while (tmp!=0 && *tmp!= 0 && !(*tmp <0x7f && *tmp>20 
                && *tmp !=0x22
                && *tmp !=0x2a
                && *tmp !=0x2e
@@ -444,10 +425,10 @@ int tf_shorten_filename(uint8_t *dest, uint8_t *src, uint8_t num) {
         else
             *(dest+8+i) = upper(*(tmp++));
     }
-
+    
     // Copy the basename
     i=0;
-    tmp = strrchr(src, '.');
+    tmp = strrchr(src, '.');    
     while(1) {
         if (i==8) break;
         if (src == tmp)
@@ -455,9 +436,9 @@ int tf_shorten_filename(uint8_t *dest, uint8_t *src, uint8_t num) {
             dest[i++] = ' ';
             continue;
         }
-
+        
         if((*dest == ' '))  {lossy_flag = 1; } else {
-        while (*src!= 0 && !(*src <0x7f && *src>20
+        while (*src!= 0 && !(*src <0x7f && *src>20 
                && *src !=0x22
                && *src !=0x2a
                && *src !=0x2e
@@ -481,7 +462,7 @@ int tf_shorten_filename(uint8_t *dest, uint8_t *src, uint8_t num) {
             dest[i] = upper(*(src++));
         }
         i+=1;
-    }
+    }    
     // now that they are populated, do analysis.
     // if num>4, do 2 letters
     if (num > 4)
@@ -531,7 +512,7 @@ int tf_shorten_filename(uint8_t *dest, uint8_t *src, uint8_t num) {
 
     // Last . in the filename
     src = strrchr(src, '.');
-
+    
     *(dest++) = ' ';
     *(dest++) = ' ';
     *(dest++) = ' ';
@@ -553,7 +534,7 @@ int tf_shorten_filename(uint8_t *dest, uint8_t *src, uint8_t num) {
  * Create a LFN entry from the filename provided.
  * - The entry is constructed from all, or the first 13 characters in the filename (whichever is smaller)
  * - If filename is <=13 bytes long, the NULL pointer is returned
- * - If the filename >13 bytes long, an entry is constructed for the first 13 bytes, and a pointer is
+ * - If the filename >13 bytes long, an entry is constructed for the first 13 bytes, and a pointer is 
  *   returned to the remainder of the filename.
  * ARGS
  *   filename - string containing the filename for which to create an entry
@@ -564,7 +545,7 @@ int tf_shorten_filename(uint8_t *dest, uint8_t *src, uint8_t num) {
  * WARNING
  *   Because this function works in forward order, and LFN entries are stored in reverse, it does
  *   NOT COMPUTE LFN SEQUENCE NUMBERS.  You have to do that on your own.  Also, because the function
- *   acts on partial filenames IT DOES NOT COMPUTE LFN CHECKSUMS.  You also have to do that on your own.
+ *   acts on partial filenames IT DOES NOT COMPUTE LFN CHECKSUMS.  You also have to do that on your own.  
  * TODO
  *   Test and further improve on this function
  */
@@ -595,7 +576,7 @@ uint8_t *tf_create_lfn_entry(uint8_t *filename, FatFileEntry *entry) {
         if(*filename++ == '\x00')
             done = 1;
     }
-
+        
     entry->lfn.attributes = 0x0f;
     entry->lfn.reserved = 0;
     entry->lfn.firstCluster = 0;
@@ -609,7 +590,7 @@ uint8_t tf_lfn_checksum(const uint8_t *pFcbName)
 {
     int i;
     uint8_t sum=0;
-
+ 
     for (i=11; i; i--)
         sum = ((sum & 1) << 7) + (sum >> 1) + *pFcbName++;
     return sum;
@@ -624,11 +605,11 @@ int tf_place_lfn_chain(TFFile *fp, uint8_t *filename, uint8_t *sfn) {
     FatFileEntry entry;
     uint8_t seq;
     //uint8_t sfn[12];
-
+    
     //tf_choose_sfn(sfn, filename, fp);
     //tf_shorten_filename(sfn, filename, 1);
     //sfn[11] = 0;     // tf_shorten_filename no longer does this...
-
+    
     // create the chains - probably only to get a count!?
     // FIXME: just pre-calculate and don't do all this recomputing!
     while(strptr = tf_create_lfn_entry(strptr, &entry)) {
@@ -636,7 +617,7 @@ int tf_place_lfn_chain(TFFile *fp, uint8_t *filename, uint8_t *sfn) {
         last_strptr = strptr;
         entries += 1;
     }
-
+    
     // LFN sequence number (first byte of LFN)
     seq = entries | 0x40;
     tf_printf("\r\n===== Applying LFNs (%d) =====", entries);
@@ -644,11 +625,11 @@ int tf_place_lfn_chain(TFFile *fp, uint8_t *filename, uint8_t *sfn) {
         tf_create_lfn_entry(last_strptr, &entry);
         entry.lfn.sequence_number = seq;
         entry.lfn.checksum = tf_lfn_checksum(sfn);
-
+        
         dbg_printf("\r\n[DEBUG-tf_place_lfn_chain] Placing LFN chain entry @ %d", fp->pos);
         tf_fwrite((uint8_t*)&entry, sizeof(FatFileEntry), 1, fp);
         seq = ((seq & ~0x40)-1);
-        last_strptr -= 13;
+        last_strptr -= 13;    
     }
     return 0;
 }
@@ -657,7 +638,7 @@ int tf_create(uint8_t *filename) {
     TFFile *fp = tf_parent(filename, "r", false);
     FatFileEntry entry;
     uint32_t cluster;
-    uint8_t *temp;
+    uint8_t *temp;    
     dbg_printf("\r\n[DEBUG-tf_create] Creating new file: '%s'", filename);
     if(!fp) return 1;
     tf_fclose(fp);
@@ -714,13 +695,13 @@ int tf_mkdir(uint8_t *filename, int mkParents) {
 
     uint32_t psc;
     uint32_t cluster;
-    uint8_t *temp;
+    uint8_t *temp;    
 
     strncpy( orig_fn, filename, TF_MAX_PATH-1 );
     orig_fn[ TF_MAX_PATH-1 ] = 0;
-
+    
     memset(&blank, 0, sizeof(FatFileEntry));
-
+    
     fp = tf_fopen(filename, "r");
     if (fp)  // if not NULL, the filename already exists.
     {
@@ -734,8 +715,8 @@ int tf_mkdir(uint8_t *filename, int mkParents) {
         dbg_printf("\r\n[DEBUG-tf_mkdir] Hey there, duffy, DUPLICATES are not allowed.");
         return 1;
     }
-
-    dbg_printf("\r\n[DEBUG-tf_mkdir] The directory does not currently exist... Creating now.  %s",
+    
+    dbg_printf("\r\n[DEBUG-tf_mkdir] The directory does not currently exist... Creating now.  %s", 
                filename);
     fp = tf_parent(filename, "r+", mkParents);
     if (!fp)
@@ -743,7 +724,7 @@ int tf_mkdir(uint8_t *filename, int mkParents) {
         dbg_printf("\r\n[DEBUG-tf_mkdir] Parent Directory doesn't exist.");
         return 1;
     }
-
+    
     dbg_printf("\r\n[DEBUG-tf_mkdir] Creating new directory: '%s'", filename);
     // Now we have the directory in which we want to create the file, open for overwrite
     do {
@@ -752,11 +733,11 @@ int tf_mkdir(uint8_t *filename, int mkParents) {
     } while(entry.msdos.filename[0] != '\x00');
     // Back up one entry, this is where we put the new filename entry
     tf_fseek(fp, -sizeof(FatFileEntry), fp->pos);
-
+    
     // go find some space for our new friend
     cluster = tf_find_free_cluster();
     tf_set_fat_entry(cluster, TF_MARK_EOC32); // Marks the new cluster as the last one (but no longer free)
-
+    
     // set up our new directory entry
     // TODO shorten these entries with memset
     entry.msdos.attributes = TF_ATTR_DIRECTORY ;
@@ -781,23 +762,23 @@ int tf_mkdir(uint8_t *filename, int mkParents) {
     //entry.msdos.attributes = TF_ATTR_DIRECTORY ;
     //    dbg_printf("  4 mkdir: attr: %x ", entry.msdos.attributes);
     tf_fwrite((uint8_t*)&entry, sizeof(FatFileEntry), 1, fp);
-
+    
     psc = fp->startCluster; // store this for later
-
+    
     // placing a 0 at the end of the FAT
     tf_fwrite((uint8_t*)&blank, sizeof(FatFileEntry), 1, fp);
     tf_fclose(fp);
     tf_release_handle(fp);
-
+    
     dbg_printf("\r\n  initializing directory entry: %s", orig_fn);
     fp = tf_fopen(orig_fn, "w");
-
+    
     // set up .
     memcpy( entry.msdos.filename, ".          ", 11 );
     //entry.msdos.attributes = TF_ATTR_DIRECTORY;
-    //entry.msdos.firstCluster = cluster & 0xffff
+    //entry.msdos.firstCluster = cluster & 0xffff    
     tf_fwrite((uint8_t*)&entry, sizeof(FatFileEntry), 1, fp);
-
+    
     // set up ..
     memcpy( entry.msdos.filename, "..         ", 11 );
     //entry.msdos.attributes = TF_ATTR_DIRECTORY;
@@ -806,7 +787,7 @@ int tf_mkdir(uint8_t *filename, int mkParents) {
 
     // placing a 0 at the end of the FAT
     tf_fwrite((uint8_t*)&blank, sizeof(FatFileEntry), 1, fp);
-
+    
     tf_fclose(fp);
     tf_release_handle(fp);
     return 0;
@@ -821,17 +802,17 @@ int tf_listdir(uint8_t *filename, FatFileEntry* entry, TFFile **fp) {
     // May Require a terminating "/."
     // FIXME: What do we do with the results?!  perhaps take in a fp and assume
     //  that if not NULL, it's already in the middle of a listdir!  if NULL
-    //  we do the tf_parent thing and then start over.  if not, we return the
+    //  we do the tf_parent thing and then start over.  if not, we return the 
     //  next FatFileEntry almost like a callback...  and return NULL when we've
-    //  reached the end.  almost like.. gulp... strtok.  ugh.  maybe not.
-    //  still, it may suck less than other things... i mean, by nature, listdir
+    //  reached the end.  almost like.. gulp... strtok.  ugh.  maybe not.  
+    //  still, it may suck less than other things... i mean, by nature, listdir 
     //  is inherently dynamic in size, and we have no re/malloc.
     uint32_t cluster;
-    uint8_t *temp;
+    uint8_t *temp;    
 
     if (*fp == NULL)
         *fp = tf_parent(filename, "r", false);
-
+    
     dbg_printf("\r\n[DEBUG-tf_listdir] listing directory: '%s' ", filename);
     if(!*fp) return 1;
     // do magic here.
@@ -853,12 +834,12 @@ int tf_listdir(uint8_t *filename, FatFileEntry* entry, TFFile **fp) {
             tf_fclose(*fp);
             *fp = NULL;
             return 0;
-
+            
         default:
             return 1;
         }
     }
-
+        
     return 0;
 }
 
@@ -871,8 +852,8 @@ TFFile *tf_fopen(uint8_t *filename, const uint8_t *mode) {
     fp = tf_fnopen(filename, mode, strlen(filename));
     if(fp == NULL) {
         if(strchr(mode, '+') || strchr(mode, 'w') || strchr(mode, 'a')) {
-              tf_create(filename);
-        }
+              tf_create(filename); 
+        }    
         return tf_fnopen(filename, mode, strlen(filename));
     }
     return fp;
@@ -907,7 +888,7 @@ TFFile *tf_fnopen(uint8_t *filename, const uint8_t *mode, int n) {
     fp->mode=TF_MODE_READ | TF_MODE_WRITE | TF_MODE_OVERWRITE;
 
 
-
+    
     while(temp_filename != NULL) {
         temp_filename = tf_walk(temp_filename, fp);
         if(fp->flags == 0xff) {
@@ -916,12 +897,12 @@ TFFile *tf_fnopen(uint8_t *filename, const uint8_t *mode, int n) {
             return NULL;
         }
     }
-
+    
     if(strchr(mode, 'r')) {
         fp->mode |= TF_MODE_READ;
     }
-    if(strchr(mode, 'a')) {
-
+    if(strchr(mode, 'a')) { 
+        
         dbg_printf("\r\n[DEBUG-tf_fnopen] File opened for APPEND.  Seeking to offset 0+%d ", fp->size);
         tf_unsafe_fseek(fp, fp->size, 0);
         fp->mode |= TF_MODE_WRITE | TF_MODE_OVERWRITE;
@@ -943,7 +924,7 @@ TFFile *tf_fnopen(uint8_t *filename, const uint8_t *mode, int n) {
     }
 
     strncpy(fp->filename, myfile, n);
-
+         
     fp->filename[n] = 0;
     return fp;
 }
@@ -971,7 +952,7 @@ int tf_free_clusterchain(uint32_t cluster) {
 int tf_fseek(TFFile *fp, int32_t base, long offset) {
     long pos = base+offset;
     if (pos >= fp->size) return TF_ERR_INVALID_SEEK;
-    return tf_unsafe_fseek(fp, base, offset);
+    return tf_unsafe_fseek(fp, base, offset); 
 }
 
 /*
@@ -992,12 +973,12 @@ int tf_unsafe_fseek(TFFile *fp, int32_t base, long offset) {
         fp->flags |= TF_FLAG_SIZECHANGED;
     }
     //dbg_printf("\r\n[DEBUG-tf_unsafe_fseek] SEEK %d+%ld ", base, offset);
-
+    
     // Compute the cluster index of the new location
     cluster_idx = pos / (tf_info.sectorsPerCluster*512); // The cluster we want in the file
-    //print_TFFile(fp);
+    //print_TFFile(fp);    
     // If the cluster index matches the index we're already at, we don't need to look in the FAT
-    // If it doesn't match, we have to follow the linked list to arrive at the correct cluster
+    // If it doesn't match, we have to follow the linked list to arrive at the correct cluster 
     if(cluster_idx != fp->currentClusterIdx) {
         temp = cluster_idx;
         /* Shortcut: If we are looking for a cluster that comes *after* the current we don't
@@ -1046,12 +1027,12 @@ int tf_unsafe_fseek(TFFile *fp, int32_t base, long offset) {
 int tf_find_file(TFFile *current_directory, uint8_t *name) {
     int rc;
     tf_fseek(current_directory, 0, 0);
-
+    
     tf_printf("\r\n    [DEBUG-tf_find_file] Searching for filename: '%s' in directory '%s' ", name, current_directory->filename);
 
     while(1) {
         tf_printf("\r\n    [DEBUG-tf_find_file]     iteration: '%s' in directory '%s' ", name, current_directory->filename);
-
+        
         rc = tf_compare_filename(current_directory, name);
         if(rc < 0) break;
         else if(rc == 1)    // found!
@@ -1075,7 +1056,7 @@ int tf_compare_filename_segment(FatFileEntry *entry, uint8_t *name) { //, uint8_
     uint8_t *entryname = entry->msdos.filename;
     tf_printf("\r\n        [DEBUG-tf_compare_filename_segment] -- '%s'", name);
     if(entry->msdos.attributes != 0x0f) {
-
+        
         tf_printf(" 8.3 Segment: ");
         // Filename
         j=0;
@@ -1108,17 +1089,17 @@ int tf_compare_filename_segment(FatFileEntry *entry, uint8_t *name) { //, uint8_
     reformatted_file[j++] = '\x00';
     i=0;
     while((name[i] != '/') && (name[i] != '\x00')) i++; // will this work for 8.3?  this should be calculated in the section with knowledge of lfn/8.3
-
+    
     tf_printf("\r\n        [DEBUG] Comparing filename segment '%s' (given) to '%s' (from disk) ", name, reformatted_file);
     // FIXME: only compare the 13 or less bytes left in the reformatted_file string... but that doesn't match all the way to the end of the test string....
-
-
+    
+    
     // the role of 'i' changes here to become the return value.  perhaps this doesn't gain us enough in performance to avoid using a real retval?
     /// PROBLEM: THIS FUNCTION assumes that if the length of the "name" is tested by the caller.
     ///   if the LFN pieces all match, but the "name" is longer... this will never fail.
     if (i>13)
     {
-        if (strncasecmp(name, reformatted_file, 13))
+        if (strncasecmp(name, reformatted_file, 13)) 
         {
             tf_printf("  - 0 (doesn't match)\r\n");
             i = 0;
@@ -1128,8 +1109,8 @@ int tf_compare_filename_segment(FatFileEntry *entry, uint8_t *name) { //, uint8_
             i = 1;
         }
     }
-    else {
-        if (reformatted_file[i] != 0 || strncasecmp(name, reformatted_file, i))
+    else { 
+        if (reformatted_file[i] != 0 || strncasecmp(name, reformatted_file, i)) 
         {
             i = 0;
             tf_printf("  - 0 (doesn't match)\r\n");
@@ -1141,7 +1122,7 @@ int tf_compare_filename_segment(FatFileEntry *entry, uint8_t *name) { //, uint8_
     }
     return i;
 }
-//
+// 
 // Reads a single FatFileEntry from fp, compares it to the MSDOS filename specified by *name
 // Returns:
 //   1 for entry matches filename.  Side effect: fp seeks to that entry
@@ -1154,11 +1135,11 @@ int tf_compare_filename(TFFile *fp, uint8_t *name) {
     FatFileEntry entry;
     uint8_t *compare_name=name;
     uint32_t lfn_entries;
-
+    
     // Read a single directory entry
     tf_printf("\r\n      [DEBUG-tf_compare_filename] Comparing filename @ %d ", fp->pos);
     tf_fread((uint8_t*)&entry, sizeof(FatFileEntry), fp);
-
+    
     // Fail if its bogus
     if(entry.msdos.filename[0] == 0x00) return -1;
 
@@ -1181,7 +1162,7 @@ int tf_compare_filename(TFFile *fp, uint8_t *name) {
         lfn_entries = entry.lfn.sequence_number & ~0x40;
         dbg_printf("\r\n=== LFN entries: %x   pos: %x  last entry:", lfn_entries, fp->pos);
         dbg_printHex((char*)&entry, 32);
-
+        
         // Seek to the last entry in the chain (LFN entries store name in reverse, so the last shall be first)
         tf_fseek(fp, (int32_t)sizeof(FatFileEntry)*(lfn_entries-1), fp->pos);
         tf_printf("\r\n pos: %x", fp->pos);
@@ -1196,7 +1177,7 @@ int tf_compare_filename(TFFile *fp, uint8_t *name) {
             tf_printf("\r\n      [DEBUG-tf_compare_filename] LFN Exiting... returning 0  (no match)");
             return 0;
         }
-
+    
         for(i=0; i<lfn_entries; i++) {
             // Seek back one and read it
             tf_printf("\r\n      [DEBUG-tf_compare_filename] LFN loop... %x::%x", i, lfn_entries);
@@ -1204,8 +1185,8 @@ int tf_compare_filename(TFFile *fp, uint8_t *name) {
             tf_printf("\r\n pos: %x", fp->pos);
             tf_fread((uint8_t*)&entry, sizeof(FatFileEntry), fp);
             tf_printf("\r\n pos: %x", fp->pos);
-
-            // Compare it.  If it's not a match, jump to the end of the chain, return failure
+        
+            // Compare it.  If it's not a match, jump to the end of the chain, return failure 
             // Otherwise, continue looping until there's no entries left.
             if(!tf_compare_filename_segment(&entry, compare_name)) { //, (i==lfn_entries-1))) {
                 tf_fseek(fp, (int32_t)((i))*sizeof(FatFileEntry), fp->pos);
@@ -1215,10 +1196,10 @@ int tf_compare_filename(TFFile *fp, uint8_t *name) {
             }
             tf_fseek(fp, -sizeof(FatFileEntry), fp->pos);
             tf_printf("\r\n pos: %x", fp->pos);
-
+        
             compare_name+=13;
         }
-        // If we made it here, match was a success!  Return so...
+        // If we made it here, match was a success!  Return so... 
         // ONLY if next entry is valid!
         tf_fseek(fp, (int32_t)sizeof(FatFileEntry)*lfn_entries, fp->pos);
         tf_printf("\r\n      [DEBUG-tf_compare_filename] LFN Exiting... returning 1 ");
@@ -1243,7 +1224,7 @@ int tf_fread(uint8_t *dest, int size, TFFile *fp) {
             }
         } else {
         if(tf_fseek(fp, 0, fp->pos +1)) {
-            return -1;
+            return -1;    
         }
         }
     }
@@ -1262,21 +1243,21 @@ int tf_fwrite(uint8_t *src, int size, int count, TFFile *fp) {
             /*
             tf_fetch(tf_first_sector(fp->currentCluster) + (fp->currentByte / 512));
 
-            tf_printf("\r\nfwrite1: cB:%x   pos: %x    tracking:%x   i/512: %x   fp->size: %x   fp->pos: %x\r\n",
+            tf_printf("\r\nfwrite1: cB:%x   pos: %x    tracking:%x   i/512: %x   fp->size: %x   fp->pos: %x\r\n", 
                    fp->currentByte, fp->pos, tracking, (i<512 ? i:512), fp->size, fp->pos);
             tf_printHex(tf_info.buffer, 512);
 
             tf_info.buffer[fp->currentByte % 512] = *((uint8_t *) src++);
             tf_info.sectorFlags |= TF_FLAG_DIRTY; // Mark this sector as dirty
             i--;
-            tf_printf("\r\nfwrite2: cB:%x   pos: %x    tracking:%x   i/512: %x   fp->size: %x   fp->pos: %x\r\n",
+            tf_printf("\r\nfwrite2: cB:%x   pos: %x    tracking:%x   i/512: %x   fp->size: %x   fp->pos: %x\r\n", 
                    fp->currentByte, fp->pos, tracking, (i<512 ? i:512), fp->size, fp->pos);
-
+            
             tf_printf("\r\n");
             tf_printHex(tf_info.buffer, 512);
-
+            
             if(tf_unsafe_fseek(fp, 0, fp->pos +1)) {
-                return -1;
+                return -1;    
             }
             tracking++;
             */
@@ -1285,26 +1266,26 @@ int tf_fwrite(uint8_t *src, int size, int count, TFFile *fp) {
             tf_fetch(tf_first_sector(fp->currentCluster) + (fp->currentByte / 512));
             tracking = fp->currentByte % 512;
             segsize = (i<512 ? i:512);
-
-            tf_printf("\r\nfwrite1: cB:%x   tracking:%x   i/512: %x   fp->size: %x   fp->pos: %x\r\n",
+            
+            tf_printf("\r\nfwrite1: cB:%x   tracking:%x   i/512: %x   fp->size: %x   fp->pos: %x\r\n", 
                    fp->currentByte, tracking, segsize, fp->size, fp->pos);
             tf_printHex(tf_info.buffer, 512);
-
+            
             memcpy( &tf_info.buffer[ tracking ], src, segsize);
             tf_info.sectorFlags |= TF_FLAG_DIRTY; // Mark this sector as dirty
-
+            
             if (fp->pos + segsize > fp->size)
             {
                 tf_printf("\r\n++ increasing filesize:  %x + %x > %x",
                        fp->pos , segsize , fp->size);
                 fp->size += segsize - (fp->pos % 512);
             }
-
-            tf_printf("\r\nfwrite2: cB:%x    tracking:%x   i/512: %x   fp->size: %x   fp->pos: %x\r\n",
+            
+            tf_printf("\r\nfwrite2: cB:%x    tracking:%x   i/512: %x   fp->size: %x   fp->pos: %x\r\n", 
                    fp->currentByte, tracking, segsize, fp->size, fp->pos);
             tf_printf("\r\n");
             tf_printHex(tf_info.buffer, 512);
-
+            
             if(tf_unsafe_fseek(fp, 0, fp->pos + segsize)) {
                 return -1;
             }
@@ -1323,7 +1304,7 @@ int tf_fputs(uint8_t *src, TFFile *fp) {
 
 int tf_fclose(TFFile *fp) {
     int rc;
-
+    
     dbg_printf("\r\n[DEBUG-tf_close] Closing file... ");
     rc =  tf_fflush(fp);
     fp->flags &= ~TF_FLAG_OPEN; // Mark the file as available for the system to use
@@ -1340,7 +1321,7 @@ TFFile *tf_parent(uint8_t *filename, const uint8_t *mode, int mkParents) {
     uint8_t *f2;
     dbg_printf("\r\n[DEBUG-tf_parent] Opening parent of '%s' ", filename);
     f2 = (uint8_t*)strrchr((char const*)filename, '/');
-    dbg_printf(" found / at offset %d\r\n", (int) (f2-filename));
+    dbg_printf(" found / at offset %d\r\n", (unsigned int) (f2-filename)); 
     retval = tf_fnopen(filename, "rw", (int)(f2-filename));
     // if retval == NULL, why!?  we could be out of handles
     if (retval==NULL && mkParents)
@@ -1348,7 +1329,7 @@ TFFile *tf_parent(uint8_t *filename, const uint8_t *mode, int mkParents) {
         uint8_t tmpbuf[260];
         if (f2-filename>260)
         {
-            dbg_printf("F* ME, something is wrong... copying %d bytes into 260",
+            dbg_printf("F* ME, something is wrong... copying %d bytes into 260", 
                    f2-filename);
             return NULL;
         }
@@ -1362,7 +1343,7 @@ TFFile *tf_parent(uint8_t *filename, const uint8_t *mode, int mkParents) {
     {
         dbg_printf("\r\n[DEBUG-tf_parent] uh oh.  tf_fopen() return -1, out of handles?");
     }
-
+    
     dbg_printf("\r\n[DEBUG-tf_parent] Returning parent of %s", filename);
     return retval;
 }
@@ -1396,25 +1377,25 @@ int tf_fflush(TFFile *fp) {
                 dbg_printf("\r\n[DEBUG-tf_fflush] FAILED to get parent!");
                 return -1;
             }
-
+            
             filename = (uint8_t*)strrchr((char const*)fp->filename, '/');
 
             dbg_printf("\r\n[DEBUG-tf_fflush] Opened %s's parent for directory entry modification... ", fp->filename);
-
+            
             // Seek to the entry we want to modify and pull it from disk
             tf_find_file(dir, filename+1);
             tf_fread((uint8_t*)&entry, sizeof(FatFileEntry), dir);
             tf_fseek(dir, -sizeof(FatFileEntry), dir->pos);
             dbg_printf("\r\n[DEBUG-tf_fflush] Updating file size from %d to %d ", entry.msdos.fileSize, fp->size-1);
-
+            
             // Modify the entry in place to reflect the new file size
-            entry.msdos.fileSize = fp->size-1;
+            entry.msdos.fileSize = fp->size-1; 
             tf_fwrite((uint8_t*)&entry, sizeof(FatFileEntry), 1, dir); // Write fatfile entry back to disk
             tf_fclose(dir);
         }
         fp->flags &= ~TF_FLAG_SIZECHANGED;
     }
-
+    
     dbg_printf("\r\n[DEBUG-tf_fflush] Flushed. ");
     fp->flags &= ~TF_FLAG_DIRTY;
     return rc;
@@ -1423,7 +1404,7 @@ int tf_fflush(TFFile *fp) {
 /*
  * Remove a file from the filesystem
  * @param filename - The full path of the file to be removed
- * @return
+ * @return 
  */
 int tf_remove(uint8_t *filename) {
     TFFile *fp;
@@ -1450,7 +1431,7 @@ int tf_remove(uint8_t *filename) {
             if(entry.msdos.filename[0] == 0) break;
         }
         fp->size-=sizeof(FatFileEntry);
-        fp->flags |= TF_FLAG_SIZECHANGED;
+        fp->flags |= TF_FLAG_SIZECHANGED; 
     }
     tf_fclose(fp);
     tf_free_clusterchain(startCluster); // Free the data associated with the file
@@ -1461,11 +1442,11 @@ int tf_remove(uint8_t *filename) {
 
 
 // Walk the FAT from the very first data sector and find a cluster that's available
-// Return the cluster index
+// Return the cluster index 
 // TODO: Rewrite this function so that you can start finding a free cluster at somewhere other than the beginning
 uint32_t tf_find_free_cluster() {
     uint32_t i, entry, totalClusters;
-
+    
     dbg_printf("\r\n[DEBUG-tf_find_free_cluster] Searching for a free cluster... ");
     totalClusters = tf_info.totalSectors/tf_info.sectorsPerCluster;
     for(i=0;i<totalClusters; i++) {
@@ -1497,7 +1478,7 @@ uint32_t tf_find_free_cluster_from(uint32_t c) {
     return i;
 }
 
-/* Initialize the FileSystem metadata on the media (yes, the "FORMAT" command
+/* Initialize the FileSystem metadata on the media (yes, the "FORMAT" command 
     that Windows doesn't allow for large volumes */
 uint32_t tf_initializeMedia(uint32_t totalSectors)       // this should take in some lun number to make this all good...   but we'll do that when we get read/write_sector lun-aware.
                                         // also, hardcoded sector configuration
@@ -1510,15 +1491,15 @@ uint32_t tf_initializeMedia(uint32_t totalSectors)       // this should take in 
     dbg_printf("\r\n build sector 0:");
     memset(sectorBuf0, 0x00, 0x200);
     memset(&bpb, 0, sizeof(bpb));
-
+    
         // jump instruction
     bpb.BS_JumpBoot[0] = 0xEB;
     bpb.BS_JumpBoot[1] = 0x58;
     bpb.BS_JumpBoot[2] = 0x90;
-
+    
         // OEM name
     memcpy( bpb.BS_OEMName, " mkdosfs", 8);
-
+    
         // BPB
     bpb.BytesPerSector = 0x200;        // hard coded, must be a define somewhere
     bpb.SectorsPerCluster = 32;        // this may change based on drive size
@@ -1545,22 +1526,22 @@ uint32_t tf_initializeMedia(uint32_t totalSectors)       // this should take in 
     bpb.FSTypeSpecificData.fat32.BS_BootSig = 0x29;
     bpb.FSTypeSpecificData.fat32.BS_VolumeID = 0xf358ddc1;      // hardcoded volume id.  this is weird.  should be generated each time.
     memset( bpb.FSTypeSpecificData.fat32.BS_VolumeLabel, 0x20, 11);
-    memcpy( bpb.FSTypeSpecificData.fat32.BS_FileSystemType, "FAT32   ", 8);
+    memcpy( bpb.FSTypeSpecificData.fat32.BS_FileSystemType, "FAT32   ", 8); 
     memcpy( sectorBuf0, &bpb, sizeof(bpb) );
-
+    
     memcpy( sectorBuf0+0x5a, "\x0e\x1f\xbe\x77\x7c\xac\x22\xc0\x74\x0b\x56\xb4\x0e\xbb\x07\x00\xcd\x10\x5e\xeb\xf0\x32\xe4\xcd\x17\xcd\x19\xeb\xfeThis is not a bootable disk.  Please insert a bootable floppy and\r\npress any key to try again ... \r\n", 129 );
 
     fat = (bpb.ReservedSectorCount);
     //dbg_printf("\n\rFATSize=%u\n\rNumFATs=%u\n\rfat=%u\n\r",bpb.FSTypeSpecificData.fat32.FATSize,bpb.NumFATs,fat);
-
+    
         // ending signatures
     sectorBuf0[0x1fe] = 0x55;
     sectorBuf0[0x1ff] = 0xAA;
     write_sector( sectorBuf0, 0 );
-
+    
     // set up key sectors...
     //dbg_printf("\n\rFATSize=%u\n\rNumFATs=%u\n\fat=%u\n\r",bpb.FSTypeSpecificData.fat32.FATSize,bpb.NumFATs,fat);
-
+    
     ssa = (bpb.NumFATs * bpb.FSTypeSpecificData.fat32.FATSize) + fat;
 
     //dbg_printf("\n\r ssa = %u\n\r",ssa);
@@ -1587,12 +1568,12 @@ uint32_t tf_initializeMedia(uint32_t totalSectors)       // this should take in 
     }
         // write backup copy of metadata
     write_sector( sectorBuf0, 6 );
-
+    
 
 
     dbg_printf("\r\n initialize DATA section starting in Section 2:");
-        // make Root Directory
-
+        // make Root Directory 
+    
     // whack ROOT directory file: SSA = RSC + FN x SF + ceil((32 x RDE)/SS)  and LSN = SSA + (CN-2) x SC
     // this clears the first cluster of the root directory
     memset(sectorBuf, 0x00, 0x200);     // 0x00000000 is the unallocated marker
@@ -1601,7 +1582,7 @@ uint32_t tf_initializeMedia(uint32_t totalSectors)       // this should take in 
         dbg_printf("wiping sector %x  ", scl);
         write_sector( sectorBuf, scl );
     }
-
+    
     /*// whack a few clusters 1/4th through the partition as well.
     // FIXME: This is a total hack, based on observed behavior.  use determinism
     for (scl=(10 * bpb->SectorsPerCluster); scl>0; scl--)
@@ -1610,9 +1591,9 @@ uint32_t tf_initializeMedia(uint32_t totalSectors)       // this should take in 
         write_sector( sectorBuf, scl+(bpb->TotalSectors32 / 2048) );
     }*/
 
-
-
-
+    
+    
+    
     dbg_printf("\r\n    // initialize FAT in Section 1 (first two dwords are special, the rest are 0");
     dbg_printf("\r\n    // write all 00's to all (%d) FAT sectors", ssa-fat);
     memset(sectorBuf, 0x00, 0x200);     // 0x00000000 is the unallocated marker
@@ -1623,17 +1604,17 @@ uint32_t tf_initializeMedia(uint32_t totalSectors)       // this should take in 
     }
 
     //SSA = RSC + FN x SF + ceil((32 x RDE)/SS)  and LSN = SSA + (CN-2) x SC
-
-
+    
+    
     dbg_printf("\r\n    // now set up first sector and write");
     *((uint32_t*)(sectorBuf+0x000))   = 0x0ffffff8;   // special - EOF marker
     *((uint32_t*)(sectorBuf+0x004))   = 0x0fffffff;   // special and clean
     *((uint32_t*)(sectorBuf+0x008))   = 0x0ffffff8;   // root directory (one cluster)
     write_sector( sectorBuf, bpb.SectorsPerCluster );
-
-
-
-
+    
+    
+    
+    
     dbg_printf(" initialization complete\r\n");
     return 0;
 }
@@ -1687,7 +1668,7 @@ uint32_t tf_initializeMediaNoBlock(uint32_t totalSectors, int start)
         bpb.FSTypeSpecificData.fat32.BS_BootSig = 0x29;
         bpb.FSTypeSpecificData.fat32.BS_VolumeID = 0xf358ddc1;      // hardcoded volume id.  this is weird.  should be generated each time.
         memset( bpb.FSTypeSpecificData.fat32.BS_VolumeLabel, 0x20, 11);
-        memcpy( bpb.FSTypeSpecificData.fat32.BS_FileSystemType, "FAT32   ", 8);
+        memcpy( bpb.FSTypeSpecificData.fat32.BS_FileSystemType, "FAT32   ", 8); 
         memcpy( sectorBuf0, &bpb, sizeof(bpb) );
 
         memcpy( sectorBuf0+0x5a, "\x0e\x1f\xbe\x77\x7c\xac\x22\xc0\x74\x0b\x56\xb4\x0e\xbb\x07\x00\xcd\x10\x5e\xeb\xf0\x32\xe4\xcd\x17\xcd\x19\xeb\xfeThis is not a bootable disk.  Please insert a bootable floppy and\r\npress any key to try again ... \r\n", 129 );
@@ -1733,7 +1714,7 @@ uint32_t tf_initializeMediaNoBlock(uint32_t totalSectors, int start)
 
 
         dbg_printf("\r\n initialize DATA section starting in Section 2:");
-            // make Root Directory
+            // make Root Directory 
 
         // whack ROOT directory file: SSA = RSC + FN x SF + ceil((32 x RDE)/SS)  and LSN = SSA + (CN-2) x SC
         // this clears the first cluster of the root directory
@@ -1769,17 +1750,17 @@ uint32_t tf_initializeMediaNoBlock(uint32_t totalSectors, int start)
             write_sector( sectorBuf, scl+(ssa/2) );
         }
         if( scl < ssa/2 )
-            return false;
+            return false; 
 
         //SSA = RSC + FN x SF + ceil((32 x RDE)/SS)  and LSN = SSA + (CN-2) x SC
-
-
+        
+        
         dbg_printf("\r\n    // now set up first sector and write");
         *((uint32_t*)(sectorBuf+0x000))   = 0x0ffffff8;   // special - EOF marker
         *((uint32_t*)(sectorBuf+0x004))   = 0x0fffffff;   // special and clean
         *((uint32_t*)(sectorBuf+0x008))   = 0x0ffffff8;   // root directory (one cluster)
         write_sector( sectorBuf, sectors_per_cluster );
-
+        
         dbg_printf(" initialization complete\r\n");
     }
     return true;
@@ -1813,7 +1794,7 @@ uint64_t tf_get_open_handles(void)
         fp = &tf_file_handles[i];
         if(fp->flags & TF_FLAG_OPEN)
             retval |= 1;
-
+        
     }
     return retval;
 }

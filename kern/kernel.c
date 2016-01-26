@@ -35,7 +35,7 @@
 
 struct cpu_desc cpu_desc;
 
-#define KERNEL_NAME "EasiOS v0.3.4"
+#define KERNEL_NAME "easiOS v0.3.5"
 
 const char* cmdline = NULL;
 uint16_t __attribute__((aligned(4))) text_buffer[2000];
@@ -274,6 +274,7 @@ struct cpu_desc* get_cpu_desc(void)
 void kmain(uint32_t magic, uint32_t mbp)
 {
   memset(&lua_apps, 0, 16 * sizeof(struct lua_apps));
+  disk_init();
   multiboot_enum(mbp);
   cpu_check_features();
   puts("Detecting ACPI...");

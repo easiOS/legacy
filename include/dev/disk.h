@@ -5,7 +5,7 @@
 
 struct chs_addr {
 	uint8_t head, sector, cylinder;
-};
+} __attribute__((packed));
 
 struct mbr_pe {
 	uint8_t status;
@@ -14,16 +14,24 @@ struct mbr_pe {
 	struct chs_addr end;
 	uint32_t lbs;
 	uint32_t sectors;
-};
+} __attribute__((packed));
 
 struct mbr {
 	uint8_t code[446];
 	struct mbr_pe partitions[4];
-	uint8_t signature[2]; // 0xAA55 in memory, 0x55AA on disk
-};
+	uint16_t signature; // 0xAA55 in memory, 0x55AA on disk
+}__attribute__((packed));
 
-struct disk_entry {
-	
+struct eos_drives { //physical or virtual partition using the EOS initrd filesystem 
+	char letter;
+	char type; //0 = physical, 1 = virtual, 2 = FAT32 Physical
+	union {
+		struct {
+			uint32_t lbs;
+			uint32_t size; //sectors
+		} phys;
+		uint32_t virt;
+	} address;
 };
 
 //ATA STATUS
@@ -109,5 +117,10 @@ struct disk_entry {
 // Directions:
 #define      ATA_READ      0x00
 #define      ATA_WRITE     0x01
+
+void disk_init();
+void ide_init(int bus, int slot);
+int ide_read_sector(int LBA, void* ide_buf, int count, int slavebit);
+int ide_write_sector(int LBA, void* ide_buf, int count, int slavebit);
 
 #endif

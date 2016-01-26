@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <kernel.h>
+#include <dev/disk.h>
 
 extern struct lua_apps lua_apps[16];
 
@@ -12,6 +13,8 @@ fs_node_t* root = NULL;
 fs_node_t* initramfs = NULL;
 
 struct initramfs_header* initramfs_header = NULL;
+
+extern struct eos_drives drives[4];
 
 uint32_t read_fs(fs_node_t* node, uint32_t offset, uint32_t size, uint8_t* buffer)
 {
@@ -28,6 +31,23 @@ void vfs_process(void* ptr)
   initramfs = malloc(sizeof(fs_node_t));
   initramfs->name[0] = 'B'; root->name[1] = ':'; root->name[2] = '\0';
   initramfs->flags = FS_DIRECTORY;
+  int di = -1;
+  for(int j = 0;j < 4; j++)
+  {
+    if(drives[j].letter == 0)
+    {
+      di = j;
+      break;
+    }
+  }
+  if(di == -1)
+  {
+    printf("  Cannot add more drives\n");
+    return;
+  }
+  drives[di].letter = 'a' + di;
+  drives[di].type = 1;
+  drives[di].address.virt = (uint32_t)vfs;
   void* f = vfs->files;
   for(int i = 0; i < vfs->count; i++)
   {

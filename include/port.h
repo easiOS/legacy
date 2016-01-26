@@ -78,3 +78,15 @@ stosl(void *addr, int data, int cnt)
                "0" (addr), "1" (cnt), "a" (data) :
                "memory", "cc");
 }
+
+static inline void outsw(unsigned short port, const void *addr, int cnt){
+   asm volatile("rep; outsw" : "+S" (addr), "+c" (cnt) : "d" (port));
+}
+
+static inline void insw(unsigned short port, void *addr, int cnt)
+{
+   asm volatile("rep; insw"
+       : "+D" (addr), "+c" (cnt)
+       : "d" (port)
+       : "memory");
+}
