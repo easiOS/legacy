@@ -49,9 +49,11 @@ SOURCES=["kern/boot.s", "kern/kernel.c", "kern/text.c", "dev/serial.c",
          "eelphant/eelphant.c", "eelphant/terminal.c", "eelphant/msgbox.c",
          "eelphant/loginwin.c", "eelphant/eclock.c", "eelphant/notepad.c",
          "eelphant/physdemo.c", "eelphant/luavm.c", "eelphant/efm.c",
+         "eelphant/testapp.c",
+         "net/icmp.c", "net/ipv4.c", "net/routing.c", "net/slip.c",
+         "net/udp.c",
+         "kern/fs/fat32.c",
          "iso/boot/grub/locale/eos.po",
-         "net/icmp.c", "net/ipv4.c", "net/routing.c",
-         "kern/fs/fat32.c"
          ]
 
 NOWARN = ["kern/fs/fat32.c"]

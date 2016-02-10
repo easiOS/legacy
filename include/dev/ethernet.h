@@ -17,7 +17,7 @@ struct ethernet_device {
   uint8_t irq;
   void* custom;
   int (*write)(void*, size_t, eth_dev_t*); //write int bytes from pointer
-  int (*read)(void*, eth_dev_t*); //read int number of packages to pointer
+  int (*read)(void*, size_t, eth_dev_t*); //read int number of packages to pointer
   int (*available)(eth_dev_t*); //is there anything in the recv buffers
   int (*full)(eth_dev_t*); //are transmit buffers full
 };

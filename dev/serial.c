@@ -10,16 +10,12 @@
 struct serial_port_table {
   uint16_t port;
   bool enabled;
+  uint8_t mode; //0 - text, 1 - slip
 } ports[4];
 
 void serinit()
 {
-  //memset(&ports, 0, sizeof(struct serial_port_table) * 4);
-  uint8_t* ports_8 = (uint8_t*)ports;
-  for(int i = 0; i < sizeof(struct serial_port_table) * 4; i++)
-  {
-    ports_8[i] = 0;
-  }
+  memset(&ports, 0, sizeof(struct serial_port_table) * 4);
 }
 
 void serinitport(uint16_t port)
@@ -36,19 +32,39 @@ void serinitport(uint16_t port)
   }
   outb(port + 1, 0x00);    // Disable all interrupts
   outb(port + 3, 0x80);    // Enable DLAB (set baud rate divisor)
-  outb(port + 0, 0x03);    // Set divisor to 3 (lo byte) 38400 baud
+  outb(port + 0, 0x01);    // Set divisor to 1 (lo byte) 115200 baud
   outb(port + 1, 0x00);    //                  (hi byte)
   outb(port + 3, 0x03);    // 8 bits, no parity, one stop bit
   outb(port + 2, 0xC7);    // Enable FIFO, clear them, with 14-byte threshold
   outb(port + 4, 0x0B);    // IRQs enabled, RTS/DSR set
-  serswrite(port, "EasiOS Read-only serial\n");
+}
+
+void sersetmode(uint16_t port, uint8_t mode)
+{
+  for(int i = 0; i < 4; i++)
+  {
+    if(ports[i].port == port)
+    {
+      ports[i].mode = mode;
+      return;
+    }
+  }
 }
 
 void serwrite(uint16_t port, char a)
 {
+  uint8_t textmode = 1;
+  for(int i = 0; i < 4; i++)
+  {
+    if(ports[i].port == port && ports[i].mode != 0)
+    {
+      textmode = 0;
+      break;
+    }
+  }
   while (!sertxempty(port));
 
-  if(a == '\n')
+  if(a == '\n' && textmode)
   {
     outb(port, '\r');
     outb(port, '\n');

@@ -32,10 +32,12 @@
 #include <acpi.h>
 #include <stdarg.h>
 #include <cpuid.h>
+#include <dev/disk.h>
+#include <net/slip.h>
 
 struct cpu_desc cpu_desc;
 
-#define KERNEL_NAME "easiOS v0.3.5"
+#define KERNEL_NAME "easiOS v0.3.6"
 
 const char* cmdline = NULL;
 uint16_t __attribute__((aligned(4))) text_buffer[2000];
