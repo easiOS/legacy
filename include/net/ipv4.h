@@ -14,11 +14,12 @@ struct ip4_header
   uint16_t frag_off;
   uint8_t ttl;
   uint8_t protocol;
-  uint16_t check;
+  int16_t check;
   uint32_t saddr;
   uint32_t daddr;
 } __attribute__((packed));
 
 void ipv4_send_data(uint8_t* dest, uint8_t* src, void* data, size_t len, uint8_t protocol);
+void ipv4_recv_data(void* data, size_t len);
 
 #endif

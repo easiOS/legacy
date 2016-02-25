@@ -6,6 +6,8 @@
  */
 
 #include <dev/serial.h>
+#include <net/udp.h>
+#include <string.h>
 
 struct serial_port_table {
   uint16_t port;
@@ -104,6 +106,24 @@ bool serrxavail(uint16_t port)
 
 void serswrite(uint16_t port, const char* str)
 {
+  for(int i = 0; i < 4; i++)
+  {
+    if(ports[i].port == port && ports[i].mode == 1)
+    {
+      udp_header h;
+      udp_create(&h, 8, 0, (char*)str, strlen(str) + 1);
+      for(int i = 0; i < 8; i++)
+      {
+        serwrite(port, ((char*)&h)[i]);
+      }
+      serwrite(port, 0xE0); serwrite(port, 0x55); //protocol identifier
+      while(*str != '\0')
+      {
+        serwrite(port, *str++);
+      }
+      return;
+    }
+  }
   int i = 0;
   while(str[i] != '\0')
   {

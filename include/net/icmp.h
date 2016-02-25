@@ -12,5 +12,6 @@ struct icmp_header {
 } __attribute__((packed));
 
 void icmp_send_ping_req(uint8_t* dest, uint8_t* src);
+void icmp_recv_icmp(uint8_t* src, uint8_t* dst, uint8_t* data);
 
 #endif

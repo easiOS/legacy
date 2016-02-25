@@ -4,10 +4,16 @@
 #include <krandom.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 eth_dev_t* slip_dev_init(uint16_t port)
 {
 	eth_dev_t* dev = ethernet_allocate();
+	if(!dev)
+	{
+		printf("Cannot allocate ethernet device\n");
+		return NULL;
+	}
 	strcmp(dev->name, "sl0");
 	memset(dev->ipv4_address, 0, 12); //reset ipv4 addresses
 	//Generate MAC address from port address
@@ -20,8 +26,6 @@ eth_dev_t* slip_dev_init(uint16_t port)
 	}
 	sersetmode(port, 1);
 	dev->write = &slip_send_packet;
-	const char* hello_world = "Hello World!";
-	dev->write(hello_world, strlen(hello_world) + 1, dev);
 	return dev;
 }
 
@@ -66,3 +70,10 @@ int slip_send_packet(void* p, size_t len, eth_dev_t* dev)
 	return olen;
 }
 
+int slip_send_packet_nodev(void* p, size_t len, uint16_t port)
+{
+	eth_dev_t dev;
+	dev.mac[4] = port >> 8;
+	dev.mac[5] = port & 0xff;
+	return slip_send_packet(p, len, &dev);
+}

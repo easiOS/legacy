@@ -12,4 +12,6 @@ typedef struct {
 	uint8_t data[0];
 } udp_header;
 
+udp_header* udp_create(udp_header* header, uint16_t src, uint16_t dst, void* data, uint16_t len);
+
 #endif

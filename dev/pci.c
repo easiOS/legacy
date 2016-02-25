@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <dev/disk.h>
 #include <dev/pci/ne2k_pci.h>
 #include <dev/pci/pcnet3.h>
 #include <dev/pci/ehci.h>

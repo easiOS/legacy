@@ -32,6 +32,8 @@
 #include "notepad.h"
 #include "physdemo.h"
 #include "luavm.h"
+#include "testapp.h"
+#include "efm.h"
 
 #define EP_MAX_WINDOWS 32
 
@@ -75,14 +77,14 @@ void eelphant_eval(char* cmd)
   for(int i = 0; cmd_copy[i] != '\0'; cmdlen = i++);
   cmdlen++;
   char b[64];
-  printf("CMDLEN: %d\n", cmdlen);
+  //printf("CMDLEN: %d\n", cmdlen);
   char* token = strtok(cmd_copy, " ");
   while(token)
   {
     args[argc++] = token;
     token = strtok(NULL, " ");
   }
-  printf("CMD: %s\n", args[0]);
+  //printf("CMD: %s\n", args[0]);
   #define CMDCMP(str) if(strcmp(args[0], str) == 0)
   CMDCMP("terminal")
   {
@@ -178,6 +180,11 @@ void eelphant_eval(char* cmd)
   {
     puts("physics demo\n");
     physdemo_spawn();
+    return;
+  }
+  CMDCMP("testapp")
+  {
+    testapp_init();
     return;
   }
   puts("Searching on initrd...\n");

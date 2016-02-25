@@ -309,9 +309,6 @@ void kmain(uint32_t magic, uint32_t mbp)
   ethernet_list();
   printf("Welcome to %s!\n", KERNEL_NAME);
   puts("Copyright (c) 2015, Daniel (Easimer) Meszaros\nAll rights reserved.\n");
-  //ping test
-  //uint8_t localip[4] = {127, 0, 0, 1};
-  //icmp_send_ping_req(localip, localip);
   size_t w = vgetw();
   size_t h = vgeth();
   if(w == 0 || h == 0)

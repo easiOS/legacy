@@ -22,7 +22,7 @@ easiOS is an in-development <span title="lol :-D :-D :DDD">operating system</spa
 ## How to run
 ### Requirements:
 * Multiboot2 compatible bootloader (syslinux, grub2, etc.)
-* x86 PC: CPU with SSE or better (Pentium 3 or better recommended), 256MB memory or better
+* x86 PC: CPU with SSE or better (Pentium 3 or better recommended), 256MB memory or more
 
 ### In a virtual Machine
 1. Build easiOS like described above
@@ -50,7 +50,7 @@ easiOS is an in-development <span title="lol :-D :-D :DDD">operating system</spa
 * PS/2 Keyboard
 * Serial ports
 * PIT
-* Virtualbox Graphics Adapter (setting mode works)
+* Virtualbox Graphics Adapter (modesetting works)
 
 ### Non-functioning
 * PS/2 Mouse (actually, works but glitchy af)
