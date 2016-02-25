@@ -27,7 +27,6 @@
 
 #include "terminal.h"
 #include "msgbox.h"
-#include "loginwin.h"
 #include "eclock.h"
 #include "notepad.h"
 #include "physdemo.h"
@@ -91,6 +90,11 @@ void eelphant_eval(char* cmd)
   CMDCMP("terminal")
   {
     terminal_spawn();
+    return;
+  }
+  CMDCMP("efm")
+  {
+    efm_spawn();
     return;
   }
   CMDCMP("resolution")
@@ -298,6 +302,7 @@ void eelphant_event(time_t dt)
             }
           break;
         case 0x38: //left alt (cmd)
+          if(ep_locked) break;
           cmd_active = !cmd_active;
           if(cmd_active)
           {
@@ -310,6 +315,7 @@ void eelphant_event(time_t dt)
           }
           break;
         case 0x1C: //enter
+          if(ep_locked) break;
           if(cmd_active)
           {
             eelphant_eval(cmd_buf);
@@ -319,10 +325,16 @@ void eelphant_event(time_t dt)
           }
           break;
         case 0x0E: //backspace
+          if(!cmd_active) break;
           cmd_buf_i = 0;
           memset(cmd_buf, 0, 64);
           break;
         case 0x01: //escape
+          if(ep_locked)
+          {
+            reboot("User closed login window");
+            break;
+          }
           if(window_active)
           {
             eelphant_destroy_window(window_active);
@@ -442,13 +454,13 @@ void eelphant_draw()
       else
         vsetcol(189, 195, 199, 200);
       vd_rectangle(FILL, w->x, w->y - 24, w->w, 24);
-      vsetcol(252, 252, 252, 255);
+      vsetcol(156, 156, 156, 255);
       vd_rectangle(LINE, w->x, w->y - 24, w->w, 24);
       vsetcol(255, 255, 255, 255);
       vd_print(w->x + 8, w->y - 20, w->title, NULL, NULL);
       vsetcol(212, 212, 204, 255);
       vd_rectangle(FILL, w->x+w->w - 32, w->y - 24, 32, 24);
-      vsetcol(252, 252, 252, 255);
+      vsetcol(156, 156, 156, 255);
       vd_rectangle(LINE, w->x+w->w - 32, w->y - 24, 32, 24);
       vsetcol(0,0,0,255);
       vd_print(w->x+w->w - 20, w->y - 18, "X", NULL, NULL);
@@ -576,29 +588,21 @@ int eelphant_main(int64_t width, int64_t height)
   last = ticks();
   now = last;
   lastmouse = time(NULL);
-  puts("Entering loop\n");
-  /*ep_window* loginw = eelphant_spawn_loginwin();
-  while(true && loginw)
+  puts("Entering login loop\n");
+  ep_locked = 1;
+  ep_window* loginw = login_init();
+  while(ep_locked)
   {
     now = ticks();
-    struct keyevent* ke = kbdpoll();
-    while(ke != NULL)
-    {
-      if(loginw)
-        if(loginw->event)
-          loginw->event(ke, NULL, loginw);
-      ke = kbdpoll();
-      putc('*');
-    }
-    //eelphant_update(now - last);
+    eelphant_event(now - last);
+    eelphant_update(now - last);
     eelphant_draw(now - last);
-    cmd_active = false;
+    vswap();
     last = now;
-    if(loginw->userdata[4] == 0x1234C0CA) break;
   }
-  puts("Entering loop\n");
-  eelphant_destroy_window(loginw);*/
-  efm_spawn();
+  eelphant_destroy_window(loginw);
+  printf("Entering user loop\n");
+  ep_locked = 0;
   msgbox_show("Welcome to EasiOS Professional!\n\nPress ALT to open the command bar\nMove windows using keypad cursors\nUse TAB to switch between windows\nPress ESCAPE to close the current window\nThank you and have a productive day!", "EasiOS", NONE, 0);
   while(true)
   {

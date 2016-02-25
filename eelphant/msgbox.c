@@ -61,7 +61,7 @@ void msgbox_draw(int64_t bx, int64_t by, ep_window* w)
 
 void msgbox_event(struct keyevent* ke, struct mouseevent* me, ep_window* w)
 {
-  if(ke->keycode == 0x1C && ke->release)
+  if(ke->keycode == 0x1C && !ke->release)
   {
     eelphant_destroy_window(w);
   }
