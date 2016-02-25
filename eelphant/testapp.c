@@ -28,6 +28,10 @@ void testapp_load(ep_window* w)
   	icmp_send_ping_req(localip, localip);
 }
 
+void testapp_update(uint64_t dt, ep_window*w)
+{
+}
+
 void testapp_init(void)
 {
 	ep_window* w = eelphant_create_window();
@@ -41,6 +45,7 @@ void testapp_init(void)
 	w->x = 100;
 	w->y = 100;
 	w->load = &testapp_load;
+	w->update = &testapp_update;
 	strcpy(w->title, "Testapp");
 	w->load(w);
 	eelphant_switch_active(w);

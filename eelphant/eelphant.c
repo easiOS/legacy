@@ -47,6 +47,8 @@ time_t last_frame_time = 60;
 time_t frame_time = 60;
 int ep_restart = 0;
 int ep_cls = 1; //clear screen?
+int ep_proc = 0; //window is running
+int ep_locked = 0; //locked, user needs to login
 
 char cmd_buf[64];
 int cmd_buf_i = 0;
@@ -229,7 +231,11 @@ void eelphant_event(time_t dt)
   {
     if(window_active)
       if(window_active->event)
+      {
+        ep_proc = 1;
         window_active->event(ke, NULL, window_active);
+        ep_proc = 0;
+      }
     if(!ke->release) //is pressed
     {
       if(ke->ctrl)
@@ -356,7 +362,11 @@ void eelphant_update(time_t dt)
   }*/
   if(window_active)
     if(window_active->update)
+    {
+      ep_proc = 1;
       window_active->update(dt, window_active);
+      ep_proc = 0;
+    }
   /*if(windows[0].flags >> 6 & 1)
   {
     windows[0].x+=10 * (dt / 10);
@@ -447,7 +457,9 @@ void eelphant_draw()
       vd_rectangle(FILL, w->x, w->y, w->w, w->h);
       if(w->draw && w == window_active)
       {
+        ep_proc = 1;
         w->draw(w->x, w->y, w);
+        ep_proc = 0;
       }
     }
   }
@@ -554,39 +566,6 @@ void eelphant_destroy_window(ep_window* w)
 
 int draw_avg = 0;
 
-void ex_handler(registers_t regs)
-{
-  char buffer[128];
-  if(!window_active)
-  {
-    snprintf(buffer, 128, "Exception interrupt (%d)", regs.int_no);
-    kpanic(buffer, regs);
-  }
-  switch(regs.int_no)
-  {
-    case 0: //Div-by-0
-    {
-      snprintf(buffer, 128, "Division by zero exception in window %s", window_active->title);
-      msgbox_show(buffer, "EasiOS", NONE, 0);
-      break;
-    }
-    case 6: //Invalid opcode
-    {
-      snprintf(buffer, 128, "Invalid opcode error in window %s", window_active->title);
-      msgbox_show(buffer, "EasiOS", NONE, 0);
-      break;
-    }
-    case 13: //General Protection Fault
-    {
-      snprintf(buffer, 128, "General protection fault in window %s", window_active->title);
-      msgbox_show(buffer, "EasiOS", NONE, 0);
-      break;
-    }
-  }
-  //Destroy the window that caused the exception
-  eelphant_destroy_window(window_active);
-}
-
 int eelphant_main(int64_t width, int64_t height)
 {
   puts("Eelphant Window Manager v0\n");
@@ -619,7 +598,6 @@ int eelphant_main(int64_t width, int64_t height)
   }
   puts("Entering loop\n");
   eelphant_destroy_window(loginw);*/
-  register_interrupt_handler(13, &ex_handler);
   efm_spawn();
   msgbox_show("Welcome to EasiOS Professional!\n\nPress ALT to open the command bar\nMove windows using keypad cursors\nUse TAB to switch between windows\nPress ESCAPE to close the current window\nThank you and have a productive day!", "EasiOS", NONE, 0);
   while(true)
