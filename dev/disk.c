@@ -535,6 +535,7 @@ int ide_write_sector(int LBA, void* outarray, int count, int slavebit)  {
 
 void ide_detect_partitions()
 {
+   printf("Searching partitions\n");
 	uint8_t mbrbuffer[512];
 	uint8_t partbuffer[512];
 	struct mbr* mbr = (struct mbr*)mbrbuffer;
@@ -546,6 +547,7 @@ void ide_detect_partitions()
     }
    	for(int i = 0; i < 4; i++)
    	{
+         printf("Partition type: 0x%x, lba: 0x%x, size: 0x%x\n", mbr->partitions[i].type, mbr->partitions[i].lbs, mbr->partitions[i].sectors);
    		if(mbr->partitions[i].type == 0xb)
    		{
    			if(tf_info.type == 1)

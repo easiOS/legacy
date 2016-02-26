@@ -1321,7 +1321,7 @@ TFFile *tf_parent(uint8_t *filename, const uint8_t *mode, int mkParents) {
     uint8_t *f2;
     dbg_printf("\r\n[DEBUG-tf_parent] Opening parent of '%s' ", filename);
     f2 = (uint8_t*)strrchr((char const*)filename, '/');
-    dbg_printf(" found / at offset %d\r\n", (unsigned int) (f2-filename)); 
+    dbg_printf(" found / at offset %u\r\n", (unsigned int) (f2-filename)); 
     retval = tf_fnopen(filename, "rw", (int)(f2-filename));
     // if retval == NULL, why!?  we could be out of handles
     if (retval==NULL && mkParents)

@@ -33,6 +33,7 @@
 #include "luavm.h"
 #include "testapp.h"
 #include "efm.h"
+#include "login.h"
 
 #define EP_MAX_WINDOWS 32
 
@@ -594,9 +595,10 @@ int eelphant_main(int64_t width, int64_t height)
   while(ep_locked)
   {
     now = ticks();
-    eelphant_event(now - last);
-    eelphant_update(now - last);
-    eelphant_draw(now - last);
+    struct keyevent* ke = kbdpoll();
+    loginw->event(ke, NULL, loginw);
+    loginw->update(now - last, loginw);
+    loginw->draw(0, 0, loginw);
     vswap();
     last = now;
   }

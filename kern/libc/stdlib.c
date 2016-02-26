@@ -118,6 +118,7 @@ void* free(void* ptr) //actually this is kfree but who cares lol
   {
       mmgmt_conf.blocks[i] = 0; //clear allocated bit
   }*/
+  if(!ptr) return NULL;
   mmgmt_free(ptr);
   return ptr;
 }

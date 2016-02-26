@@ -3,28 +3,32 @@
 #include <video.h>
 #include <stdlib.h>
 #include <config.h>
+#include <kernel.h>
 #include "login.h"
 
 extern int ep_locked;
 
-void login_update(uint32_t dt, ep_window* w)
+void login_update(uint64_t dt, ep_window* w)
 {
 
 }
 
 void login_unload(ep_window* w)
 {
-	free(w->userdata[0]);
+	free((void*)w->userdata[0]);
 }
 
 void login_draw(int64_t bx, int64_t by, ep_window* w)
 {
+	vsetcol(0, 78, 152, 255);
+	vd_rectangle(FILL, 0, 0, 1024, 100);
+	vd_rectangle(FILL, 0, 668, 1024, 100);
 	if(w->userdata[2])
 	{
 		vsetcol(255, 255, 255, 255);
-		vd_rectangle(FILL, bx + 100, by + 100, 400, 30);
+		vd_rectangle(FILL, 400, 250, 400, 30);
 		vsetcol(156, 156, 156, 255);
-		vd_rectangle(LINE, bx + 100, by + 100, 400, 30);
+		vd_rectangle(LINE, 400, 250, 400, 30);
 		char buffer[128];
 		for(int i = 0; i < 128; i++)
 		{
@@ -38,19 +42,24 @@ void login_draw(int64_t bx, int64_t by, ep_window* w)
 				break;
 			}
 		}
+		vsetcol(255, 255, 255, 255);
+		vd_print(400, 200, "Password:", NULL, NULL);
 		vsetcol(0, 0, 0, 255);
-		vd_print(bx + 105, by + 85, "Password:", NULL, NULL);
-		vd_print(bx + 105, by + 105, buffer, NULL, NULL);
+		vd_print(405, 255, buffer, NULL, NULL);
 	}
 	else
 	{
-		vsetcol(0, 0, 0, 255);
-		vd_print(bx + 100, by + 100, "Press Ctrl-Shift-L to begin.", NULL, NULL);
+		vsetcol(255, 255, 255, 255);
+		vd_print(400, 200, "Press Ctrl-Shift-L to begin.", NULL, NULL);
 	}
+	vsetcol(255, 255, 255, 255);
+	vd_print(64, 600, "Press Escape to restart the computer.", NULL, NULL);
 }
 
 void login_event(struct keyevent* ke, struct mouseevent* me, ep_window* w)
 {
+	if(ke && ke->keycode == 0x01)
+		reboot("Requested by user");
 	if(ke && !w->userdata[2])
 	{
 		if(ke->ctrl && ke->shift && ke->release)
@@ -58,6 +67,8 @@ void login_event(struct keyevent* ke, struct mouseevent* me, ep_window* w)
 			if(ke->character == 'l' || ke->character == 'L')
 			{
 				w->userdata[2] = 1;
+				vsetcol(60, 108, 164, 255);
+				vcls();
 			}
 		}
 	}
@@ -87,7 +98,7 @@ void login_event(struct keyevent* ke, struct mouseevent* me, ep_window* w)
 			((char*)w->userdata[0])[w->userdata[1]--] = '\0';	
 			if(w->userdata[1] < 0)
 			{
-				w->userdata[1] == 0;
+				w->userdata[1] = 0;
 			}
 		}
 	}
@@ -95,12 +106,21 @@ void login_event(struct keyevent* ke, struct mouseevent* me, ep_window* w)
 
 ep_window* login_init(void)
 {
+	#ifndef USER_PASSWORD
+	ep_locked = 0;
+	return NULL;
+	#endif
+	if(strlen(USER_PASSWORD) == 0)
+	{
+		ep_locked = 0;
+		return NULL;
+	}
 	ep_window* w = NULL;
 	w = eelphant_create_window();
-	w->w = 640;
-	w->h = 480;
-	w->x = 192;
-	w->y = 144;
+	w->w = 1024;
+	w->h = 768;
+	w->x = 0;
+	w->y = 0;
 	w->bg.r = 212;
 	w->bg.g = 212;
 	w->bg.b = 212;
@@ -109,11 +129,13 @@ ep_window* login_init(void)
 	w->unload = &login_unload;
 	w->draw = &login_draw;
 	w->event = &login_event;
-	strcpy(w->title, "EasiOS Login");
+	//strcpy(w->title, "EasiOS Login");
 	eelphant_switch_active(w);
-	w->userdata[0] = malloc(512);
+	w->userdata[0] = (uint32_t)malloc(512);
 	w->userdata[1] = 0;
 	w->userdata[2] = 0;
 	((char*)w->userdata[0])[0] = '\0';
+	vsetcol(60, 108, 164, 255);
+	vcls();
 	return w;
 }

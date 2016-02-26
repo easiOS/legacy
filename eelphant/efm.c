@@ -127,7 +127,7 @@ void efm_spawn()
 		printf("Drive %c:\\ Size: %d MB %s\n", drives[i].letter, drives[i].type == 1 ? 0 : (drives[i].address.phys.size * 512 / 1024 / 1024), (drives[i].type == 0 ? "Physical" : (drives[i].type == 2 ? "Physical FAT32" : "Initrd")));
 		if(drives[i].type == 2)
 		{
-			if(tf_fopen("DTEST", "r"))
+			if(tf_fopen("DTEST", "w"))
 			{
 				printf("holY FUCC NIKKA\n");
 			}

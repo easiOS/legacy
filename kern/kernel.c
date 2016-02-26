@@ -301,7 +301,6 @@ void kmain(uint32_t magic, uint32_t mbp)
   nlb_init();
   kbdinit();
   mouseinit();
-  //ideinit();
   asm volatile("sti");
   while(time(NULL) == 0);
   pciinit();

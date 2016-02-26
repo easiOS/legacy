@@ -7,6 +7,6 @@
 
 // ======== User settings ========
 
-#define USER_PASSWORD "easios123" //user password, TODO: implement authentication
+#define USER_PASSWORD "" //user password, TODO: implement authentication
 
 #endif /* H_CONFIG */
