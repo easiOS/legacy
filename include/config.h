@@ -1,6 +1,10 @@
 #ifndef H_CONFIG
 #define H_CONFIG
 
+// ======== Kernel settings ========
+
+#define FAT32_DEBUG 0 //print fat32 debug messages
+
 // ======== LuaVM ========
 
 //#define LUAVM_DEBUG //Enable debug messages

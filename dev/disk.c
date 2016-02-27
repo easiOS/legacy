@@ -533,6 +533,60 @@ int ide_write_sector(int LBA, void* outarray, int count, int slavebit)  {
    return 0;
 }
 
+void ide_detect_gpt_partitions()
+{
+   printf("Searching GPT partitions\n");
+   uint8_t gptbuffer[512];
+   struct gpt_hdr* gpt = (struct gpt_hdr*)gptbuffer;
+   ide_read_sector(1, gpt, 1, 0);
+   if(gpt->signature != 0x5452415020494645)
+   {
+      printf("Invalid GPT signature 0x%x\n", gpt->signature);
+      return;
+   }
+   printf("GPT Version 0x%x\n", gpt->revision);
+   for(int i = 0; i < 32; i++)
+   {
+      struct gpt_pe partitions[4];
+      ide_read_sector(gpt->pealba + i, partitions, 1, 0);
+      for(int p = 0; p < 4; p++)
+      {
+         uint64_t zero[2]; memset(zero, 0, 16);
+         if(memcmp(zero, &partitions[p].ptype, 16) == 0)
+            continue; //skip unused entry
+         struct guid eos_ptype = {0x6054bbb2, 0xe732, 0x4645, 0x8cb5ca85, 0xd7c786c5};
+         if(memcmp(&partitions[p].ptype, &eos_ptype, 16) == 0)
+         {
+            printf("easiOS 0.3 System Partition found!\n");
+            int di = -1;
+            for(int j = 0; j < 4; j++)
+            {
+               if(drives[j].letter == 0)
+               {
+                  di = j;
+                  break;
+               }
+            }
+            if(di == -1)
+            {
+               printf("  Cannot add more drives\n");
+               return;
+            }
+            tf_info.driveid = di;
+            drives[di].letter = 'a' + di;
+            drives[di].type = 2;
+            drives[di].address.phys.lba = partitions[i].startlba;
+            drives[di].address.phys.size = partitions[i].lastlba + 1 - partitions[i].startlba;
+            tf_init();
+            tf_info.driveid = di;
+            tf_mkdir((uint8_t*)"/sys", 0); tf_mkdir((uint8_t*)"/bin", 0);
+            tf_mkdir((uint8_t*)"/cfg", 0); tf_mkdir((uint8_t*)"/user", 0);
+            return;
+         }
+      }
+   }
+}
+
 void ide_detect_partitions()
 {
    printf("Searching partitions\n");
@@ -548,7 +602,13 @@ void ide_detect_partitions()
    	for(int i = 0; i < 4; i++)
    	{
          printf("Partition type: 0x%x, lba: 0x%x, size: 0x%x\n", mbr->partitions[i].type, mbr->partitions[i].lba, mbr->partitions[i].sectors);
-   		if(mbr->partitions[i].type == 0xb)
+   		if(mbr->partitions[i].type == 0xee)
+         {
+            printf("Protective MBR found, assuming GPT partition table\n");
+            ide_detect_gpt_partitions();
+            return;
+         }
+         if(mbr->partitions[i].type == 0xb)
    		{
    			if(tf_info.type == 1)
    			{

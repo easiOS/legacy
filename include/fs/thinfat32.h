@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <config.h>
 
 
 #define TF_MAX_PATH 256
@@ -26,9 +27,8 @@
 
 #define TF_ATTR_DIRECTORY 0x10
 //  #define TF_DEBUG 1
-#define DEBUG 1
 
-#ifdef DEBUG
+#if FAT32_DEBUG
 
     #define dbg_printf(...) printf(__VA_ARGS__)
     #define dbg_printHex(x,y) printHex(x,y)

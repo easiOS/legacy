@@ -305,7 +305,7 @@ void kmain(uint32_t magic, uint32_t mbp)
   krandom_get();
   ethernet_list();
   printf("Welcome to %s!\n", KERNEL_NAME);
-  puts("Copyright (c) 2015, Daniel (Easimer) Meszaros\nAll rights reserved.\n");
+  puts("Copyright (c) 2015-2016, Daniel (Easimer) Meszaros\nAll rights reserved.\n");
   size_t w = vgetw();
   size_t h = vgeth();
   if(w == 0 || h == 0)

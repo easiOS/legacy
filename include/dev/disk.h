@@ -22,6 +22,40 @@ struct mbr {
 	uint16_t signature; // 0xAA55 in memory, 0x55AA on disk
 }__attribute__((packed));
 
+struct guid {
+	uint32_t data1;
+	uint16_t data2, data3;
+	uint32_t data4, data5;
+} __attribute__((packed));
+
+struct gpt_hdr {
+	uint64_t signature; //gpt signature (0x5452415020494645 little-endian)
+	uint32_t revision; //gpt revision
+	uint32_t hdrsiz; //header size
+	uint32_t crc32; //crc32 of header
+	uint32_t zero; //must be zero
+	uint64_t curlba; //current lba
+	uint64_t bcklba; //header backup lba
+	uint64_t ftulba; //first usable lba
+	uint64_t ltulba; //last usable lba
+	struct guid disk_guid; //disk GUID
+	uint64_t pealba; //partition entry array lba
+	uint32_t nope; //number of partition entries
+	uint32_t pesiz; //partition entry size
+	uint32_t peacrc; //partition entry array crc32
+	uint8_t reserved[420]; //must be all zero
+} __attribute__((packed));
+
+struct gpt_pe {
+	struct guid ptype; 	//EasiOS 0.3 Partition GUID:
+	                   	//6054BBB2-E732-4645-85CA-B58CC586C7D7
+	struct guid pguid; //partition guid
+	uint64_t startlba; //start of partition
+	uint64_t lastlba; //end of partition (inclusive)
+	uint64_t flags; //flags
+	uint8_t pname[72]; //partition name UTF-16LE
+} __attribute__((packed));
+
 struct eos_drives { //physical or virtual partition using the EOS initrd filesystem 
 	char letter;
 	char type; //0 = physical, 1 = virtual, 2 = FAT32 Physical
