@@ -25,7 +25,6 @@
 #include <dev/pci.h>
 #include <tar.h>
 #include <dev/ethernet.h>
-#include <dev/net_loopback.h>
 #include <kshell.h>
 #include <users.h>
 #include <vfs.h>
@@ -37,7 +36,7 @@
 
 struct cpu_desc cpu_desc;
 
-#define KERNEL_NAME "easiOS v0.3.7"
+#define KERNEL_NAME "easiOS v0.3.8"
 
 const char* cmdline = NULL;
 uint16_t __attribute__((aligned(4))) text_buffer[2000];
@@ -298,7 +297,6 @@ void kmain(uint32_t magic, uint32_t mbp)
   init_descriptor_tables();
   timerinit(1000);
   read_rtc();
-  nlb_init();
   kbdinit();
   mouseinit();
   asm volatile("sti");

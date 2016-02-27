@@ -1206,7 +1206,8 @@ int tf_compare_filename(TFFile *fp, uint8_t *name) {
     return -1;
 }
 
-int tf_fread(uint8_t *dest, int size, TFFile *fp) {
+int tf_fread(void *ddest, int size, TFFile *fp) {
+    uint8_t* dest = ddest;
     uint32_t sector;
     while(size > 0) {
         sector = tf_first_sector(fp->currentCluster) + (fp->currentByte / 512);
@@ -1228,7 +1229,8 @@ int tf_fread(uint8_t *dest, int size, TFFile *fp) {
     return 0;
 }
 
-int tf_fwrite(uint8_t *src, int size, int count, TFFile *fp) {
+int tf_fwrite(void *ssrc, int size, int count, TFFile *fp) {
+    uint8_t* src = ssrc;
     int i, tracking, segsize;
     dbg_printf("\r\n[DEBUG-tf_write] Call to tf_fwrite() size=%d count=%d \r\n", size, count);
     //printHex(src, size);

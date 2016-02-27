@@ -213,29 +213,17 @@ void eelphant_eval(char* cmd)
   if(f)
   {
     printf("Executable found on disk!\n");
-    int empty = -1;
-    for(int i = 0; i < LUA_APPS_N; i++)
-    {
-      if(lua_apps[i].address == NULL && empty == -1)
-        empty = i;
-      if(strcmp(lua_apps[i].name, args[0]) == 0)
-      {
-        tf_fclose(f);
-        luavm_spawn(lua_apps[i].address);
-        return;
-      }
-    }
-    strncpy(lua_apps[empty].name, args[0], 32);
-    lua_apps[empty].address = malloc(f->size);
-    if(!lua_apps[empty].address)
+    uint8_t* app_addr = malloc(f->size);
+    if(!app_addr)
     {
       printf("Failed to load application: out of memory!\n");
       tf_fclose(f);
       return;
     }
-    tf_fread(lua_apps[empty].address, f->size, f);
-    luavm_spawn(lua_apps[empty].address);
+    tf_fread(app_addr, f->size, f);
     tf_fclose(f);
+    luavm_spawn((lheader_t*)app_addr);
+    free(app_addr);
     return;
   }
   printf("eelphant: command not found: %s\n", args[0]);

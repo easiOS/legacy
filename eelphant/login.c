@@ -129,13 +129,13 @@ ep_window* login_init(void)
 	w->unload = &login_unload;
 	w->draw = &login_draw;
 	w->event = &login_event;
-	//strcpy(w->title, "EasiOS Login");
-	eelphant_switch_active(w);
 	w->userdata[0] = (uint32_t)malloc(512);
 	w->userdata[1] = 0;
 	w->userdata[2] = 0;
+
 	((char*)w->userdata[0])[0] = '\0';
 	vsetcol(60, 108, 164, 255);
 	vcls();
+	eelphant_switch_active(w);
 	return w;
 }
