@@ -592,6 +592,16 @@ void ide_detect_partitions()
    printf("Searching partitions\n");
 	uint8_t mbrbuffer[512];
 	uint8_t partbuffer[512];
+   //Check for GPT
+   struct gpt_hdr* gpt = (struct gpt_hdr*)mbrbuffer;
+   ide_read_sector(1, gpt, 1, 0);
+   if(gpt->signature == 0x5452415020494645)
+   {
+      printf("GPT found\n");
+      ide_detect_gpt_partitions();
+      return;
+   }
+   //Check for MBR
 	struct mbr* mbr = (struct mbr*)mbrbuffer;
     ide_read_sector(0, mbr, 1, 0);
     if(mbr->signature != 0xAA55)
