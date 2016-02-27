@@ -207,10 +207,34 @@ void eelphant_eval(char* cmd)
   puts("Searching on disk...\n");
   char buffer[256];
   memset(buffer, 0, 256);
-  TFFile* f = tf_fopen(args[0], "r");
+  strcat(buffer, "/bin/");
+  strcat(buffer, args[0]);
+  TFFile* f = tf_fopen((uint8_t*)buffer, (const uint8_t*)'r');
   if(f)
   {
     printf("Executable found on disk!\n");
+    int empty = -1;
+    for(int i = 0; i < LUA_APPS_N; i++)
+    {
+      if(lua_apps[i].address == NULL && empty == -1)
+        empty = i;
+      if(strcmp(lua_apps[i].name, args[0]) == 0)
+      {
+        tf_fclose(f);
+        luavm_spawn(lua_apps[i].address);
+        return;
+      }
+    }
+    strncpy(lua_apps[empty].name, args[0], 32);
+    lua_apps[empty].address = malloc(f->size);
+    if(!lua_apps[empty].address)
+    {
+      printf("Failed to load application: out of memory!\n");
+      tf_fclose(f);
+      return;
+    }
+    tf_fread(lua_apps[empty].address, f->size, f);
+    luavm_spawn(lua_apps[empty].address);
     tf_fclose(f);
     return;
   }

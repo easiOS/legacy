@@ -18,13 +18,14 @@ TFStats tf_stats;
 extern struct eos_drives drives[4];
 
 int read_sector(uint8_t *data, uint32_t sector) {
-    printf("\nnigga tryna read sector %d of drive %d\n", drives[tf_info.driveid].address.phys.lbs + sector, tf_info.driveid);
-    ide_read_sector(drives[tf_info.driveid].address.phys.lbs + sector, data, 1, 0);
+    printf("\nFAT32_READ sector %u drive %d\n", drives[tf_info.driveid].address.phys.lba + sector, tf_info.driveid);
+    ide_read_sector(drives[tf_info.driveid].address.phys.lba + sector, data, 1, 0);
     return 0;
 }
 
-int write_sector(uint8_t *data, uint32_t blocknum) {
-    //ide_write_sector(drives[tf_info.driveid].address.phys.lbs + blocknum, data, 1, 0);
+int write_sector(uint8_t *data, uint32_t sector) {
+    printf("\nFAT32_WRITE sector %u drive %d\n", drives[tf_info.driveid].address.phys.lba + sector, tf_info.driveid);
+    ide_write_sector(drives[tf_info.driveid].address.phys.lba + sector, data, 1, 0);
     return 0;
 }
 
@@ -173,10 +174,6 @@ int tf_init() {
     tf_info.rootDirectorySize = temp;
     
     dbg_printf("\r\n[DEBUG-tf_init] Size of root directory: %d bytes", tf_info.rootDirectorySize);
-    #ifdef TF_DEBUG
-    tf_fetch(0);
-    printBPB( (BPB_struct*)tf_info.buffer );
-    #endif
     tf_fclose(fp);
     tf_release_handle(fp);
     dbg_printf("\r\ntf_init() successful...\r\n");

@@ -21,5 +21,6 @@ struct lua_apps
 void kpanic(const char* msg, registers_t regs);
 void reboot(const char* reason);
 struct cpu_desc* get_cpu_desc(void);
+#define LUA_APPS_N 16
 
 #endif

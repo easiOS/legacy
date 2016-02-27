@@ -37,11 +37,11 @@
 
 struct cpu_desc cpu_desc;
 
-#define KERNEL_NAME "easiOS v0.3.6"
+#define KERNEL_NAME "easiOS v0.3.7"
 
 const char* cmdline = NULL;
 uint16_t __attribute__((aligned(4))) text_buffer[2000];
-struct lua_apps lua_apps[16];
+struct lua_apps lua_apps[LUA_APPS_N];
 
 void kpanic(const char* msg, registers_t regs)
 {

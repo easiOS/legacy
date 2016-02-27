@@ -177,13 +177,13 @@ int strncmp(const char *_l, const char *_r, size_t n)
 
 char *strrchr(char *s, int c)
 {
-  char* ss = s;
-    char* ret=0;
-    do {
-        if( *ss == (char)c )
-            ret=ss;
-    } while(*ss++);
-    return ret;
+  char* ret = 0;
+  do
+  {
+    if(*s == c)
+      ret = (char*)s;
+  } while(*s++);
+  return (ret);
 }
 
 char* strchr(char* str, int character)

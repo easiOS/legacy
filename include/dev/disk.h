@@ -12,7 +12,7 @@ struct mbr_pe {
 	struct chs_addr begin;
 	uint8_t type;
 	struct chs_addr end;
-	uint32_t lbs;
+	uint32_t lba;
 	uint32_t sectors;
 } __attribute__((packed));
 
@@ -27,7 +27,7 @@ struct eos_drives { //physical or virtual partition using the EOS initrd filesys
 	char type; //0 = physical, 1 = virtual, 2 = FAT32 Physical
 	union {
 		struct {
-			uint32_t lbs;
+			uint32_t lba;
 			uint32_t size; //sectors
 		} phys;
 		uint32_t virt;

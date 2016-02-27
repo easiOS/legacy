@@ -547,14 +547,14 @@ void ide_detect_partitions()
     }
    	for(int i = 0; i < 4; i++)
    	{
-         printf("Partition type: 0x%x, lba: 0x%x, size: 0x%x\n", mbr->partitions[i].type, mbr->partitions[i].lbs, mbr->partitions[i].sectors);
+         printf("Partition type: 0x%x, lba: 0x%x, size: 0x%x\n", mbr->partitions[i].type, mbr->partitions[i].lba, mbr->partitions[i].sectors);
    		if(mbr->partitions[i].type == 0xb)
    		{
    			if(tf_info.type == 1)
    			{
    				continue;
    			}
-   			printf("Partition found %d at LBA %d (size: %d) FAT32\n", i, mbr->partitions[i].lbs, mbr->partitions[i].sectors);
+   			printf("Partition found %d at LBA %d (size: %d) FAT32\n", i, mbr->partitions[i].lba, mbr->partitions[i].sectors);
    			tf_info.type = 1;
    			int di = -1;
    			for(int j = 0;j < 4; j++)
@@ -573,15 +573,15 @@ void ide_detect_partitions()
    			tf_info.driveid = di;
    			drives[di].letter = 'a' + di;
    			drives[di].type = 2;
-   			drives[di].address.phys.lbs = mbr->partitions[i].lbs;
+   			drives[di].address.phys.lba = mbr->partitions[i].lba;
    			drives[di].address.phys.size = mbr->partitions[i].sectors;
    			tf_init();
    			tf_info.driveid = di;
    		}
    		if(mbr->partitions[i].type == 0x7f)
    		{
-   			printf("Partition found %d at LBA %d (size: %d)\n", i, mbr->partitions[i].lbs, mbr->partitions[i].sectors);
-   			ide_read_sector(mbr->partitions[i].lbs, partbuffer, 1, 0);
+   			printf("Partition found %d at LBA %d (size: %d)\n", i, mbr->partitions[i].lba, mbr->partitions[i].sectors);
+   			ide_read_sector(mbr->partitions[i].lba, partbuffer, 1, 0);
    			struct initramfs_header* vfs = (struct initramfs_header*)partbuffer;
    			if(vfs->magic != 0x45524653)
    			{
@@ -603,7 +603,7 @@ void ide_detect_partitions()
    			}
    			drives[di].letter = 'a' + di;
    			drives[di].type = 0;
-   			drives[di].address.phys.lbs = mbr->partitions[i].lbs;
+   			drives[di].address.phys.lba = mbr->partitions[i].lba;
    			drives[di].address.phys.size = mbr->partitions[i].sectors;
    		}
    	}
