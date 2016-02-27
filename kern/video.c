@@ -1299,8 +1299,6 @@ void vd_print(int64_t x, int64_t y, const char* str, int64_t* xe, int64_t* ye)
   int i = 0;
   while(str[i] != '\0')
   {
-    /*if(str[i] < 32 && (str[i] != 9 || str[i] != 10 || str[i] != 11 || str[i] != 13) && str[i] != 127) continue;
-    if(str[i] == 0 || str[i] > 127) break;*/
     switch(str[i])
     {
       case '\r':
@@ -1326,6 +1324,46 @@ void vd_print(int64_t x, int64_t y, const char* str, int64_t* xe, int64_t* ye)
   }
   if(xe != NULL) *xe = x2;
   if(ye != NULL) *ye = y2;
+}
+
+void vd_printl(int64_t x, int64_t y, const char* str, int xl, int yl)
+{
+    if(xl <= 0) return;
+    if(yl <= 0) return;
+    int64_t x2 = x;
+    int64_t y2 = y;
+  int i = 0;
+  while(str[i] != '\0')
+  {
+    switch(str[i])
+    {
+      case '\r':
+        x2 = x;
+        break;
+      case '\n':
+        x2 = x;
+        y2+=16;
+        break;
+      case '\t':
+        x2 += 24;
+        break;
+      default:
+        if(str[i] > 31 && str[i] < 127)
+        {
+          if(fb_font[(int)str[i]] != NULL)
+            vd_bitmap16(fb_font[(int)str[i]], x2, y2, 16);
+          x2 += 10;
+        }
+        break;
+    }
+    i++;
+    if(i > 0 && i % xl == 0)
+    {
+        x2 = x;
+        y2+=16;
+    }
+    if(i / xl >= yl) return;
+  }
 }
 
 int64_t vgetw()

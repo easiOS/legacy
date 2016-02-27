@@ -43,6 +43,7 @@ easiOS is an in-development <span title="lol :-D :-D :DDD">operating system</spa
 * PIT
 * Memory management
 * Graphical mode and drawing
+* File I/O on FAT32 partitions (MBR, GPT supported), running Lua bytecode from disk
 
 ## Supported devices
 
@@ -51,6 +52,7 @@ easiOS is an in-development <span title="lol :-D :-D :DDD">operating system</spa
 * Serial ports
 * PIT
 * Virtualbox Graphics Adapter (modesetting works)
+* IDE disks
 
 ### Non-functioning
 * PS/2 Mouse (actually, works but glitchy af)

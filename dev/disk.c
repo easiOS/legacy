@@ -579,8 +579,6 @@ void ide_detect_gpt_partitions()
             drives[di].address.phys.size = partitions[i].lastlba + 1 - partitions[i].startlba;
             tf_init();
             tf_info.driveid = di;
-            tf_mkdir((uint8_t*)"/sys", 0); tf_mkdir((uint8_t*)"/bin", 0);
-            tf_mkdir((uint8_t*)"/cfg", 0); tf_mkdir((uint8_t*)"/user", 0);
             return;
          }
       }

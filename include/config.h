@@ -3,7 +3,7 @@
 
 // ======== Kernel settings ========
 
-#define FAT32_DEBUG 0 //print fat32 debug messages
+#define FAT32_DEBUG 1 //print fat32 debug messages
 
 // ======== LuaVM ========
 

@@ -43,6 +43,7 @@ void vsetcol(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 rgb_t vgetcol();
 void vcls();
 void vd_print(int64_t x, int64_t y, const char* str, int64_t* xe, int64_t* ye);
+void vd_printl(int64_t x, int64_t y, const char* str, int xl, int yl);
 void vd_line(int64_t x1, int64_t y1, int64_t x2, int64_t y2);
 void vd_triangle(vdrawmode_t drawmode, int64_t x1, int64_t y1, int64_t x2, int64_t y2, int64_t x3, int64_t y3);
 void vd_rectangle(vdrawmode_t drawmode, int64_t x, int64_t y, int64_t w, int64_t h);
