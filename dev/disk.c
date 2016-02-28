@@ -576,7 +576,7 @@ void ide_detect_gpt_partitions()
             drives[di].letter = 'a' + di;
             drives[di].type = 2;
             drives[di].address.phys.lba = partitions[i].startlba;
-            drives[di].address.phys.size = partitions[i].lastlba + 1 - partitions[i].startlba;
+            drives[di].address.phys.size = partitions[i].lastlba - (partitions[i].startlba - 1);
             tf_init();
             tf_info.driveid = di;
             return;

@@ -24,14 +24,22 @@ void iowin_event(struct keyevent* ke, struct mouseevent* me, ep_window* w)
 			strcat(buffer, b);
 			if(mode == 0)
 			{
+				printf("iowindow: open file %s\n", buffer);
 				TFFile* f = tf_fopen((uint8_t*)buffer, (uint8_t*)"r");
 				if(f)
 				{
+					printf("iowindow: ok\n");
+					uint8_t fbuffer[f->size];
 					size_t a = w->userdata[4];
-					tf_fread((void*)w->userdata[3], a, f);
+					tf_fread(fbuffer, a, f);
 					size_t* b = (size_t*)w->userdata[4];
 					*b = f->size;
+					memcpy((void*)w->userdata[3], fbuffer, f->size);
 					printf("Cursor at %d\n", *(size_t*)w->userdata[4]);
+				}
+				else
+				{
+					printf("iowindow: cannot open %s\n", buffer);
 				}
 				tf_fclose(f);
 				eelphant_switch_active((ep_window*)w->userdata[5]);
