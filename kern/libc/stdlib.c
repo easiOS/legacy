@@ -123,11 +123,24 @@ void* free(void* ptr) //actually this is kfree but who cares lol
   return ptr;
 }
 
-int atoi(char* p) {
-    int k = 0;
-    while (*p) {
-        k = (k<<3)+(k<<1)+(*p)-'0';
-        p++;
-     }
-     return k;
+int isdigit(char c)
+{
+  return c >= 48 && c <= 57;
+}
+
+int atoi(char* c) {
+    int value = 0;
+    int sign = 1;
+    if( *c == '+' || *c == '-' )
+    {
+        if( *c == '-' ) sign = -1;
+        c++;
+    }
+    while (isdigit(*c))
+    {
+        value *= 10;
+        value += (int) (*c-'0');
+        c++;
+    }
+    return (value * sign);
 }

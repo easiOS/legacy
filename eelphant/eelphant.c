@@ -54,6 +54,8 @@ char cmd_buf[64];
 int cmd_buf_i = 0;
 bool cmd_active = false;
 
+int ep_tz = 0;
+
 extern struct lua_apps lua_apps[16];
 
 const uint16_t cursor[] = {
@@ -530,7 +532,7 @@ void eelphant_draw()
   vd_print(datex, datey, ":", &datex, &datey);
   itoa(date[5], b, 10);
   vd_print(datex, datey, b, &datex, &datey);*/
-  itoa(date[3], b, 10);
+  itoa((date[3] + ep_tz) % 24, b, 10);
   if(b[1] == '\0')
   {
     b[1] = b[0];
@@ -601,6 +603,15 @@ int eelphant_main(int64_t width, int64_t height)
   last = ticks();
   now = last;
   lastmouse = time(NULL);
+  TFFile* tzf = tf_fopen((uint8_t*)"/cfg/timezone", (const uint8_t*)"r");
+  if(tzf)
+  {
+    char tzb[3];
+    memset(tzb, 0, 3);
+    tf_fread(tzb, 2, tzf);
+    tf_fclose(tzf);
+    ep_tz = atoi(tzb);
+  }
   puts("Entering login loop\n");
   ep_locked = 1;
   ep_window* loginw = login_init();

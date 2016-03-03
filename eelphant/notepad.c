@@ -51,8 +51,8 @@ void notepad_event(struct keyevent* ke, struct mouseevent* me, ep_window* w)
         }
         case 'o':
         {
-          size_t* len = &(w->userdata[1]);
-          iowin_spawn(IOWIN_MODE_OPEN, NULL, (void*)w->userdata[0], (size_t*)len, w);
+          size_t len = 65535;
+          iowin_spawn(IOWIN_MODE_OPEN, NULL, (void*)w->userdata[0], &len, w);
           break;
         }
       }

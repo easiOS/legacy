@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <config.h>
 #include <kernel.h>
+#include <dev/pcspkr.h>
+#include <dev/timer.h>
 #include "login.h"
 
 extern int ep_locked;
@@ -16,6 +18,19 @@ void login_update(uint64_t dt, ep_window* w)
 void login_unload(ep_window* w)
 {
 	free((void*)w->userdata[0]);
+	int melody[] = {NOTE_E7, NOTE_E7, 0, NOTE_E7,
+    0, NOTE_C7, NOTE_E7, 0,
+    NOTE_G7, 0, 0,  0,
+    NOTE_G6, 0, 0, 0}; //what the fuck
+  	for(int i = 0; i < 16; i++)
+  	{
+    	if(melody[i] == 0)
+    		nosound();
+    	else
+    	 	sound(melody[i]);
+    	sleep(191);
+  	}
+  	nosound();
 }
 
 void login_draw(int64_t bx, int64_t by, ep_window* w)
