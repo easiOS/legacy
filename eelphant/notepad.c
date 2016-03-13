@@ -3,8 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fs/thinfat32.h>
 #include "notepad.h"
 #include "iowindow.h"
+#include "msgbox.h"
 
 void notepad_draw(int64_t bx, int64_t by, ep_window* w)
 {
@@ -82,17 +84,17 @@ void notepad_unload(ep_window* w)
   free((void*)w->userdata[0]);
 }
 
-void notepad_spawn()
+ep_window* notepad_spawn()
 {
   ep_window* w = eelphant_create_window();
-  if(!w) return;
+  if(!w) return NULL;
   strcpy(w->title, "Notepad");
   char* buffer = (char*)malloc(65536);
   if(!buffer)
   {
     puts("notepad: out of memory\n");
     eelphant_destroy_window(w);
-    return;
+    return NULL;
   }
   buffer[0] = '\0';
   w->userdata[0] = (uint32_t)buffer;
@@ -109,4 +111,21 @@ void notepad_spawn()
   w->event = &notepad_event;
   w->unload = &notepad_unload;
   eelphant_switch_active(w);
+  return w;
+}
+
+ep_window* notepad_spawnf(const char* fn)
+{
+  ep_window* w = notepad_spawn();
+  uint8_t* buffer = (uint8_t*)w->userdata[0];
+  TFFile* f = tf_fopen((uint8_t*)fn, (const uint8_t*)"r");
+  if(!f)
+  {
+    msgbox_show("File not found!", "Error", ERR, OK);
+    return w;
+  }
+  tf_fread(buffer, 65536, f);
+  w->userdata[1] = f->size;
+  tf_fclose(f);
+  return w;
 }

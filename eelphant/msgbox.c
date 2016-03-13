@@ -94,6 +94,8 @@ int msgbox_show(const char* message, const char* title, enum MsgBoxType type, un
     j++;
   }
   w->w = linemaxlen * 12 + 30;
+  if(w->w < 100)
+    w->w = 100;
   w->z = 1000;
   w->unload = &msgbox_unload;
   w->load = &msgbox_load;

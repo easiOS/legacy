@@ -9,6 +9,7 @@ bool* signals[256];
 int keyevents_sp = -1;
 bool shift = false;
 bool ctrl = false;
+bool alt = false;
 
 const char keys[] = {
   0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
@@ -57,6 +58,11 @@ static void kbdcallback(registers_t regs)
     ctrl = !(scancode & 0x80);
     goto end;
   }
+  if(kc == 0x38)
+  {
+    alt = !(scancode & 0x80);
+    goto end;
+  }
   if(keyevents_sp + 1 <= 255)
   {
     e = &keyevents[++keyevents_sp];
@@ -67,7 +73,12 @@ static void kbdcallback(registers_t regs)
     e->character = keychar;
     e->shift = shift;
     e->ctrl = ctrl;
-    //printf("KEYEVENT: keycode: 0x%x/%d char: %d release: %d shift: %d ctrl: %d\n", kc, doublescan, e->character, e->release, e->shift, e->ctrl);
+    e->alt = alt;
+    if(kc == 0x53 && doublescan && e->alt && e->ctrl)
+    {
+      extern void kernupd_finish(void);
+      kernupd_finish();
+    }
   }
 end:
   outb(0x20, 0x20); //End of Interrupt

@@ -13,6 +13,7 @@
 #include <dev/pci/virtio-net.h>
 #include <dev/pci/debugdrv.h>
 #include <dev/pci/amd_rv100.h>
+#include <dev/pci/e100.h>
 
 struct _pci_device {
   uint16_t vendor;
@@ -23,7 +24,7 @@ struct _pci_device {
 //  Vendor   Device  Name
     {0x8086, 0x1237, "Intel PCI & Memory", NULL},
     {0x8086, 0x7000, "Intel PIIX3 PCI2ISA Bridge (Triton II)", NULL},
-    {0x8086, 0x1038, "Intel PRO/100", NULL},
+    {0x8086, 0x1038, "Intel PRO/100", &e100init},
     {0x8086, 0x100e, "Intel Pro 1000/MT", NULL},
     {0x1234, 0x1111, "QEMU/Bochs Virtual VGA", NULL},
     {0x10ec, 0x8029, "Ne2000 PCI", &ne2k_pciinit},

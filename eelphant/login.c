@@ -18,7 +18,7 @@ void login_update(uint64_t dt, ep_window* w)
 void login_unload(ep_window* w)
 {
 	free((void*)w->userdata[0]);
-	int melody[] = {NOTE_E7, NOTE_E7, 0, NOTE_E7,
+	/*int melody[] = {NOTE_E7, NOTE_E7, 0, NOTE_E7,
     0, NOTE_C7, NOTE_E7, 0,
     NOTE_G7, 0, 0,  0,
     NOTE_G6, 0, 0, 0}; //what the fuck
@@ -30,7 +30,7 @@ void login_unload(ep_window* w)
     	 	sound(melody[i]);
     	sleep(191);
   	}
-  	nosound();
+  	nosound();*/
 }
 
 void login_draw(int64_t bx, int64_t by, ep_window* w)

@@ -13,13 +13,25 @@ struct ethernet_device {
   uint8_t ipv4_netmask[4];
   uint8_t ipv4_gateway[4];
   uint8_t mac[6];
-  uint16_t iobase;
+  uint32_t iobase;
+  uint32_t memory;
   uint8_t irq;
+  uint16_t bus, slot, func;
   void* custom;
   int (*write)(void*, size_t, eth_dev_t*); //write int bytes from pointer
   int (*read)(void*, size_t, eth_dev_t*); //read int number of packages to pointer
   int (*available)(eth_dev_t*); //is there anything in the recv buffers
   int (*full)(eth_dev_t*); //are transmit buffers full
+  struct {
+    int phy_id;
+    int advertising;
+    int phy_id_mask;
+    int reg_num_mask;
+
+    unsigned int full_duplex : 1;
+    unsigned int force_media : 1;
+    unsigned int supports_gmii : 1;
+  } mii;
 };
 
 typedef struct ethernet_frame {

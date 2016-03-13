@@ -15,6 +15,8 @@
 #define RADEON_DST_HEIGHT                   0x1410
 #define RADEON_DST_WIDTH                    0x140c
 
+//256 ports
+
 void amdrv100set_mode(vga_card* v, int64_t w, int64_t h, uint8_t bpp)
 {
   puts("amd_rv100: set mode stub\n");
@@ -38,16 +40,14 @@ void amdrv100init(uint8_t bus, uint8_t slot)
   uint32_t fbaddr = pci_config_read_dword(bus, slot, 0, 0x10) & ~0xF;
   uint32_t port = pci_config_read_dword(bus, slot, 0, 0x14) & ~0x3;
   printf("amd_rv100: framebuffer addr: 0x%x port: 0x%x\n", fbaddr, port);
-  uint32_t portdata = inl(port);
-  uint32_t w = inw(port + RADEON_DST_WIDTH);
-  uint32_t h = inw(port + RADEON_DST_HEIGHT);
-  printf("amd_rv100: portdata: %d width: %d height: %d\n", portdata, w, h);
   vga_card* v = graphics_add_card();
   if(!v) return;
   v->bus = bus;
   v->slot = slot;
   v->data[0] = fbaddr;
   v->data[1] = port;
+  pci_config_write_byte(bus, slot, 0, 0x3d, 1);
+  pci_config_write_byte(bus, slot, 0, 0x3c, 11);
   vdestroy();
   vinit(1024, 768, 32, 1024 * 4, fbaddr);
   printf("amd_rv100: finished.\n");

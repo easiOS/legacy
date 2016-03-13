@@ -171,7 +171,7 @@ void __sleep(uint32_t millis)
     while(now - start < millis)
     {
         now = ticks();
-        puts("");
+        cpu_relax();
     }
 }
 

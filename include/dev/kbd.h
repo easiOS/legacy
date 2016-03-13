@@ -10,6 +10,7 @@ struct keyevent {
   bool release;
   bool shift;
   bool ctrl;
+  bool alt;
 } keyevents[256];
 
 void kbdinit();

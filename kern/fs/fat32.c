@@ -4,6 +4,7 @@
 #include <fs/thinfat32.h>
 #include <fs/thinternal.h>
 #include <dev/disk.h>
+#include <dev/timer.h>
 
 //#define TF_DEBUG
 
@@ -389,6 +390,14 @@ void tf_choose_sfn(uint8_t *dest, uint8_t *src, TFFile *fp)
  */
 int tf_shorten_filename(uint8_t *dest, uint8_t *src, uint8_t num) {
     int l = strlen(src);
+    int j = 0;
+    while(src != '.')
+    {
+        if(j == 7)
+            break;
+        dest[j++] = *(src++);
+    }
+    return 0;
     int i;
     int lossy_flag=0;
     uint8_t *tmp;
@@ -483,47 +492,6 @@ int tf_shorten_filename(uint8_t *dest, uint8_t *src, uint8_t num) {
             *tmp++ = num + 0x30;
         }
     }
-    /*
-    // Copy the basename
-    while(1) {
-        if(i==8) break;
-        if((i==6) || (*src == '.') || (*src == '\x00'))break;
-        if((*dest == ' '))  {lossy_flag = 1; } else {
-            *(dest++) = upper(*(src++));
-        }
-        i+=1;
-    }
-    // Funny tail if basename was too long
-    if(i==6) {
-        *(dest++) = '~';
-        *(dest++) = num+0x30;        // really? hard coded? wow. FIXME: make check filesystem
-        i+=2;
-    }
-    // Or Not
-    else {
-        while(i<8) {
-            *(dest++) = ' ';
-            i++;
-        }
-    }
-
-    // Last . in the filename
-    src = strrchr(src, '.');
-    
-    *(dest++) = ' ';
-    *(dest++) = ' ';
-    *(dest++) = ' ';
-    dest -= 3;
-    //*(dest++) = '\x00';   // this field really *is* 11 bytes long, no terminating NULL necessary.
-    //dest -= 4;            // and thank you to not since it clobbers the next byte (.attributes)
-    if(src != NULL) {
-        src +=1;
-        while(i < 11) {     // this field really *is* 11 bytes long, no terminating NULL necessary.
-            if(*src == '\x00') break;
-        *(dest++) = upper(*(src++));
-        i+=1;
-        }
-    }*/
     return 0;
 }
 
@@ -650,15 +618,17 @@ int tf_create(uint8_t *filename) {
     tf_fseek(fp, -sizeof(FatFileEntry), fp->pos);
     cluster = tf_find_free_cluster();
     tf_set_fat_entry(cluster, TF_MARK_EOC32); // Marks the new cluster as the last one (but no longer free)
-    // TODO shorten these entries with memset
+
+    uint32_t date[6];
+    get_time(date);
     entry.msdos.attributes = 0;
-          entry.msdos.creationTimeMs = 0x25;
-    entry.msdos.creationTime = 0x7e3c;
-    entry.msdos.creationDate = 0x4262;
-    entry.msdos.lastAccessTime = 0x4262;
+    entry.msdos.creationTimeMs = 0x25;
+    entry.msdos.creationTime = ((date[4] << 6) & 6) | (date[3] << 11);
+    entry.msdos.creationDate = (date[2] & 5) | ((date[1] << 5) & 4) | (((date[0] - 1980) << 9) & 7);
+    entry.msdos.lastAccessTime = entry.msdos.creationTime;
     entry.msdos.eaIndex = (cluster >> 16) & 0xffff;
-    entry.msdos.modifiedTime = 0x7e3c;
-    entry.msdos.modifiedDate = 0x4262;
+    entry.msdos.modifiedTime = entry.msdos.creationTime;
+    entry.msdos.modifiedDate = entry.msdos.creationDate;
     entry.msdos.firstCluster = cluster & 0xffff;
     entry.msdos.fileSize = 0;
     temp = strrchr(filename, '/')+1;
@@ -735,16 +705,18 @@ int tf_mkdir(uint8_t *filename, int mkParents) {
     cluster = tf_find_free_cluster();
     tf_set_fat_entry(cluster, TF_MARK_EOC32); // Marks the new cluster as the last one (but no longer free)
     
-    // set up our new directory entry
-    // TODO shorten these entries with memset
+    // set up our new directory entry    
+
+    uint32_t date[6];
+    get_time(date);
     entry.msdos.attributes = TF_ATTR_DIRECTORY ;
     entry.msdos.creationTimeMs = 0x25;
-    entry.msdos.creationTime = 0x7e3c;
-    entry.msdos.creationDate = 0x4262;
-    entry.msdos.lastAccessTime = 0x4262;
+    entry.msdos.creationTime = ((date[4] << 6) & 6) | (date[3] << 11);
+    entry.msdos.creationDate = (date[2] & 5) | ((date[1] << 5) & 4) | (((date[0] - 1980) << 9) & 7);
+    entry.msdos.lastAccessTime = entry.msdos.creationTime;
     entry.msdos.eaIndex = (cluster >> 16) & 0xffff;
-    entry.msdos.modifiedTime = 0x7e3c;
-    entry.msdos.modifiedDate = 0x4262;
+    entry.msdos.modifiedTime = entry.msdos.creationTime;
+    entry.msdos.modifiedDate = entry.msdos.creationDate;
     entry.msdos.firstCluster = cluster & 0xffff;
     entry.msdos.fileSize = 0;
     temp = strrchr(filename, '/')+1;

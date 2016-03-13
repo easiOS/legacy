@@ -33,6 +33,7 @@
 #include <cpuid.h>
 #include <dev/disk.h>
 #include <net/slip.h>
+#include <fs/thinfat32.h>
 
 struct cpu_desc cpu_desc;
 
@@ -70,7 +71,11 @@ void kpanic(const char* msg, registers_t regs)
   vd_print(100, fy + 30, "If you'd like to know more, you can search online later for this error: ", &px, &py);
   vswap();
   puts("swapped\n");
-  vd_print(100, py + 20, msg, NULL, NULL);
+  vd_print(100, py + 20, msg, &px, &py);
+  vswap();
+  void dumpdata(registers_t regs);
+  dumpdata(regs);
+  vd_print(100, py + 40, "Human readable debug data has been sent to the serial port.", NULL, NULL);
   vswap();
   hlt_loop:
   asm("hlt");
@@ -306,6 +311,7 @@ void kmain(uint32_t magic, uint32_t mbp)
   ethernet_list();
   printf("Welcome to %s!\n", KERNEL_NAME);
   puts("Copyright (c) 2015-2016, Daniel (Easimer) Meszaros\nAll rights reserved.\n");
+  puts("printf implemetation:\n\tCopyright (c) 2013,2014 Michal Ludvig <michal@logix.cz> All rights reserved.\n");
   size_t w = vgetw();
   size_t h = vgeth();
   if(w == 0 || h == 0)
@@ -329,8 +335,6 @@ void reboot(const char* reason)
   puts("\n\n");
   puts("The system is going down for reboot NOW!\n");
   puts(reason); puts("\n\n\n");
-  uint64_t now = ticks();
-  while(ticks() - now < 2000);
   asm volatile("cli");
   do {
     temp = inb(0x64);
@@ -341,4 +345,33 @@ void reboot(const char* reason)
   loop:
   asm volatile("hlt");
   goto loop;
+}
+
+void dumpdata(registers_t regs)
+{
+  puts("=================\nDump\n=================\n");
+  printf("Registers:\nDS: 0x%x\nEDI: 0x%x ESI: 0x%x", regs.ds, regs.edi, regs.esi);
+  printf("EBP: 0x%x ESP: 0x%x EBP: 0x%x\n", regs.ebp, regs.esp, regs.ebp);
+  printf("EDX: 0x%x ECX: 0x%x EAX: 0x%x\n", regs.edx, regs.ecx, regs.eax);
+  printf("EIP: 0x%x  CS: 0x%x EFLAGS: 0x%x\n", regs.eip, regs.cs, regs.eflags);
+  printf("USERESP: 0x%x SS: 0x%x\n", regs.useresp, regs.ss);
+  puts("=================\n");
+  pci_ls();
+  puts("=================\n");
+  extern int64_t fbw, fbh, fbbpp, fbp;
+  printf("Video\n\tWidth: %u Height: %u\n", fbw, fbh);
+  printf("\tBPP: %u Pitch: %u\n", fbbpp, fbp);
+  puts("=================\n");
+}
+
+void klog(const char* str)
+{
+  #if FAT32_DEBUG
+  return;
+  #endif
+  TFFile* f = tf_fopen((uint8_t*)"/user/klog", (const uint8_t*)"a");
+  if(!f)
+    return;
+  tf_fwrite((uint8_t*)str, strlen(str), 1, f);
+  tf_fclose(f);
 }

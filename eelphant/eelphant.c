@@ -196,6 +196,11 @@ void eelphant_eval(char* cmd)
     testapp_init();
     return;
   }
+  CMDCMP("kernupd")
+  {
+    kernupd_init();
+    return;
+  }
   puts("Searching on initrd...\n");
   for(int i = 0; i < 16; i++)
   {
@@ -316,7 +321,7 @@ void eelphant_event(time_t dt)
               }
             }
           break;
-        case 0x38: //left alt (cmd)
+        case 0x5B: //left GUI
           if(ep_locked) break;
           cmd_active = !cmd_active;
           if(cmd_active)
