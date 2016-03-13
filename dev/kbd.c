@@ -74,6 +74,7 @@ static void kbdcallback(registers_t regs)
     e->shift = shift;
     e->ctrl = ctrl;
     e->alt = alt;
+    e->doublescan = doublescan;
     if(kc == 0x53 && doublescan && e->alt && e->ctrl)
     {
       extern void kernupd_finish(void);

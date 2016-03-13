@@ -11,6 +11,7 @@ struct keyevent {
   bool shift;
   bool ctrl;
   bool alt;
+  bool doublescan;
 } keyevents[256];
 
 void kbdinit();

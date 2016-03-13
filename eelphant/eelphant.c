@@ -71,6 +71,8 @@ const uint16_t cursor[] = {
 
 time_t lastmouse = 0;
 
+void eelphant_screenshot(void);
+
 void eelphant_eval(char* cmd)
 {
   char* args[8];
@@ -368,6 +370,14 @@ void eelphant_event(time_t dt)
             }
           }
           break;
+        case 0x2A:
+        {
+          if(ke->doublescan)
+          {
+            eelphant_screenshot();
+          }
+          break;
+        }
         default:
           if(cmd_active)
             if(cmd_buf_i < 64)
@@ -657,4 +667,16 @@ void eelphant_switch_active(ep_window* w)
 {
   if(!w) return;
   window_active = w;
+}
+
+void eelphant_screenshot(void)
+{
+  extern uint32_t* fb;
+  extern int64_t fbw, fbh;
+  TFFile* f = tf_fopen((uint8_t*)"/user/scr.raw", (uint8_t*)"w");
+  if(!f)
+    return;
+  tf_fwrite(fb, 4, fbw * fbh, f);
+  tf_fclose(f);
+  puts("Screenshot has been saved to /user/scr.raw\n");
 }
