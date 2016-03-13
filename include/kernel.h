@@ -18,6 +18,7 @@ struct lua_apps
 	void* address;
 } __attribute__((packed, aligned(4)));
 
+void kmain(uint32_t magic, uint32_t mbp);
 void kpanic(const char* msg, registers_t regs);
 void reboot(const char* reason);
 void kernupd_init(void);

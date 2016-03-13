@@ -168,7 +168,7 @@ void efm_event(struct keyevent* ke, struct mouseevent* me, ep_window* w)
 	EFM_FileEntry* fea = (EFM_FileEntry*)w->userdata[EFM_DIRENTRIES];
 	if(ke)
 	{
-		if(ke->release)
+		if(!ke->release)
 		{
 			switch(ke->keycode)
 			{
