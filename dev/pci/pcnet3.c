@@ -303,7 +303,7 @@ void pcnet3init(uint8_t bus, uint8_t slot)
 	csr0 |= (1 << 1);
 	pcnet32_dwio_write_csr(iobase, 0, csr0);
 	puts("pcnet32: no init, no stop, start\n");
-	dev->write = &pcnet32_sendpacket;
+	//dev->write = &pcnet32_sendpacket;
 
 	strcpy(dev->name, "pcnet32");
 

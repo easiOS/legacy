@@ -371,6 +371,8 @@ void eelphant_event(time_t dt)
           }
           break;
         case 0x2A:
+        case 0xE0:
+        case 0x37:
         {
           if(ke->doublescan)
           {

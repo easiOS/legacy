@@ -29,7 +29,7 @@ eth_dev_t* slip_dev_init(uint16_t port)
 	return dev;
 }
 
-int slip_send_packet(void* p, size_t len, eth_dev_t* dev)
+int slip_send_packet(void* p, size_t len, uint8_t* dst, eth_dev_t* dev)
 {
 	uint16_t port = (dev->mac[4] << 8) | dev->mac[5];
 	size_t olen = len;
@@ -75,5 +75,6 @@ int slip_send_packet_nodev(void* p, size_t len, uint16_t port)
 	eth_dev_t dev;
 	dev.mac[4] = port >> 8;
 	dev.mac[5] = port & 0xff;
-	return slip_send_packet(p, len, &dev);
+    uint8_t ayy[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+	return slip_send_packet(p, len, ayy, &dev);
 }

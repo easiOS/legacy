@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#define PROT_IPV4 0x0008
+#define PROT_ARP  0x0608
+
 typedef struct ethernet_device eth_dev_t;
 
 struct ethernet_device {
@@ -17,8 +20,9 @@ struct ethernet_device {
   uint32_t memory;
   uint8_t irq;
   uint16_t bus, slot, func;
+  int link; //link down = 0, up = non-0
   void* custom;
-  int (*write)(void*, size_t, eth_dev_t*); //write int bytes from pointer
+  int (*write)(void*, size_t, uint8_t*, eth_dev_t*); //write int bytes from pointer, send to uint8_t*
   int (*read)(void*, size_t, eth_dev_t*); //read int number of packages to pointer
   int (*available)(eth_dev_t*); //is there anything in the recv buffers
   int (*full)(eth_dev_t*); //are transmit buffers full
@@ -38,6 +42,7 @@ typedef struct ethernet_frame {
   uint8_t hwaddr_dest[6];
   uint8_t hwaddr_src[6];
   uint16_t ethertype;
+  uint8_t data[];
 } __attribute__((packed)) ethernet_frame_t;
 
 typedef struct arp_packet {
@@ -51,8 +56,11 @@ typedef struct arp_packet {
 } __attribute__((packed)) arp_packet_t;
 
 struct ethernet_device* ethernet_allocate();
+void ethernet_free(struct ethernet_device* dev);
 void ethernet_list();
 int ethernet_send_arp(struct ethernet_device* dev);
 const struct ethernet_device* ethernet_getif(int id);
+int ethernet_send_packet(struct ethernet_device* dev, void* buf, size_t len, uint8_t* dest, uint16_t protocol);
+void ethernet_recv_packet(struct ethernet_device* dev, void* buf, size_t len);
 
 #endif

@@ -24,8 +24,9 @@ void testapp_load(ep_window* w)
 	slip_send_packet(buffer, 128, dev);
 	printf("sent packet!\n");*/
 	//ping test
-  	uint8_t localip[4] = {127, 0, 0, 1};
-  	icmp_send_ping_req(localip, localip);
+  	uint8_t remotip[4] = {192, 168, 1, 10};
+  	uint8_t localip[4] = {192, 168, 1, 128};
+  	icmp_send_ping_req(remotip, localip);
 }
 
 void testapp_update(uint64_t dt, ep_window*w)

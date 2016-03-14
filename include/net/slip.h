@@ -17,7 +17,7 @@
 
 //Initialize SLIP device on port
 eth_dev_t* slip_dev_init(uint16_t port);
-int slip_send_packet(void*, size_t, eth_dev_t*);
+int slip_send_packet(void* p, size_t len, uint8_t* dst, eth_dev_t* dev);
 int slip_send_packet_nodev(void* p, size_t len, uint16_t port);
 
 #endif

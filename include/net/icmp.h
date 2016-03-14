@@ -8,7 +8,11 @@ struct icmp_header {
   uint8_t type;
   uint8_t code;
   uint16_t checksum;
-  uint8_t restofheader[4];
+} __attribute__((packed));
+
+struct icmp_ping_header{
+    struct icmp_header header;
+    uint16_t id, seq;
 } __attribute__((packed));
 
 void icmp_send_ping_req(uint8_t* dest, uint8_t* src);

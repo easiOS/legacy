@@ -224,3 +224,32 @@ int printf(const char* format, ...)
   puts(buffer);
   return ret;
 }
+
+//file i/o
+
+FILE fhandles[FOPEN_MAX];
+
+int iosys_init(void) //called at startup by the kernel
+{
+	memset(fhandles, 0, sizeof(FILE) * FOPEN_MAX);
+	for(int i = 0; i < FOPEN_MAX; i++)
+	{
+		fhandles[i].flags |= FILE_FLAG_FREE;
+		fhandles[i].id = i;
+	}
+}
+
+FILE* fopen(const char* filename, const char* mode)
+{
+	FILE* f = NULL;
+	for(int i = 0; i < FOPEN_MAX; i++)
+	{
+		if(fhandles[i].flags & FILE_FLAG_FREE)
+		{
+			fhandles[i].flags &= ~FILE_FLAG_FREE;
+			f = &fhandles[i];
+			break;
+		}
+	}
+
+}

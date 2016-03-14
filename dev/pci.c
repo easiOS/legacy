@@ -14,6 +14,7 @@
 #include <dev/pci/debugdrv.h>
 #include <dev/pci/amd_rv100.h>
 #include <dev/pci/e100.h>
+#include <dev/pci/e1000.h>
 
 struct _pci_device {
   uint16_t vendor;
@@ -25,7 +26,6 @@ struct _pci_device {
     {0x8086, 0x1237, "Intel PCI & Memory", NULL},
     {0x8086, 0x7000, "Intel PIIX3 PCI2ISA Bridge (Triton II)", NULL},
     {0x8086, 0x1038, "Intel PRO/100", &e100init},
-    {0x8086, 0x100e, "Intel Pro 1000/MT", NULL},
     {0x1234, 0x1111, "QEMU/Bochs Virtual VGA", NULL},
     {0x10ec, 0x8029, "Ne2000 PCI", &ne2k_pciinit},
     {0x11c1, 0x0450, "LSI Winmodem 56k", NULL},
@@ -44,6 +44,32 @@ struct _pci_device {
     {0x104c, 0xac51, "Texas Instruments 1420 PCI2CB", NULL},
     {0x125d, 0x1988, "ESS Allegro Audio", NULL},
     {0x1af4, 0x1000, "VirtIO Network Card", &virtionetinit},
+    {0x8086, 0x0438, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x043a, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x043c, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x0440, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x1000, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x1001, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x1004, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x1008, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x1009, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x100c, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x100d, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x100e, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x100f, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x1010, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x1011, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x1012, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x1013, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x1014, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x1015, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x1016, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x1017, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x1018, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x1019, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x101a, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x101d, "Intel Pro 1000/MT", &e1000init},
+    {0x8086, 0x101e, "Intel Pro 1000/MT", &e1000init},
     {}
 };
 
@@ -127,6 +153,23 @@ void pci_config_write_byte(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offs
   io_wait();
   outb(PCI_PORT_CONF_DATA, val);
   io_wait();
+}
+
+uint8_t pci_config_read_byte(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset)
+{
+  uint32_t addr;
+  uint32_t lbus = (uint32_t)bus;
+  uint32_t lslot = (uint32_t)slot;
+  uint32_t lfunc = (uint32_t)func;
+  uint16_t t = 0;
+
+  addr = (uint32_t)((lbus<<16) | (lslot << 11) | (lfunc << 8) |
+          (offset & 0xfc) | ((uint32_t)0x80000000));
+  outl(PCI_PORT_CONF_ADDR, addr);
+  io_wait();
+  uint32_t in = inl(0xCFC);
+  t = (uint16_t)((in >> ((offset & 2) * 8)) & 0xff);
+  return t;
 }
 
 void pci_ls()
