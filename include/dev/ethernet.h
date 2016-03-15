@@ -46,7 +46,7 @@ struct ethernet_device {
     unsigned int supports_gmii : 1;
   } mii;
   //stats
-  uint64_t received, sent;
+  uint32_t received, sent;
 };
 
 typedef struct ethernet_frame {

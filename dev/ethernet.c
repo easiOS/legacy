@@ -72,30 +72,22 @@ void ethernet_list()
 
 const struct ethernet_device* ethernet_getif(int id)
 {
+  if(id == -1)
+    return NULL;
   return (const struct ethernet_device*)&ethernet_devices[id];
 }
 
 int ethernet_send_packet(struct ethernet_device* dev, void* buf, size_t len, uint8_t* dest, uint16_t protocol)
 {
-  printf("ethernet: attach frame to %u bytes of data (protocol: 0x%x)\n", len, protocol);
   struct ethernet_frame* frame = malloc(sizeof(struct ethernet_frame) + len);
   void* data = ((void*)frame) + sizeof(struct ethernet_frame);
-  printf("%x %x (+%x)\n", frame, data, sizeof(struct ethernet_frame));
   memcpy(frame->hwaddr_src, dev->mac, 6);
   memcpy(frame->hwaddr_dest, dest, 6);
   memcpy(&(frame->ethertype), &protocol, 2);
   memcpy(data, buf, len);
-  switch(protocol)
-  {
-    case PROT_IPV4:
-    {
-      printf("IP version & ihl: %x %x\n", ((uint8_t*)frame + sizeof(struct ethernet_frame))[0], ((uint8_t*)buf)[0]);
-      break;
-    }
-  }
-  printf("ethernet: pass to driver\n");
   len = dev->write(frame, len + sizeof(struct ethernet_frame), dest, dev);
   free(frame);
+  dev->sent = dev->sent + 1;
   return len;
 }
 
@@ -107,7 +99,6 @@ void ethernet_recv_packet(struct ethernet_device* dev, void* buf, size_t len)
   {
     case PROT_IPV4: //ipv4
     {
-      printf("ethernet: recv ipv4 packet\n");
       ipv4_recv_data(data, len - sizeof(struct ethernet_frame));
       break;
     }
@@ -121,6 +112,7 @@ void ethernet_recv_packet(struct ethernet_device* dev, void* buf, size_t len)
       printf("ethernet: unknown ethertype 0x%x\n", frame->ethertype);
     }
   }
+  dev->received = dev->received + 1;
 }
 
 #define UPDC32(octet, crc) (crc_32_tab[((crc) ^ (octet)) & 0xff] ^ ((crc) >> 8))

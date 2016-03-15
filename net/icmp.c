@@ -22,7 +22,6 @@ uint16_t icmp_checksum(void* addr, size_t count)
 
 void icmp_send_ping_req(uint8_t* dest, uint8_t* src)
 {
-  printf("Sending ping request to %d.%d.%d.%d\n", dest[0], dest[1], dest[2], dest[3]);
   struct icmp_ping_header asd;
   asd.header.type = 8;
   asd.header.code = 0;
@@ -30,13 +29,11 @@ void icmp_send_ping_req(uint8_t* dest, uint8_t* src)
   asd.seq = 0;
   asd.header.checksum = 0;
   asd.header.checksum = icmp_checksum(&asd, sizeof(asd));
-  printf("icmp: pass to ip layer\n");
   ipv4_send_data(dest, src, &asd, sizeof(asd), 1);
 }
 
 void icmp_send_ping_reply(uint8_t* dest, uint8_t* src, uint16_t id, uint16_t seq)
 {
-  printf("Sending ping reply to %d.%d.%d.%d\n", dest[0], dest[1], dest[2], dest[3]);
   struct icmp_ping_header asd;
   memset(&asd, 0, sizeof(asd));
   asd.header.type = 0;
@@ -54,13 +51,10 @@ void icmp_send_ping_reply(uint8_t* dest, uint8_t* src, uint16_t id, uint16_t seq
 void icmp_recv_icmp(uint8_t* src, uint8_t* dst, uint8_t* data)
 {
   struct icmp_header* header = (struct icmp_header*)data;
-  printf("received icmp from %d.%d.%d.%d\n", src[0], src[1], src[2], src[3]);
-  printf("\ttype: %d\n", header->type);
   switch(header->type)
   {
     case 0:
     {
-      printf("\tping reply from %d.%d.%d.%d\n", src[0], src[1], src[2], src[3]);
       return;
     }
     case 3:

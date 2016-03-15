@@ -34,6 +34,7 @@
 #include "testapp.h"
 #include "efm.h"
 #include "login.h"
+#include "ifconfig.h"
 
 #define EP_MAX_WINDOWS 32
 
@@ -191,6 +192,11 @@ void eelphant_eval(char* cmd)
   {
     puts("physics demo\n");
     physdemo_spawn();
+    return;
+  }
+  CMDCMP("ifconfig")
+  {
+    ifconfig_init();
     return;
   }
   CMDCMP("testapp")

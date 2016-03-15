@@ -222,7 +222,7 @@ int e1000_write(void* buf, size_t len, uint8_t* dst, struct ethernet_device* dev
 {
 	
 	struct e1000_private* p = (struct e1000_private*)dev->custom;
-	printf("e1000: sending frame from buf at 0x%x with length %x...", buf, len);
+	//printf("e1000: sending frame from buf at 0x%x with length %x...", buf, len);
 
 	p->tx_descs[p->tx_cur]->addr = (uint32_t)buf;
 	p->tx_descs[p->tx_cur]->length = sizeof(struct ethernet_frame) + len + 4;
@@ -238,11 +238,11 @@ int e1000_write(void* buf, size_t len, uint8_t* dst, struct ethernet_device* dev
 		timeout--;
 		if(!timeout)
 		{
-			puts("timed out, packet dropped\n");
+			//puts("timed out, packet dropped\n");
 			goto timeout;
 		}
 	}
-	puts("sent!\n");
+	//puts("sent!\n");
 	goto ok;
 
 	timeout:

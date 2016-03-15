@@ -38,6 +38,7 @@ int routing_table_getif(uint8_t* dest, uint8_t* src)
     if(ethernet_getif(i)->flags & 1)
       return i; //return first ethernet device i don't care
   }
+  return -1;
   int fullzero = 0;
   int ret = -1;
   int max = 0;
