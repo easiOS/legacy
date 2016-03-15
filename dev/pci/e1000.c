@@ -9,6 +9,7 @@
 #include <dev/pci.h>
 #include <dev/pci/e1000.h>
 #include <dev/ethernet.h>
+#include <dev/timer.h>
 
 uint8_t e1000_mmio_read8(uint32_t addr)
 {
@@ -259,7 +260,7 @@ void e1000_check_link(struct ethernet_device* dev)
 
 void e1000_reset(struct ethernet_device* dev)
 {
-	uint32_t pbs, pba, ctrl, status;
+	/*uint32_t pbs, pba, ctrl, status;
 	printf("e1000: device reset\n");
 
 	//note: reset delay is 20ms
@@ -269,7 +270,7 @@ void e1000_reset(struct ethernet_device* dev)
 	sleep(20);
 
 	//default config
-//	ctrl |= ()
+//	ctrl |= ()*/
 }
 
 struct ethernet_device* dfhdevice;

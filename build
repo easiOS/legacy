@@ -51,7 +51,7 @@ SOURCES=["kern/boot.s", "kern/kernel.c", "kern/text.c", "dev/serial.c",
          "eelphant/physdemo.c", "eelphant/luavm.c", "eelphant/efm.c",
          "eelphant/testapp.c", "eelphant/login.c",
          "net/icmp.c", "net/ipv4.c", "net/routing.c", "net/slip.c",
-         "net/udp.c",
+         "net/udp.c", "net/arp.c",
          "kern/fs/fat32.c",
          "iso/boot/grub/locale/eos.po",
          ]

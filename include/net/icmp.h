@@ -10,7 +10,7 @@ struct icmp_header {
   uint16_t checksum;
 } __attribute__((packed));
 
-struct icmp_ping_header{
+struct icmp_ping_header {
     struct icmp_header header;
     uint16_t id, seq;
 } __attribute__((packed));

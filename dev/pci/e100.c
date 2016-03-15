@@ -6,6 +6,7 @@
 #include <dev/timer.h>
 #include <port.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 void e100_irq(struct ethernet_device* dev, int enable)
 {
@@ -46,6 +47,12 @@ int e100_scb_cmd(struct ethernet_device* dev, uint32_t ptr, uint8_t cmd)
 	return rc;
 }
 
+void e100_init_eeprom(struct ethernet_device* dev)
+{
+	//struct e100_private* p = dev->custom;
+
+}
+
 void e100init(uint8_t bus, uint8_t slot)
 {
 	printf("e100: init on bus %x slot %x\n", bus, slot);
@@ -69,6 +76,7 @@ void e100init(uint8_t bus, uint8_t slot)
   	}
 	dev->iobase = ((pci_config_read_dword(bus, slot, 0, 0x14) >> 16) & 0xFFFFFFFC);
 	dev->memory = pci_config_read_dword(bus, slot, 0, 0x10) & 0xFFFFFFF0;
+	dev->custom = malloc(sizeof(struct e100_private));
 	printf("I/O ports: 0x%x\nMemory at 0x%x\nStarting dumping memory...\n\n", dev->iobase, dev->memory);
 	e100_irq(dev, 0);
 	e100_scb_cmd(dev, 0, RUAddrLoad);

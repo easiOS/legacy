@@ -60,6 +60,10 @@ enum phy_chips {
 	S80C24,                  PhyUndefined,          DP83840A=10
 };
 
+struct e100_private {
+	
+};
+
 void e100init(uint8_t bus, uint8_t slot);
 
 #endif

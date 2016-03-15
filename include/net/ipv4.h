@@ -5,15 +5,6 @@
 #include <stdlib.h>
 #include <stddef.h>
 
-#define htons(A) ((((uint16_t)(A) & 0xff00) >> 8) | \
-(((uint16_t)(A) & 0x00ff) << 8))
-#define htonl(A) ((((uint32_t)(A) & 0xff000000) >> 24) | \
-(((uint32_t)(A) & 0x00ff0000) >> 8) | \
-(((uint32_t)(A) & 0x0000ff00) << 8) | \
-(((uint32_t)(A) & 0x000000ff) << 24))
-#define ntohs htons
-#define ntohl htohl
-
 struct ip4_header
 {
   uint8_t ihl:4, version:4;

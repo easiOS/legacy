@@ -7,6 +7,15 @@
 #define PROT_IPV4 0x0008
 #define PROT_ARP  0x0608
 
+#define htons(A) ((((uint16_t)(A) & 0xff00) >> 8) | \
+(((uint16_t)(A) & 0x00ff) << 8))
+#define htonl(A) ((((uint32_t)(A) & 0xff000000) >> 24) | \
+(((uint32_t)(A) & 0x00ff0000) >> 8) | \
+(((uint32_t)(A) & 0x0000ff00) << 8) | \
+(((uint32_t)(A) & 0x000000ff) << 24))
+#define ntohs htons
+#define ntohl htohl
+
 typedef struct ethernet_device eth_dev_t;
 
 struct ethernet_device {
@@ -36,6 +45,8 @@ struct ethernet_device {
     unsigned int force_media : 1;
     unsigned int supports_gmii : 1;
   } mii;
+  //stats
+  uint64_t received, sent;
 };
 
 typedef struct ethernet_frame {
@@ -44,16 +55,6 @@ typedef struct ethernet_frame {
   uint16_t ethertype;
   uint8_t data[];
 } __attribute__((packed)) ethernet_frame_t;
-
-typedef struct arp_packet {
-  uint16_t htype, ptype;
-  uint8_t hlen, plen;
-  uint16_t op;
-  uint16_t sha0, sha1, sha2;
-  uint16_t spa0, spa1;
-  uint16_t tha0, tha1, tha2;
-  uint16_t tpa0, tpa1;
-} __attribute__((packed)) arp_packet_t;
 
 struct ethernet_device* ethernet_allocate();
 void ethernet_free(struct ethernet_device* dev);

@@ -2,6 +2,9 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <net/ipv4.h>
+#include <net/arp.h>
 
 #define MAX_ETH_N 8
 
@@ -15,6 +18,8 @@ struct ethernet_device* ethernet_allocate()
   {
     if(ethernet_devices[i].flags & 1) continue;
     ethernet_devices[i].flags = 1;
+    ethernet_devices[i].received = 0;
+    ethernet_devices[i].sent = 0;
     return &ethernet_devices[i];
   }
   return NULL;
@@ -65,11 +70,6 @@ void ethernet_list()
   }
 }
 
-int ethernet_send_arp(struct ethernet_device* dev)
-{
-  return 0;
-}
-
 const struct ethernet_device* ethernet_getif(int id)
 {
   return (const struct ethernet_device*)&ethernet_devices[id];
@@ -103,7 +103,6 @@ void ethernet_recv_packet(struct ethernet_device* dev, void* buf, size_t len)
 {
   struct ethernet_frame* frame = (struct ethernet_frame*)buf;
   void* data = frame + 1;
-  uint8_t* d = buf;
   switch(frame->ethertype)
   {
     case PROT_IPV4: //ipv4
@@ -114,7 +113,7 @@ void ethernet_recv_packet(struct ethernet_device* dev, void* buf, size_t len)
     }
     case PROT_ARP:
     {
-
+      arp_receive(dev, data);
       break; 
     }
     default:
