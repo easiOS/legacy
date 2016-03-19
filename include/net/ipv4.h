@@ -21,5 +21,9 @@ struct ip4_header
 
 void ipv4_send_data(uint8_t* dest, uint8_t* src, void* data, size_t len, uint8_t protocol);
 void ipv4_recv_data(void* data, size_t len);
+uint16_t ipv4_checksum(void* addr, size_t count);
+
+#define IP_PROT_ICMP 0x01
+#define IP_PROT_UDP  0x11
 
 #endif

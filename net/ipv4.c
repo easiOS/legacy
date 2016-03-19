@@ -6,6 +6,8 @@
 #include <net/routing.h>
 #include <net/udp.h>
 
+uint16_t ipv4_mtu = 1500;
+
 uint16_t ipv4_checksum(void* addr, size_t count)
 {
   register uint32_t sum = 0;
@@ -24,7 +26,7 @@ uint16_t ipv4_checksum(void* addr, size_t count)
   return (uint16_t)~sum;
 }
 
-void ipv4_send_data(uint8_t* dest, uint8_t* src, void* data, size_t len, uint8_t protocol)
+void ipv4_send_data_LEGACY__(uint8_t* dest, uint8_t* src, void* data, size_t len, uint8_t protocol)
 {
   void* ip4data = malloc(sizeof(struct ip4_header) + len);
   memset(ip4data, 0, sizeof(struct ip4_header) + len);
@@ -57,6 +59,11 @@ void ipv4_send_data(uint8_t* dest, uint8_t* src, void* data, size_t len, uint8_t
   free(ip4data);
 }
 
+void ipv4_send_data(uint8_t* dest, uint8_t* src, void* data, size_t len, uint8_t protocol)
+{
+  
+}
+
 void ipv4_recv_data(void* data, size_t len)
 {
   struct ip4_header* ip4h = (struct ip4_header*)data;
@@ -73,14 +80,14 @@ void ipv4_recv_data(void* data, size_t len)
   }
   switch(ip4h->protocol)
   {
-    case 1: //ICMP
+    case IP_PROT_ICMP: //ICMP
     {
       icmp_recv_icmp((uint8_t*)(&ip4h->saddr), (uint8_t*)(&ip4h->daddr), (uint8_t*)(data + sizeof(struct ip4_header)));
       break;
     }
-    case 17: //UDP
+    case IP_PROT_UDP: //UDP
     {
-      printf("ipv4: stub udp recv\n");
+      udp_receive(&ip4h->saddr, &ip4h->daddr, data + sizeof(struct ip4_header), ip4h->tot_len - sizeof(struct ip4_header));
       break;
     }
     default:

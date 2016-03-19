@@ -110,7 +110,7 @@ void serswrite(uint16_t port, const char* str)
   {
     if(ports[i].port == port && ports[i].mode == 1)
     {
-      udp_header h;
+      /*udp_header h;
       udp_create(&h, 8, 0, (char*)str, strlen(str) + 1);
       for(int i = 0; i < 8; i++)
       {
@@ -121,7 +121,7 @@ void serswrite(uint16_t port, const char* str)
       {
         serwrite(port, *str++);
       }
-      return;
+      return;*/
     }
   }
   int i = 0;
