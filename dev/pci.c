@@ -5,10 +5,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define PCI_PORT_CONF_ADDR 0xCF8
+#define PCI_PORT_CONF_DATA 0xCFC
+
 #include <dev/disk.h>
 #include <dev/pci/ne2k_pci.h>
 #include <dev/pci/pcnet3.h>
-#include <dev/pci/ehci.h>
+#include <dev/pci/ohci.h>
 #include <dev/pci/virtboxgfx.h>
 #include <dev/pci/virtio-net.h>
 #include <dev/pci/debugdrv.h>
@@ -32,7 +36,7 @@ struct _pci_device {
     {0x8086, 0x3576, "Intel Host-AGP Bridge", NULL},
     {0x1022, 0x2000, "PCnet LANCE PCI Ethernet Controller", &pcnet3init},
     {0x8086, 0x7113, "PIIX4/4E/4M Power Management Controller", NULL},
-    {0x8086, 0x265c, "USB 2.0 EHCI Controller", &ehciinit},
+    {0x8086, 0x265c, "USB 2.0 EHCI Controller", NULL},
     {0x80ee, 0xbeef, "Virtualbox Graphics Adapter", &vbgfxinit},
     {0x80ee, 0x7145, "Virtualbox Graphics Adapter", &vbgfxinit},
     {0x1106, 0x3371, "VIA Chrome 9 HC", NULL},
@@ -70,11 +74,9 @@ struct _pci_device {
     {0x8086, 0x101a, "Intel Pro 1000/MT", &e1000init},
     {0x8086, 0x101d, "Intel Pro 1000/MT", &e1000init},
     {0x8086, 0x101e, "Intel Pro 1000/MT", &e1000init},
+    {0x106b, 0x003f, "Apple USB OHCI Controller", &ohciinit},
     {}
 };
-
-#define PCI_PORT_CONF_ADDR 0xCF8
-#define PCI_PORT_CONF_DATA 0xCFC
 
 uint16_t pci_config_read_word(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset)
 {

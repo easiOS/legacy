@@ -37,7 +37,7 @@
 
 struct cpu_desc cpu_desc;
 
-#define KERNEL_NAME "easiOS v0.3.9"
+#define KERNEL_NAME "easiOS v0.3.10"
 
 const char* cmdline = NULL;
 uint16_t __attribute__((aligned(4))) text_buffer[2000];

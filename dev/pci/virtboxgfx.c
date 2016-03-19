@@ -1,3 +1,4 @@
+#include <dev/pci.h>
 #include <dev/pci/virtboxgfx.h>
 #include <port.h>
 #include <video.h>
