@@ -78,7 +78,7 @@ void kpanic(const char* msg, registers_t regs)
   vd_print(100, py + 40, "Human readable debug data has been sent to the serial port.", NULL, NULL);
   vswap();
   hlt_loop:
-  asm("hlt");
+  cpu_relax();
   goto hlt_loop;
 }
 

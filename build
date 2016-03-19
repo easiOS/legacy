@@ -10,7 +10,7 @@ CC="i686-elf-gcc"
 AS="nasm"
 LINKER="i686-elf-gcc"
 CFLAGS="-O2 -c $INPUT -o $OUTPUT -std=gnu99 -ffreestanding -Wall \
--fdiagnostics-color=always -I include/"
+-fdiagnostics-color=always -I include/ -fstack-protector-all"
 AFLAGS="-felf32 -o $OUTPUT $INPUT"
 EXECUTABLE="easios.bin"
 ISO="easios.iso"
@@ -40,7 +40,7 @@ SOURCES=["kern/boot.s", "kern/kernel.c", "kern/text.c", "dev/serial.c",
          "kern/libc/stdlib.c", "dev/kbd.c", "kern/mem.c", "dev/mouse.c",
          "kern/libc/time.c", "kern/krandom.c", "dev/pci.c", "kern/md5.c",
          "kern/users.c", "kern/vfs.c", "kern/acpi/rsdp.c",
-         "kern/dma.c", "dev/pci/virtboxgfx.c",
+         "kern/dma.c", "dev/pci/virtboxgfx.c", "kern/ssp.c",
          "kshell/kshell.c", "kern/kernupd.c",
          "dev/pci/ne2k_pci.c", "dev/ethernet.c", "dev/pci/pcnet3.c",
          "dev/pci/ehci.c", "dev/graphics.c",
