@@ -34,11 +34,15 @@ EXT = {
 }
 
 SOURCES=["kernel/boot.s",
-         "kernel/kernel.c", "kernel/video.c", "kernel/text.c", #"kernel/dtables.c",
-         "kernel/memory.c", #"kernel/krandom.c", "kernel/users.c", "kernel/dma.c",
+         "kernel/kernel.c", "kernel/video.c", "kernel/text.c", "kernel/dtables.c",
+         "kernel/dtablesa.s", "kernel/memory.c", #"kernel/krandom.c", "kernel/users.c",
+         #"kernel/dma.c",
          "kernel/ssp.c", #"kernel/kshell.c",
          #"kernel/"
-         "drivers/serial.c",
+         "drivers/serial.c", "drivers/timer.c",
+         "stdlibc/math.c", "stdlibc/stdio.c", "stdlibc/stdlib.c", "stdlibc/string.c",
+         "stdlibc/time.c", 
+         "iso/boot/grub/locale/eos.po",
          ]
 
 #SOURCES=["kernel/boot.s", "kernel/kernel.c", "kernel/text.c", "dev/serial.c",

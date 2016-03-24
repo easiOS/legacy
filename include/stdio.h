@@ -13,6 +13,11 @@
 #define FILE_SOCKET_UDP (1 << 30)
 #define FILE_SOCKET_RAW (1 << 29)
 
+#define STDOUT 0
+#define stdout 0
+#define STDIN  1
+#define stdin  1
+
 enum FILETYPE {
 	FT_UNKNOWN = 0,
 	FT_PHYSICAL = 1,
@@ -44,7 +49,8 @@ typedef struct {
 } FILE;
 
 int puts(const char* str);
-int putc(char c);
+int putc(char c, int file);
+int putchar(char c);
 char* gets(char* str);
 int getchar();
 int printf(const char* format, ...);

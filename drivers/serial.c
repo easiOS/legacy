@@ -1,3 +1,4 @@
+#include <string.h>
 #include <drivers/serial.h>
 #include <port.h>
 
