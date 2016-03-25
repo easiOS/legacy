@@ -39,7 +39,7 @@ SOURCES=["kernel/boot.s",
          #"kernel/dma.c",
          "kernel/ssp.c", #"kernel/kshell.c",
          #"kernel/"
-         "drivers/serial.c", "drivers/timer.c",
+         "drivers/serial.c", "drivers/timer.c", "drivers/pci.c",
          "stdlibc/math.c", "stdlibc/stdio.c", "stdlibc/stdlib.c", "stdlibc/string.c",
          "stdlibc/time.c", 
          "iso/boot/grub/locale/eos.po",
