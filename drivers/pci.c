@@ -6,25 +6,35 @@ struct _pci_dev {
   char name[128];
   void (*initfunc)(unsigned char, unsigned char, unsigned char);
 } pci_devices[] = {
-
+  {}
 };
 
 void pciinit(void)
 {
+  unsigned short vendorid, deviceid;
 	for(int bus = 0; bus < 256; bus++)
 		for(int device = 0; device < 32; device++)
 		{
-			if(PCIC_READ_VENDOR(bus, device, 0) == 0xFFFF)
+			if((vendorid = PCIC_READ_VENDOR(bus, device, 0)) == 0xFFFF)
 				continue;
+      deviceid = PCIC_READ_DEVICE(bus, device, 0);
 			unsigned char function = 0;
 			struct _pci_dev* pd = pci_devices;
 			unsigned char headertype = PCIC_READ_HDRT(bus, device, function);
 			if((headertype & 0x80) != 0)
 			{
-				for(function = 1; function < 8; function++)
+				for(function = 0; function < 8; function++)
 					if(PCIC_READ_VENDOR(bus, device, function) != 0xFFFF)
 					{
-
+            while(pd->vendor != 0)
+            {
+              if(pd->vendor == vendorid && pd->device == deviceid)
+              {
+                if(pd->initfunc)
+                  pd->initfunc(bus, device, function);
+              }
+              pd++;
+            }
 					}
 			}
 		}

@@ -18,6 +18,8 @@
 #define IRQ14 46
 #define IRQ15 47
 
+#define DTABLES_HNDLR static void
+
 typedef struct registers
 {
    unsigned ds;                  // Data segment selector

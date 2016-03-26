@@ -22,7 +22,7 @@ unsigned long long get_unix_time()
   return ttime;
 }
 
-static void timer_callback(registers_t regs)
+DTABLES_HNDLR timer_callback(registers_t regs)
 {
   tick++;
   if(tick % 1000 == 0)
