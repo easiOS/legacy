@@ -31,6 +31,7 @@ isr_t interrupt_handlers[256];
 void dtables_reg(unsigned char n, isr_t handler)
 {
     interrupt_handlers[n] = handler;
+    printf("dtables_reg %d @ 0x%x\n", n, handler);
 }
 
 static void init_gdt()

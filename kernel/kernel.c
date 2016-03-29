@@ -7,11 +7,14 @@
 #include <kernel.h>
 #include <multiboot2.h>
 #include <text.h>
-#include <drivers/serial.h>
-#include <drivers/timer.h>
 #include <memory.h>
 #include <video.h>
 #include <dtables.h>
+#include <ioevents.h>
+#include <drivers/serial.h>
+#include <drivers/timer.h>
+#include <drivers/kbd.h>
+#include <drivers/pci.h>
 
 uint16_t __attribute__((aligned(4))) text_buffer[2400];
 const char* cmdline = NULL;
@@ -30,17 +33,18 @@ void kmain(unsigned magic, void* mbp)
 	puts("Initializing timer...");
 	time_init();
 	while(time(NULL) == 0);
-	puts("[  OK  ]\n");
-	puts("Initializing user I/O...");
-	puts("[  OK  ]\n");
-	asm volatile("sti");
-	puts("Interrupts enabled\n");
+	puts("Initializing user I/O...\n");
+	ioeinit();
+	kbdinit();
 	puts("Initializing PCI devices...\n");
-	//pciinit();
-	puts("PCI devices [  OK  ]\n");
+	puts("Enabling interrupts...\n");
+	asm volatile("sti");
+	pciinit();
 	printf("Welcome to %s\n", KERNEL_NAME);
   	puts("Copyright (c) 2015-2016, Project EasiOS\nAll rights reserved.\n");
   	puts("printf implemetation:\n\tCopyright (c) 2013,2014 Michal Ludvig <michal@logix.cz> All rights reserved.\n");
+  	netif_list();
+  	while(1);
 }
 
 void multiboot_enum(void* mbp)

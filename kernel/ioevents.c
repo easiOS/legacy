@@ -28,3 +28,9 @@ int ioe_available(void)
 {
 	return ioev_in != ioev_out;
 }
+
+void ioeinit(void)
+{
+	memset(ioevents, 0, sizeof(struct ioevent) * 256);
+	ioev_in = ioev_out = 0;
+}

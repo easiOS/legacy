@@ -101,11 +101,6 @@ DTABLES_HNDLR timer_callback(registers_t regs)
 
   void timerinit(unsigned frequency)
   {
-    puts("Timer register, frequency: ");
-    char buffer[32];
-    itoa(frequency, buffer, 10);
-    puts(buffer);
-    puts(" Hz...");
     // Firstly, register our timer callback.
     dtables_reg(IRQ0, &timer_callback);
 

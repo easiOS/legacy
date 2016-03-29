@@ -27,4 +27,12 @@ void pci_cfg_write_dw(unsigned char bus, unsigned char slot, unsigned char func,
 #define PCIC_READ_INTL(b, s, f) pci_cfg_read_b(b, s, f, 0x3c)
 #define PCIC_READ_INTP(b, s, f) pci_cfg_read_b(b, s, f, 0x3d)
 
+#define PCIC_WRITE_VENDOR(b, s, f, v) pci_cfg_write_w(b, s, f, 0x00, v)
+#define PCIC_WRITE_DEVICE(b, s, f, v) pci_cfg_write_w(b, s, f, 0x02, v)
+#define PCIC_WRITE_CMD(b, s, f, v) pci_cfg_write_w(b, s, f, 0x04, v)
+#define PCIC_WRITE_STATUS(b, s, f, v) pci_cfg_write_w(b, s, f, 0x06, v)
+#define PCIC_WRITE_HDRT(b, s, f, v) pci_cfg_write_b(b, s, f, 0xe, v)
+#define PCIC_WRITE_INTL(b, s, f, v) pci_cfg_write_b(b, s, f, 0x3c, v)
+#define PCIC_WRITE_INTP(b, s, f, v) pci_cfg_write_b(b, s, f, 0x3d, v)
+
 #endif /* H_PCI */

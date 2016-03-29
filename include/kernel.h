@@ -31,8 +31,4 @@ static inline void cpu_relax(void)
 	asm volatile("rep; nop" ::: "memory");
 }
 
-#define SUBSYS_START(n) puts(n ## "...");
-#define SUBSYS_END_OK() puts("[  OK  ]");
-#define SUBSYS_END_FAIL() puts("[ FAIL ]");
-
 #endif

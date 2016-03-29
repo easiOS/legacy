@@ -1,13 +1,31 @@
 #include <drivers/pci.h>
 #include <port.h>
 
+#include <drivers/pci/e1000.h>
+
 struct _pci_dev {
   unsigned short vendor, device;
   char name[128];
   void (*initfunc)(unsigned char, unsigned char, unsigned char);
 } pci_devices[] = {
+// Vendor  Device  Name
+  {0x8086, 0x100e, "Intel Pro 1000/MT", &e1000init},
   {}
 };
+
+void pci_initfunc(int vendorid, int deviceid, int bus, int device, int function)
+{
+  struct _pci_dev* pd = pci_devices;
+  while(pd->vendor != 0)
+  {
+    if(pd->vendor == vendorid && pd->device == deviceid)
+    {
+      if(pd->initfunc)
+        pd->initfunc(bus, device, function);
+    }
+    pd++;
+  }
+}
 
 void pciinit(void)
 {
@@ -18,24 +36,17 @@ void pciinit(void)
 			if((vendorid = PCIC_READ_VENDOR(bus, device, 0)) == 0xFFFF)
 				continue;
       deviceid = PCIC_READ_DEVICE(bus, device, 0);
+      
 			unsigned char function = 0;
-			struct _pci_dev* pd = pci_devices;
+
+      pci_initfunc(vendorid, deviceid, bus, device, function);
+
 			unsigned char headertype = PCIC_READ_HDRT(bus, device, function);
 			if((headertype & 0x80) != 0)
 			{
-				for(function = 0; function < 8; function++)
+				for(function = 1; function < 8; function++)
 					if(PCIC_READ_VENDOR(bus, device, function) != 0xFFFF)
-					{
-            while(pd->vendor != 0)
-            {
-              if(pd->vendor == vendorid && pd->device == deviceid)
-              {
-                if(pd->initfunc)
-                  pd->initfunc(bus, device, function);
-              }
-              pd++;
-            }
-					}
+            pci_initfunc(vendorid, deviceid, bus, device, function);
 			}
 		}
 }

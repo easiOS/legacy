@@ -32,5 +32,7 @@ struct ioevent {
 
 void ioe_push(struct ioevent* e);
 struct ioevent* ioe_pop();
+int ioe_available(void);
+void ioeinit(void);
 
 #endif

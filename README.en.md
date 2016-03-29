@@ -9,7 +9,24 @@ easiOS is an in-development operating system for the x86 architecture.
 * FAT32 filesystem
 
 ## How to build
-*build system is being rewritten*
+### Requirements:
+* CMake https://cmake.org/
+* Netwide Assembler http://www.nasm.us/
+* GCC i686 Cross-Compiler http://wiki.osdev.org/GCC_Cross-Compiler
+### Unix
+1. Create a separate build-directory (e.g. ~/build)
+2. `cd` into the build-directory
+3. Run `cmake sourcedir`, where sourcedir is the directory where the source code is
+4. Run `make`
+### Windows
+*WARNING: this is untested*
+1. Create a separate build-directory (e.g. Documents\build)
+2. Open CMake GUI
+3. Set the source code and build directory paths
+4. Press Configure, select your Visual Studio version as generator
+5. Press Generate
+6. Open VS Solution
+7. Build VS Solution
 
 ## How to run
 ### Requirements:
@@ -18,7 +35,9 @@ easiOS is an in-development operating system for the x86 architecture.
 
 ### In a virtual Machine
 1. Build easiOS like described above
-2. Mount the ISO (found in the root directory of the source) in the VM
+2. a) On Unix systems, run makeiso.sh
+2. b) On Windows systems, run makeiso.bat
+2. Mount the ISO in the VM
 3. Run the VM
 
 ### On a real machine
