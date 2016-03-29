@@ -36,7 +36,7 @@ EXT = {
 SOURCES=["kernel/boot.s",
          "kernel/kernel.c", "kernel/video.c", "kernel/text.c", "kernel/dtables.c",
          "kernel/dtablesa.s", "kernel/memory.c", #"kernel/krandom.c", "kernel/users.c",
-         #"kernel/dma.c",
+         "kernel/ioevents.c",
          "kernel/ssp.c", #"kernel/kshell.c",
          #"kernel/"
          "drivers/serial.c", "drivers/timer.c", "drivers/pci.c", "drivers/kbd.c",

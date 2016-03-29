@@ -7,24 +7,6 @@
 #define IOFLAGS_GUI 7
 #define IOFLAGS_DS 8
 
-struct input_event {
-	unsigned flags;
-	/* flags:
-	 * Bits from right to left:
-	 * # if 1 this is a keyboard event
-	 * # reserved
-	 * # reserved
-	 * # if 1 this was a release
-	 * # if 1, shift was held
-	 * # if 1, ctrl was held
-	 * # if 1, alt was held
-	 * # if 1, gui was held
-	 * # if 1, there were multiple scans
-	 */
-	unsigned keycode;
-	char character;
-};
-
 void kbdinit();
 int kbdavailable();
 struct input_event* kbdpoll();
