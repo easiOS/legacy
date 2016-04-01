@@ -30,6 +30,8 @@ void kmain(unsigned magic, void* mbp)
 	multiboot_enum(mbp);
 	sinit();
 	sinitport(COM1);
+	puts("Enabling interrupts...\n");
+	asm volatile("sti");
 	puts("Initializing timer...");
 	time_init();
 	while(time(NULL) == 0);
@@ -37,14 +39,16 @@ void kmain(unsigned magic, void* mbp)
 	ioeinit();
 	kbdinit();
 	puts("Initializing PCI devices...\n");
-	puts("Enabling interrupts...\n");
-	asm volatile("sti");
 	pciinit();
 	printf("Welcome to %s\n", KERNEL_NAME);
   	puts("Copyright (c) 2015-2016, Project EasiOS\nAll rights reserved.\n");
   	puts("printf implemetation:\n\tCopyright (c) 2013,2014 Michal Ludvig <michal@logix.cz> All rights reserved.\n");
   	netif_list();
-  	while(1);
+  	while(1)
+  	{
+  		cpu_relax();
+  	}
+  	printf("the end\n");
 }
 
 void multiboot_enum(void* mbp)

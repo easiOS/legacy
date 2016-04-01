@@ -1,6 +1,8 @@
 #ifndef H_E1000
 #define H_E1000
 
+#include <stdint.h>
+
 #define REG_CTRL        0x0000
 #define REG_STATUS      0x0008
 #define REG_EEPROM      0x0014
@@ -93,33 +95,33 @@
 #define E1000_NUM_TX_DESC 8
  
 struct e1000_rx_desc {
-        volatile unsigned long long addr;
-        volatile unsigned short length;
-        volatile unsigned short checksum;
-        volatile unsigned char status;
-        volatile unsigned char errors;
-        volatile unsigned short special;
+        volatile uint64_t addr;
+        volatile uint16_t length;
+        volatile uint16_t checksum;
+        volatile uint8_t status;
+        volatile uint8_t errors;
+        volatile uint16_t special;
 } __attribute__((packed));
  
 struct e1000_tx_desc {
-        volatile unsigned long long addr;
-        volatile unsigned short length;
-        volatile unsigned char cso;
-        volatile unsigned char cmd;
-        volatile unsigned char status;
-        volatile unsigned char css;
-        volatile unsigned short special;
+        volatile uint64_t addr;
+        volatile uint16_t length;
+        volatile uint8_t cso;
+        volatile uint8_t cmd;
+        volatile uint8_t status;
+        volatile uint8_t css;
+        volatile uint16_t special;
 } __attribute__((packed));
 
 struct e1000_private {
-	unsigned char bar_type;
+	uint8_t bar_type;
 	int eeprom_exists;
 	struct e1000_rx_desc* rx_descs[E1000_NUM_RX_DESC];
 	struct e1000_tx_desc* tx_descs[E1000_NUM_TX_DESC];
-	unsigned short rx_cur, tx_cur;
-        unsigned iobase, memory;
+	uint16_t rx_cur, tx_cur;
+        uint32_t iobase, memory;
 };
 
-void e1000init(unsigned char bus, unsigned char slot, unsigned char func);
+void e1000init(uint8_t bus, uint8_t slot, uint8_t func);
 
 #endif

@@ -171,6 +171,7 @@ void isr_handler(registers_t regs)
 
 void irq_handler(registers_t regs)
 {
+  if(regs.int_no != 32) printf("Interrupt: %d\n", regs.int_no);
   if (interrupt_handlers[regs.int_no] != 0)
    {
        isr_t handler = interrupt_handlers[regs.int_no];

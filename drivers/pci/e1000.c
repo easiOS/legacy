@@ -334,7 +334,7 @@ void e1000init(unsigned char bus, unsigned char slot, unsigned char func)
 	for(int i = 0; i<0x80; i++)
 		e1000_writecmd(dev, 0x5200 + i * 4, 0);
 	uint8_t intline = PCIC_READ_INTL(bus, slot, func);
-	dtables_reg(32 + intline, &e1000_handler);
+	//dtables_reg(32 + intline, &e1000_handler);
 	printf("e1000: registered interrupt %d\n", 32 + intline);
 	dfhdevice = dev; //i don't know what i'm doing
 	e1000_enable_int(dev);
