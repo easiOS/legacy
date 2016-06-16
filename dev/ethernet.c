@@ -109,7 +109,7 @@ void ethernet_recv_packet(struct ethernet_device* dev, void* buf, size_t len)
     }
     default:
     {
-      printf("ethernet: unknown ethertype 0x%x\n", frame->ethertype);
+      //printf("ethernet: unknown ethertype 0x%x\n", frame->ethertype);
     }
   }
   dev->received = dev->received + 1;

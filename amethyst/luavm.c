@@ -19,12 +19,8 @@
 #include <unistd.h>
 #include <time.h>
 #include <signal.h>
-#include "eelphant.h"
-#else /* __linux__ */
-#include <eelphant.h>
 #endif /* __linux__ */
-
-
+#include <amethyst.h>
 
 #ifdef LUAVM_DEBUG
 #define luavm_inf(format, ...) printf("[luaVM INF] " format "\n", ##__VA_ARGS__)
@@ -65,7 +61,7 @@ struct {
 };
 
 #ifdef __linux__
-extern ep_window w;
+extern am_win w;
 
 void* luacfile;
 
@@ -80,7 +76,7 @@ static void signal_catch(int signo)
     printf("exiting...\n");
     if(w.flags) if(w.unload) w.unload(&w);
     if(luacfile) free(luacfile);
-    eelphant_destroy_window(&w);
+    amethyst_destroy_window(&w);
     exit(0);
   }
 }
@@ -104,7 +100,7 @@ int main(int argc, char** argv)
   if(w.load) w.load(&w);
   while(w.flags && !(w.flags >> 2 & 1))
   {
-    if(w.update) w.update(100, &w);
+    if(w.update) w.update(&w, 100);
   }
   return 0;
 }
@@ -156,10 +152,10 @@ void luavm_load()
 
 }
 
-void luavm_update(uint64_t dt, ep_window* w)
+void luavm_update(am_win* w, unsigned dt)
 {
   if(!(w->flags >> 1 & 1)) return;
-  luavm_state* s = (luavm_state*)w->userdata[0];
+  luavm_state* s = (luavm_state*)w->windata;
   uint32_t* instr = (uint32_t*)((uint32_t)s->code_ptr);
   while(s->ip < s->code_n && ((w->flags >> 1) & 1))
   {
@@ -169,7 +165,7 @@ void luavm_update(uint64_t dt, ep_window* w)
   s->ip = 0;
 } 
 
-void luavm_draw(int64_t bx, int64_t by, ep_window* w)
+void luavm_draw(am_win* w, int bx, int by)
 {
 
 }
@@ -209,7 +205,7 @@ void luavm_spawn(lheader_t* f) //spawn a luavm and it's window
   printf("\"\n");*/
 
   //--------------------------------------
-  ep_window* w = eelphant_create_window();
+  am_win* w = amethyst_create_window();
   if(!w) return;
   strcpy(w->title, "LuaVM");
   w->x = 10;
@@ -220,14 +216,14 @@ void luavm_spawn(lheader_t* f) //spawn a luavm and it's window
   w->bg.g = 212;
   w->bg.b = 212;
   w->bg.a = 255;
-  w->userdata[0] = (uint32_t)malloc(sizeof(luavm_state));
-  if(!w->userdata[0])
+  w->windata = (void*)malloc(sizeof(luavm_state));
+  if(!w->windata)
   {
     luavm_fat("cannot allocate memory for VM state");
-    eelphant_destroy_window(w);
+    amethyst_destroy_window(w);
     return;
   }
-  luavm_state* vm_state = (luavm_state*)w->userdata[0];
+  luavm_state* vm_state = (luavm_state*)w->windata;
   vm_state->window = w;
   vm_state->file = f;
   vm_state->ip = 0;
@@ -283,8 +279,8 @@ void luavm_spawn(lheader_t* f) //spawn a luavm and it's window
   if(vm_state->fprot_n != 0)
   {
     luavm_fat("bytecodes contains user-defined functions: this isn't allowed");
-    free((void*)w->userdata[0]);
-    eelphant_destroy_window(w);
+    free(w->windata);
+    amethyst_destroy_window(w);
     return;
   }
 
@@ -304,7 +300,7 @@ void luavm_spawn(lheader_t* f) //spawn a luavm and it's window
   w->flags |= 1 << 1;
   w->update = &luavm_update;
   w->draw = &luavm_draw;
-  eelphant_switch_active(w);
+  amethyst_set_active(w);
 }
 
 void luavm_exec(luavm_state* state, uint32_t instruction)
@@ -464,7 +460,7 @@ void luavm_exec(luavm_state* state, uint32_t instruction)
       #ifdef __linux__
       raise(SIGILL);
       #else
-      eelphant_destroy_window(state->window);
+      amethyst_destroy_window(state->window);
       #endif /* __linux__ */
       break;
   }

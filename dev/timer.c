@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <kernel.h>
+#include <string.h>
 
 uint32_t tick = 0;
 uint32_t last_rtc_read = 3600000;
@@ -22,6 +23,14 @@ uint32_t minute = 0;
 uint32_t second = 0;
 
 uint64_t watchdog_last_kick = 0;
+
+typedef struct {
+  unsigned flags;
+  unsigned mod; // call function only if !(tick % mod)
+  void (*cb)(unsigned t);
+} timer_callback_t;
+
+timer_callback_t timer_callbacks[16];
 
 uint64_t get_unix_time()
 {
@@ -38,6 +47,14 @@ static void timer_callback(registers_t regs)
       kpanic("KERNEL_WATCHDOG_TIMEOUT", regs);
     }
     watchdog_last_kick = tick + 1;
+
+    // notify
+    for(int i = 0; i < 16; i++)
+      if(timer_callbacks[i].flags)
+        if(timer_callbacks[i].cb)
+          if(!(tick % timer_callbacks[i].mod))
+            timer_callbacks[i].cb(tick);
+
     if(ttime == 0)
     {
       ttime = 31556952 * (year - 1970);
@@ -162,6 +179,30 @@ void timerinit(uint32_t frequency)
     outb(0x40, l);
     outb(0x40, h);
     puts("done.\n");
+
+    memset(timer_callbacks, 0, 16 * sizeof(timer_callback_t));
+}
+
+int timer_registercb(void (*f)(unsigned), unsigned mod)
+{
+  for(int i = 0; i < 16; i++)
+    if(!timer_callbacks[i].flags)
+    {
+      timer_callbacks[i].flags = 1;
+      timer_callbacks[i].mod = mod;
+      timer_callbacks[i].cb = f;
+      return i;
+    }
+  return -1;
+}
+
+void timer_unregistercb(unsigned i)
+{
+  if(i > 15)
+    return;
+  timer_callbacks[i].flags = 0;
+  timer_callbacks[i].mod = 0;
+  timer_callbacks[i].cb = NULL;
 }
 
 void __sleep(uint32_t millis)

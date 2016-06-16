@@ -119,3 +119,35 @@ double pow(double x, int y) {
     }
     return z;
 }
+
+double abs(double a)
+{
+	return (a >= 0) ? a : -a;
+}
+
+double sqrt(const double n)
+{
+	double a = 0.001;
+	double l, u, g;
+
+	if(n < 1)
+	{
+		l = n;
+		u = 1;
+	}
+	else
+	{
+		l = 1;
+		u = n;
+	}
+
+	while((u - l) > a)
+	{
+		g = (l + u) / 2;
+		if(g * g > n)
+			u = g;
+		else
+			l = g;
+	}
+	return (l+u)/2;
+}

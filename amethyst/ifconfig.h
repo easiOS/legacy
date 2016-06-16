@@ -1,6 +1,6 @@
 #ifndef H_IFCONFIG
 #define H_IFCONFIG
 
-void ifconfig_init(void);
+int ifconfig_main(int argc, char** argv);
 
 #endif

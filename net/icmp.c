@@ -32,7 +32,7 @@ void icmp_send_ping_req(uint8_t* dest, uint8_t* src)
   ipv4_send_data(dest, src, &asd, sizeof(asd), 1);
 }
 
-void icmp_send_ping_reply(uint8_t* dest, uint8_t* src, uint16_t id, uint16_t seq)
+void icmp_send_ping_reply(uint8_t* dest, uint8_t* src, uint16_t id, uint16_t seq, uint8_t* data)
 {
   struct icmp_ping_header asd;
   memset(&asd, 0, sizeof(asd));
@@ -42,7 +42,7 @@ void icmp_send_ping_reply(uint8_t* dest, uint8_t* src, uint16_t id, uint16_t seq
   asd.id = id;
   asd.seq = seq;
   asd.header.checksum = 0;
-
+  memcpy(asd.data, data, 128);
   asd.header.checksum = icmp_checksum(&asd, sizeof(asd));
 
   ipv4_send_data(dest, src, &asd, sizeof(asd), 1);
@@ -89,7 +89,7 @@ void icmp_recv_icmp(uint8_t* src, uint8_t* dst, uint8_t* data)
       struct icmp_ping_header* ping = (struct icmp_ping_header*)data;
       uint16_t id = ping->id;
       uint16_t seq = ping->seq;
-      icmp_send_ping_reply(src, dst, id, seq);
+      icmp_send_ping_reply(src, dst, id, seq, ping->data);
       break;
     }
     default:

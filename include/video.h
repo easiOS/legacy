@@ -1,6 +1,8 @@
 #ifndef H_VIDEO
 #define H_VIDEO
 
+#include <stdint.h>
+
 struct VBEModeInfoBlock {
   uint16_t attributes;
   uint8_t winA,winB;
@@ -33,7 +35,7 @@ typedef enum {
 
 typedef struct {
   uint8_t r,g,b,a;
-} rgb_t;
+} __attribute__((packed)) rgb_t;
 
 void vinit(int64_t width, int64_t height, int64_t bpp, int64_t pitch, uint64_t addr);
 void vdestroy();

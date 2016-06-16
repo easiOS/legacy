@@ -13,6 +13,7 @@ struct icmp_header {
 struct icmp_ping_header {
     struct icmp_header header;
     uint16_t id, seq;
+    uint8_t data[128];
 } __attribute__((packed));
 
 void icmp_send_ping_req(uint8_t* dest, uint8_t* src);

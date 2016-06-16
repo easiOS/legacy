@@ -11,7 +11,7 @@ struct ip4_header
   uint8_t tos;
   uint16_t tot_len;
   uint16_t id;
-  uint16_t frag_off;
+  uint16_t flags:3, frag_off:13;
   uint8_t ttl;
   uint8_t protocol;
   int16_t check;

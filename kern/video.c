@@ -19,6 +19,7 @@ uint32_t* fb;
 uint32_t __attribute__((aligned(4)))fbb[1440000]; //maximum resolution: 1600x900 or equivalent
 int64_t fbw = 0, fbh = 0, fbbpp = 0, fbp = 0;
 uint8_t fbt;
+int vmodified = 0;
 rgb_t color;
 
 typedef struct { unsigned char dummy [32]; } DT;
@@ -1266,6 +1267,7 @@ void vplot(int64_t x, int64_t y)
     ob = (uint8_t)((a * color.b + ia * db) >> 8);
     fbb[y * fbw + x] = or << 16 | og << 8 | ob;
   }
+  vmodified = 1;
 }
 
 void vsetcol(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
@@ -1283,13 +1285,8 @@ rgb_t vgetcol()
 
 void vcls()
 {
-  for(int64_t y = 0; y < fbh; y++)
-    for(int64_t x = 0; x < fbw; x++)
-    {
-      uint32_t p = fb[y * fbw + x];
-      if((p >> 16 & 0xFF) != color.r || (p >> 8 & 0xFF) != color.g || (p & 0xFF) != color.b)
-        vplot(x, y);
-    }
+    for(unsigned i = 0; i < fbh * fbw; i++)
+        fbb[i] = color.r << 16 | color.g << 8 | color.b;
 }
 
 void vd_print(int64_t x, int64_t y, const char* str, int64_t* xe, int64_t* ye)
@@ -1426,12 +1423,14 @@ void vd_line(int64_t x1, int64_t y1, int64_t x2, int64_t y2)
 //copy framebuffer buffer to framebuffer
 void vswap()
 {
+    if(!vmodified)
+        return;
   //asm volatile("cli");
   uint32_t* fbbyte = (uint32_t*)fb;
   uint32_t* fbbbyte = (uint32_t*)fbb;
   //float* fbbyte = (float*)fb;
   //float* fbbbyte = (float*)fbb;
-  for(int64_t i = 0; i < fbw * fbh; i++)
+  for(int i = 0; i < fbw * fbh; i++)
   {
     fbbyte[i] = fbbbyte[i];
   }

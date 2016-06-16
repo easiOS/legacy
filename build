@@ -9,7 +9,7 @@ import shutil
 CC="i686-elf-gcc"
 AS="nasm"
 LINKER="i686-elf-gcc"
-CFLAGS="-O2 -c $INPUT -o $OUTPUT -std=gnu99 -ffreestanding -Wall \
+CFLAGS="-O2 -g -c $INPUT -o $OUTPUT -std=gnu99 -ffreestanding -Wall \
 -fdiagnostics-color=always -I include/ -fstack-protector-all"
 AFLAGS="-felf32 -o $OUTPUT $INPUT"
 EXECUTABLE="easios.bin"
@@ -46,10 +46,8 @@ SOURCES=["kern/boot.s", "kern/kernel.c", "kern/text.c", "dev/serial.c",
          "dev/pci/ohci.c", "dev/graphics.c",
          "dev/pci/virtio-net.c", "dev/pci/debugdrv.c", "dev/pci/amd_rv100.c",
          "dev/disk.c", "dev/pci/e100.c", "dev/pci/e1000.c",
-         "eelphant/eelphant.c", "eelphant/terminal.c", "eelphant/msgbox.c",
-         "eelphant/eclock.c", "eelphant/notepad.c", "eelphant/iowindow.c",
-         "eelphant/physdemo.c", "eelphant/luavm.c", "eelphant/efm.c",
-         "eelphant/testapp.c", "eelphant/login.c", "eelphant/ifconfig.c",
+         "amethyst/amethyst.c", "amethyst/testwin.c", "amethyst/ifconfig.c",
+         "amethyst/luavm.c",
          "net/icmp.c", "net/ipv4.c", "net/routing.c", "net/slip.c",
          "net/udp.c", "net/arp.c",
          "kern/fs/fat32.c",

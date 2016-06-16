@@ -20,7 +20,7 @@
 #include <text.h>
 #include <krandom.h>
 #include <time.h>
-#include <eelphant.h>
+#include <amethyst.h>
 #include <dev/ide.h>
 #include <dev/pci.h>
 #include <tar.h>
@@ -37,7 +37,7 @@
 
 struct cpu_desc cpu_desc;
 
-#define KERNEL_NAME "easiOS v0.3.10"
+#define KERNEL_NAME "easiOS v0.4.0"
 
 const char* cmdline = NULL;
 uint16_t __attribute__((aligned(4))) text_buffer[2000];
@@ -312,23 +312,23 @@ void kmain(uint32_t magic, uint32_t mbp)
   krandom_get();
   ethernet_list();
   printf("Welcome to %s!\n", KERNEL_NAME);
-  puts("Copyright (c) 2015-2016, Daniel (Easimer) Meszaros\nAll rights reserved.\n");
-  puts("printf implemetation:\n\tCopyright (c) 2013,2014 Michal Ludvig <michal@logix.cz> All rights reserved.\n");
+  puts("    (c) 2015-2016 Easimer Labs - All rights reserved.\n");
   size_t w = vgetw();
   size_t h = vgeth();
   if(w == 0 || h == 0)
   {
-    puts("Cannot start Eelphant: no video. Falling back to kernel shell\n");
+    puts("Cannot start window manager: no video. Falling back to kernel shell\n");
     kshell_main();
     puts("kshell returned\n"); return;
   }
   int ret = 0;
   do
   {
-    ret = eelphant_main(w, h);
+    //ret = eelphant_main(w, h);
+    ret = amethyst_main(w, h);
   } while (ret);
-  printf("eelphant returned with %d\n", ret);
-  reboot("Eelphant exited\n");
+  printf("Window manager returned with %d\n", ret);
+  reboot("Window manager exited\n");
 }
 
 void reboot(const char* reason)

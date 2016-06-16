@@ -6,7 +6,7 @@
 #include <kernel.h>
 #include <video.h>
 #include <dev/graphics.h>
-#include <eelphant.h>
+#include <amethyst.h>
 
 #define KSHELL_PROMPT "easios>"
 #define KSHELL_BUFSIZE 128
@@ -57,14 +57,14 @@ void kshell_eval()
     reboot("Requested by user");
     return;
   }
-  CMDCMP("eelphant")
+  CMDCMP("amethyst")
   {
     size_t w = vgetw();
     size_t h = vgeth();
     int ret;
     do
     {
-      ret = eelphant_main(w, h);
+      ret = amethyst_main(w, h);
     } while (ret);
     return;
   }

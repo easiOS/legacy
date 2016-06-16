@@ -8,5 +8,7 @@ double sin(double x);
 double cos(double x);
 double pow(double x, int y);
 double floor(double x);
+double abs(double a);
+double sqrt(const double n);
 
 #endif
