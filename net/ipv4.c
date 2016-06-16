@@ -13,6 +13,8 @@ struct ipv4_stream {
   unsigned char* memory;
 };
 
+struct ipv4_stream ipv4_streams[32] = {{0, NULL}};
+
 uint16_t ipv4_checksum(void* addr, size_t count)
 {
   register uint32_t sum = 0;
@@ -142,6 +144,94 @@ void ipv4_recv_data(void* data, size_t len)
     }
     default:
     {
+    }
+  }
+}
+
+void ipv4_recv_data_new(void* data, size_t len)
+{
+  struct ip4_header* ip4h = (struct ip4_header*)data;
+  if(ip4h->version != 4)
+  {
+    //printf("ipv4: bad ip version 0x%x\n", ip4h->version);
+    return;
+  }
+  uint16_t checksum = ip4h->check;
+  ip4h->check = ipv4_checksum(ip4h, sizeof(struct ip4_header));
+  if(checksum == ip4h->check)
+  {
+    return;
+  }
+  if(ip4h->flags == 0 && ip4h->frag_off == 0)
+  {
+    switch(ip4h->protocol)
+    {
+      case IP_PROT_ICMP: //ICMP
+      {
+        icmp_recv_icmp((uint8_t*)(&ip4h->saddr), (uint8_t*)(&ip4h->daddr), (uint8_t*)(data + sizeof(struct ip4_header)));
+        break;
+      }
+      case IP_PROT_UDP: //UDP
+      {
+        udp_receive(&ip4h->saddr, &ip4h->daddr, data + sizeof(struct ip4_header), ip4h->tot_len - sizeof(struct ip4_header));
+        break;
+      }
+      default:
+      {
+      }
+    }
+  }
+  if(ip4h->flags == 0 && ip4h->frag_off != 0)
+  {
+    for(int i = 0; i < 32; i++)
+    {
+      if(ipv4_streams[i].id == ip4h->id)
+      {
+        memcpy(ipv4_streams[i].memory + ip4h->frag_off, data + ip4h->ihl * 4, ip4h->tot_len - ip4h->ihl * 4);
+        switch(ip4h->protocol)
+        {
+          case IP_PROT_ICMP: //ICMP
+          {
+          icmp_recv_icmp((uint8_t*)(&ip4h->saddr), (uint8_t*)(&ip4h->daddr), (uint8_t*)(ipv4_streams[i].memory));
+          break;
+          }
+          case IP_PROT_UDP: //UDP
+          {
+            udp_receive(&ip4h->saddr, &ip4h->daddr, ipv4_streams[i].memory, ip4h->tot_len - sizeof(struct ip4_header));
+            break;
+          }
+          default:
+          {
+          }
+        }
+        break;
+      }
+    }
+  }
+  if(ip4h->flags == 4 || ip4h->frag_off != 0)
+  {
+    int nostream = 1;
+    for(int i = 0; i < 32; i++)
+    {
+      if(ipv4_streams[i].id == ip4h->id)
+      {
+        nostream = 0;
+        memcpy(ipv4_streams[i].memory + ip4h->frag_off, data + ip4h->ihl * 4, len - ip4h->ihl * 4);
+        break;
+      }
+    }
+    if(nostream)
+    {
+      for(int i = 0; i < 32; i++)
+      {
+        if(ipv4_streams[i].memory == NULL)
+        {
+          ipv4_streams[i].id = ip4h->id;
+          ipv4_streams[i].memory = malloc(65536);
+          memcpy(ipv4_streams[i].memory + ip4h->frag_off, data + ip4h->ihl * 4, len - ip4h->ihl * 4);
+          break;
+        }
+      }
     }
   }
 }

@@ -7,6 +7,8 @@
 #define PROT_IPV4 0x0008
 #define PROT_ARP  0x0608
 
+#define MAX_ETH_N 1
+
 #define htons(A) ((((uint16_t)(A) & 0xff00) >> 8) | \
 (((uint16_t)(A) & 0x00ff) << 8))
 #define htonl(A) ((((uint32_t)(A) & 0xff000000) >> 24) | \
@@ -63,5 +65,6 @@ int ethernet_send_arp(struct ethernet_device* dev);
 const struct ethernet_device* ethernet_getif(int id);
 int ethernet_send_packet(struct ethernet_device* dev, void* buf, size_t len, uint8_t* dest, uint16_t protocol);
 void ethernet_recv_packet(struct ethernet_device* dev, void* buf, size_t len);
+struct ethernet_device* ethernet_getbyname(const char* name);
 
 #endif

@@ -20,8 +20,65 @@ void ifconfig_draw(am_win* w, int bx, int by)
 	vd_print(px, py, buffer, &px, &py);
 }
 
+unsigned ip2int(const char* ip)
+{
+  unsigned v = 0;
+  
+  const char* start;
+  start = ip;
+  for(int i = 0; i < 4; i++)
+  {
+    char c;
+    int n = 0;
+    while(1)
+    {
+      c = *start;
+      start++;
+      if(c >= '0' && c <= '9')
+      {
+        n *= 10;
+        n += c - '0';
+      }
+      else if((i < 3 && c == '.') || i == 3)
+        break;
+      else
+        return 0;
+    }
+    if(n > 255)
+      return 0;
+    v *= 256;
+    v += n;
+  }
+  return v;
+}
+
 int ifconfig_main(int argc, char** argv)
 {
+  struct ethernet_device* dev = (struct ethernet_device*)ethernet_getif(routing_table_getif(NULL, NULL));
+  if(!dev)
+    return 1;
+  if(argc > 2)
+  {
+    uint8_t* octets = NULL;
+    if(strcmp(argv[1], "setip") == 0)
+      octets = dev->ipv4_address;
+    if(strcmp(argv[1], "setmask") == 0)
+      octets = dev->ipv4_netmask;
+    if(strcmp(argv[1], "setgate") == 0)
+      octets = dev->ipv4_gateway;
+    if(octets)
+    {
+      unsigned ip = ip2int(argv[2]);
+      if(ip != 0)
+      {
+        octets[0] = ip >> 24 & 0xff;
+        octets[1] = ip >> 16 & 0xff;
+        octets[2] = ip >> 8 & 0xff;
+        octets[3] = ip & 0xff;
+      }
+      return 0;
+    }
+  }
 	am_win* w = amethyst_create_window();
   if(!w) return 1;
   strcpy(w->title, "Network Interface Configuration");
@@ -31,13 +88,6 @@ int ifconfig_main(int argc, char** argv)
  	w->bg.g = 212;
  	w->bg.b = 212;
  	w->bg.a = 255;
-
- 	const struct ethernet_device* dev = ethernet_getif(routing_table_getif(NULL, NULL));
- 	if(!dev)
- 	{
- 		amethyst_destroy_window(w);
- 		return 1;
- 	}
  	w->windata = (void*)dev;
   w->draw = &ifconfig_draw;
   amethyst_set_active(w);

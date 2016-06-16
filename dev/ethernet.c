@@ -6,8 +6,6 @@
 #include <net/ipv4.h>
 #include <net/arp.h>
 
-#define MAX_ETH_N 8
-
 struct ethernet_device ethernet_devices[MAX_ETH_N];
 
 uint32_t crc32(uint8_t *buf, size_t len);
@@ -72,9 +70,21 @@ void ethernet_list()
 
 const struct ethernet_device* ethernet_getif(int id)
 {
-  if(id == -1)
+  if(id < 0)
     return NULL;
   return (const struct ethernet_device*)&ethernet_devices[id];
+}
+
+struct ethernet_device* ethernet_getbyname(const char* name)
+{
+  for(int i = 0; i < MAX_ETH_N; i++)
+  {
+    if(strcmp(ethernet_devices[i].name, name) == 0)
+    {
+      return &ethernet_devices[i];
+    }
+  }
+  return NULL;
 }
 
 int ethernet_send_packet(struct ethernet_device* dev, void* buf, size_t len, uint8_t* dest, uint16_t protocol)

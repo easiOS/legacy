@@ -33,7 +33,7 @@ void routing_table_remove(int i)
 
 int routing_table_getif(uint8_t* dest, uint8_t* src)
 {
-  for(int i = 0; i < 8; i++)
+  for(int i = 0; i < MAX_ETH_N; i++)
   {
     if(ethernet_getif(i)->flags & 1)
       return i; //return first ethernet device i don't care

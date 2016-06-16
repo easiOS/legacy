@@ -141,6 +141,62 @@ void amethyst_event()
           			am_cls = 1;
 					break;
 				}
+				case 0x48: // cursor up
+				{
+					if(am_active)
+					{
+						am_active->y-= 10;
+						am_cls = 1;
+					}
+					break;
+				}
+				case 0x4B: // cursor left
+				{
+					if(am_active)
+					{
+						am_active->x -= 10;
+						am_cls = 1;
+					}
+					break;
+				}
+				case 0x4D: // cursor right
+				{
+					if(am_active)
+					{
+						am_active->x += 10;
+						am_cls = 1;
+					}
+					break;
+				}
+				case 0x50: // cursor down
+				{
+					if(am_active)
+					{
+						am_active->y += 10;
+						am_cls = 1;
+					}
+					break;
+				}
+				case 0x01: // escape
+				{
+					if(am_active)
+					{
+						amethyst_destroy_window(am_active);
+						am_cls = 1;
+					}
+					break;
+				}
+				case 0x0f: // tab
+				{
+					for(int i = 0; i < AM_MAX_WINDOWS; i++)
+						if(am_windows[i].flags & 1)
+						{
+							am_active = &am_windows[i];
+							am_cls = 1;
+							break;
+						}
+					break;
+				}
 				default:
 				{
 					if(am_cmd)
@@ -184,6 +240,7 @@ void amethyst_update(unsigned dt)
 	if(am_active)
 		if(am_active->update)
 			am_active->update(am_active, dt);
+	get_time((uint32_t*)am_date);
 }
 
 void amethyst_draw()
@@ -245,6 +302,11 @@ void amethyst_draw()
 	vd_rectangle(FILL, 1, am_height - 31, am_width - 2, 31);
 	vsetcol(252, 252, 252, 255);
 	vd_rectangle(LINE, 0, am_height - 32, am_width, 32);
+	/// draw time
+	char datebuf[64] = {'\0'};
+	snprintf(datebuf, 64, "%d:%d", am_date[3], am_date[4]);
+	vsetcol(0, 0, 0, 255);
+	vd_print(am_width - 56, am_height - 26, datebuf, NULL, NULL);
 	// draw command window (if active)
 	if(!am_cmd)
 		return;
