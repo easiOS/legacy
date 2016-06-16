@@ -4,4 +4,4 @@ legacy/
 easios.iso
 *.euf
 *.mo
-eelphant/
+build/

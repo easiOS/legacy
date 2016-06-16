@@ -152,27 +152,6 @@ void multiboot_enum(uint32_t mbp)
         }
 				break;
 			}
-      case MULTIBOOT_TAG_TYPE_VBE:
-      {
-        struct multiboot_tag_vbe* tagvbe =
-          (struct multiboot_tag_vbe*) tag;
-        puts("VBE\n");
-        char buffer[64];
-        puts(" Mode: ");
-        itoa(tagvbe->vbe_mode, buffer, 10);
-        puts(buffer);
-        puts("\n VBE Interface Seg: 0x");
-        itoa(tagvbe->vbe_interface_seg, buffer, 16);
-        puts(buffer);
-        puts(" Off: 0x");
-        itoa(tagvbe->vbe_interface_off, buffer, 16);
-        puts(buffer);
-        puts(" Len: ");
-        itoa(tagvbe->vbe_interface_len, buffer, 10);
-        puts(buffer);
-        putc('\n');
-        break;
-      }
       case MULTIBOOT_TAG_TYPE_MMAP:
 			{
 				struct multiboot_tag_mmap *tagmmap =
@@ -181,53 +160,6 @@ void multiboot_enum(uint32_t mbp)
 				memmgmt_init(tagmmap->entries, mmap_n);
         break;
 			}
-      case MULTIBOOT_TAG_TYPE_MODULE:
-      {
-        const char* luamagic = "\033Lua";
-        struct multiboot_tag_module *tagmod =
-          (struct multiboot_tag_module *)tag;
-        printf("GRUB module detected (cmdline: %s)\n", tagmod->cmdline);
-        if(*(uint32_t*)tagmod->mod_start == 0x45524653)
-        {
-          puts("  EasiOS VFS detected\n");
-          vfs_process((void*)tagmod->mod_start);
-          continue;
-        }
-        if(*(uint32_t*)tagmod->mod_start == 0x0237C0C0)
-        {
-          puts("  EasiOS Userfile detected\n");
-          eos_users_init((struct eos_user_header*)tagmod->mod_start);
-          continue;
-        }
-        if(memcmp((uint32_t*)tagmod->mod_start, luamagic, 4) == 0)
-        {
-          puts("  Lua bytecode detected\n");
-          if(tagmod->cmdline[0] == '\0')
-          {
-            puts("No name on cmdline, discarding.\n");
-            continue;
-          }
-          for(int i = 0; i < 16; i++)
-          {
-            if(lua_apps[i].address != NULL) continue;
-            lua_apps[i].address = (uint32_t*)tagmod->mod_start;
-            strcpy(lua_apps[i].name, tagmod->cmdline);
-            printf("    new lua app (ID#%d): %s at address 0x%x\n", i, lua_apps[i].name, lua_apps[i].address);
-            break;
-          }
-          continue;
-        }
-        struct posix_header* tarmod = (struct posix_header*)tagmod->mod_start;
-        if(tarmod->magic[0] == 'u' && tarmod->magic[1] == 's' &&
-           tarmod->magic[2] == 't' && tarmod->magic[3] == 'a' &&
-           tarmod->magic[4] == 'r')
-        {
-          puts("  Tar file detected\n");
-          continue;
-        }
-        puts("  Unknown\n");
-        break;
-      }
     }
   }
 }

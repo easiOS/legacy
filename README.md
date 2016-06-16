@@ -44,7 +44,7 @@ easiOS is an in-development <span title="lol :-D :-D :DDD">operating system</spa
 * Memory management
 * Graphical mode and drawing
 * File I/O on FAT32 partitions (MBR, GPT supported), running Lua bytecode from disk
-* Network stack (kinda)
+* Network stack (ARP works, can reply to ping)
 
 ## Supported devices
 

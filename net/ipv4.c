@@ -8,6 +8,11 @@
 
 uint16_t ipv4_mtu = 576;
 
+struct ipv4_stream {
+  unsigned short id;
+  unsigned char* memory;
+};
+
 uint16_t ipv4_checksum(void* addr, size_t count)
 {
   register uint32_t sum = 0;
