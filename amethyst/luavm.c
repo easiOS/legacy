@@ -42,8 +42,9 @@ LVM_DEFINE_SYSCALL(luavm_cos);
 LVM_DEFINE_SYSCALL(luavm_video_plot);
 LVM_DEFINE_SYSCALL(luavm_video_setcol);
 LVM_DEFINE_SYSCALL(luavm_video_rect);
+LVM_DEFINE_SYSCALL(luavm_luaio);
 
-#define SYSCALLN 8
+#define SYSCALLN 9
 
 struct {
   const char* name;
@@ -57,7 +58,8 @@ struct {
   {"cos", 4, &luavm_cos},
   {"vplot", 5, &luavm_video_plot},
   {"vsetcol", 6, &luavm_video_setcol},
-  {"vdrect", 7, &luavm_video_rect}
+  {"vdrect", 7, &luavm_video_rect},
+  {"luaio", 8, &luavm_luaio}
 };
 
 #ifdef __linux__
@@ -530,4 +532,9 @@ void luavm_video_rect(luavm_state* state, uint32_t reg)
   int w = (int)args[4];
   int h = (int)args[5];
   vd_rectangle(drawmode, wx + x, wy + y, w, h);
+}
+
+void luavm_luaio(luavm_state* state, uint32_t reg)
+{
+  printf("luaio called\n");
 }

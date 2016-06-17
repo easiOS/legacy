@@ -13,9 +13,12 @@
 #include <dev/timer.h>
 #include <dev/kbd.h>
 #include <string.h>
+#include <fs/thinfat32.h>
 
 #include "testwin.h"
 #include "ifconfig.h"
+#include "luavm.h"
+#include "about.h"
 
 am_win am_windows[AM_MAX_WINDOWS];
 am_win* am_active = NULL;
@@ -41,6 +44,11 @@ am_cmd_t am_commands[64] = {
 		.name = "ifconfig",
 		.argc = 1,
 		.main = &ifconfig_main,
+	},
+	{
+		.name = "about",
+		.argc = 1,
+		.main = &about_main,
 	},
 	// End of Array
 	{
@@ -87,7 +95,28 @@ void amethyst_cmdeval(char* s)
 			}
 			am_last2 = am_last;
 			am_last = &am_commands[i];
+			return;
 		}
+	}
+	char fnbuf[256];
+	fnbuf[0] = '\0';
+	strcat(fnbuf, "/bin/");
+	strcat(fnbuf, args[0]);
+	TFFile* f = tf_fopen((uint8_t*)fnbuf, (const uint8_t*)"r");
+	if(f)
+	{
+		void* progbuf = malloc(f->size);
+		if(!progbuf)
+		{
+			printf("amethyst: cannot load program from disk: out of memory\n");
+			tf_fclose(f);
+			return;
+		}
+		tf_fread((uint8_t*)progbuf, f->size, f);
+		tf_fclose(f);
+		luavm_spawn(progbuf);
+		free(progbuf);
+		return;
 	}
 }
 

@@ -37,8 +37,6 @@
 
 struct cpu_desc cpu_desc;
 
-#define KERNEL_NAME "easiOS v0.3.11"
-
 const char* cmdline = NULL;
 uint16_t __attribute__((aligned(4))) text_buffer[2000];
 struct lua_apps lua_apps[LUA_APPS_N];

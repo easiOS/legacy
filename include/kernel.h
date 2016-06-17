@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <dtables.h>
 
+#define KERNEL_NAME "easiOS v0.3.11"
+
 struct cpu_desc
 {
   char vendor[16];
