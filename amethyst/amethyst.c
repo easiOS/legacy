@@ -19,6 +19,7 @@
 #include "ifconfig.h"
 #include "luavm.h"
 #include "about.h"
+#include "image.h"
 
 am_win am_windows[AM_MAX_WINDOWS];
 am_win* am_active = NULL;
@@ -49,6 +50,11 @@ am_cmd_t am_commands[64] = {
 		.name = "about",
 		.argc = 1,
 		.main = &about_main,
+	},
+	{
+		.name = "image",
+		.argc = 2,
+		.main = &image_main,
 	},
 	// End of Array
 	{

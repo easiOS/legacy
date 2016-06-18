@@ -158,13 +158,23 @@ void luavm_update(am_win* w, unsigned dt)
 {
   if(!(w->flags >> 1 & 1)) return;
   luavm_state* s = (luavm_state*)w->windata;
+  if(s->ip >= s->code_n)
+  {
+    return;
+  }
   uint32_t* instr = (uint32_t*)((uint32_t)s->code_ptr);
-  while(s->ip < s->code_n && ((w->flags >> 1) & 1))
+  //while(s->ip < s->code_n && ((w->flags >> 1) & 1))
+  unsigned tar = s->ip + dt;
+  while(s->ip < tar && s->ip < s->code_n && ((w->flags >> 1) & 1))
   {
     luavm_exec(s, instr[s->ip]);
     s->ip++;
   }
-  s->ip = 0;
+  if(s->ip >= s->code_n)
+  {
+    strcat(w->title, " (finished)");
+  }
+  //s->ip = 0;
 } 
 
 void luavm_draw(am_win* w, int bx, int by)

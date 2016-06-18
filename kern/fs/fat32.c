@@ -25,8 +25,8 @@ int read_sector(uint8_t *data, uint32_t sector) {
 }
 
 int write_sector(uint8_t *data, uint32_t sector) {
-    if(sector < drives[tf_info.driveid].address.phys.lba + drives[tf_info.driveid].address.phys.size)
-    ide_write_sector(drives[tf_info.driveid].address.phys.lba + sector, data, 1, 0);
+    //if(sector < drives[tf_info.driveid].address.phys.lba + drives[tf_info.driveid].address.phys.size)
+    //ide_write_sector(drives[tf_info.driveid].address.phys.lba + sector, data, 1, 0);
     return 0;
 }
 
@@ -1325,6 +1325,7 @@ int tf_fflush(TFFile *fp) {
     FatFileEntry entry;
     uint8_t *filename=entry.msdos.filename;
 
+    if(!(fp->flags & TF_MODE_WRITE)) return 0;
     if(!(fp->flags & TF_FLAG_DIRTY)) return 0;
 
 
