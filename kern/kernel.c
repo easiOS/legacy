@@ -33,6 +33,7 @@
 #include <cpuid.h>
 #include <dev/disk.h>
 #include <net/slip.h>
+#include <fs/fat32/fat_filelib.h>
 
 struct cpu_desc cpu_desc;
 
