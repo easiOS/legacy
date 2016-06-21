@@ -3,7 +3,8 @@
 #include <video.h>
 #include <amethyst.h>
 #include <string.h>
-#include <fs/thinfat32.h>
+#include <stdlib.h>
+#include <fs/fat32/fat_filelib.h>
 
 struct bmp_header
 {
@@ -96,7 +97,7 @@ int image_main(int argc, char** argv)
 	fnbuf[0] = '\0';
 	strcat(fnbuf, "/user/");
 	strcat(fnbuf, argv[1]);
-	TFFile* f = tf_fopen((uint8_t*)fnbuf, (const uint8_t*)"r");
+	FL_FILE* f = fl_fopen(fnbuf, "r");
 	if(!f)
 	{
 		printf("image: file /user/%s does not exist\n", argv[1]);
@@ -106,7 +107,7 @@ int image_main(int argc, char** argv)
 	if(!w)
 	{
 		printf("image: can't allocate window\n");
-		tf_fclose(f);
+		fl_fclose(f);
 		return 1;
 	}
 	w->load = &image_load;
@@ -118,7 +119,7 @@ int image_main(int argc, char** argv)
 	amethyst_set_active(w);
 
 	struct bmp_header h;
-	tf_fread(&h, sizeof(struct bmp_header), f);
+	fl_fread(&h, sizeof(struct bmp_header), 1, f);
 	if(strncmp(h.type, "BM", 2) != 0)
 	{
 		printf("image: File not 256-bit BMP\n");
@@ -163,19 +164,18 @@ int image_main(int argc, char** argv)
 		goto destroy;
 	}
 	memset(wd->bitmap, 0xff, h.sizeimg);
-	tf_fseek(f, h.hsiz, 0);
-	tf_fread(wd->palette, pn * 4, f);
-	tf_fseek(f, h.off, 0);
+	fl_fread(wd->palette, pn * 4, 1, f);
 	uint8_t* bm_end = (uint8_t*)wd->bitmap + h.sizeimg;
-	for(uint8_t* bm = (uint8_t*)wd->bitmap; bm < bm_end; bm += 4)
+	/*for(uint8_t* bm = (uint8_t*)wd->bitmap; bm < bm_end; bm += 4)
 	{
 		tf_fread(bm, 4, f);
-	}
-	tf_fclose(f);
+	}*/
+	fl_fread(wd->bitmap, h.sizeimg, 1, f);
+	fl_fclose(f);
 	return 0;
 
 	destroy:
-	tf_fclose(f);
+	//tf_fclose(f);
 	amethyst_destroy_window(w);
 	return 1;
 }

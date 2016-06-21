@@ -4,7 +4,7 @@
 #include <port.h>
 #include <stdio.h>
 #include <vfs.h>
-#include <fs/thinfat32.h>
+#include <fs/fat32/fat_filelib.h>
 #include <string.h>
 
 struct IDEChannelRegisters {
@@ -25,9 +25,6 @@ struct ide_device {
    unsigned int   Size;        // Size in Sectors.
    unsigned char  Model[41];   // Model in string.
 } ide_devices[4];
-
-extern TFInfo tf_info;
-extern TFFile tf_file;
 
 struct eos_drives drives[4] = {0};
 
@@ -533,6 +530,40 @@ int ide_write_sector(int LBA, void* outarray, int count, int slavebit)  {
    return 0;
 }
 
+int fl_startoff = -1;
+
+int fl_disk_write(unsigned long sector, unsigned char *buffer, unsigned long sector_count)
+{
+   if(fl_startoff < 0)
+      return 0;
+    unsigned long i;
+
+    for (i=0;i<sector_count;i++)
+    {
+        ide_write_sector(sector, buffer, 1, 0);
+        sector ++;
+        buffer += 512;
+    }
+
+    return 1;
+}
+
+int fl_disk_read(unsigned long sector, unsigned char *buffer, unsigned long sector_count)
+{
+   if(fl_startoff < 0)
+      return 0;
+    unsigned long i;
+
+    for (i=0;i<sector_count;i++)
+    {
+        ide_read_sector(sector, buffer, 1, 0);
+        sector ++;
+        buffer += 512;
+    }
+
+    return 1;
+}
+
 void ide_detect_gpt_partitions()
 {
    printf("Searching GPT partitions\n");
@@ -572,13 +603,18 @@ void ide_detect_gpt_partitions()
                printf("  Cannot add more drives\n");
                return;
             }
-            tf_info.driveid = di;
             drives[di].letter = 'a' + di;
             drives[di].type = 2;
             drives[di].address.phys.lba = partitions[i].startlba;
             drives[di].address.phys.size = partitions[i].lastlba - (partitions[i].startlba - 1);
-            tf_init();
-            tf_info.driveid = di;
+            if(fl_startoff < 0)
+               fl_startoff = drives[di].address.phys.lba;
+            fl_init();
+            if(fl_attach_media(fl_disk_read, fl_disk_write) != FAT_INIT_OK)
+            {
+               printf("disk: Cannot init FAT32\n");
+               fl_startoff = -1;
+            }
             return;
          }
       }
@@ -618,12 +654,8 @@ void ide_detect_partitions()
          }
          if(mbr->partitions[i].type == 0xb)
    		{
-   			if(tf_info.type == 1)
-   			{
-   				continue;
-   			}
    			printf("Partition found %d at LBA %d (size: %d) FAT32\n", i, mbr->partitions[i].lba, mbr->partitions[i].sectors);
-   			tf_info.type = 1;
+   			//tf_info.type = 1;
    			int di = -1;
    			for(int j = 0;j < 4; j++)
    			{
@@ -638,13 +670,18 @@ void ide_detect_partitions()
    				printf("  Cannot add more drives\n");
    				return;
    			}
-   			tf_info.driveid = di;
    			drives[di].letter = 'a' + di;
    			drives[di].type = 2;
    			drives[di].address.phys.lba = mbr->partitions[i].lba;
    			drives[di].address.phys.size = mbr->partitions[i].sectors;
-   			tf_init();
-   			tf_info.driveid = di;
+            if(fl_startoff < 0)
+               fl_startoff = drives[di].address.phys.lba;
+            fl_init();
+            if(fl_attach_media(fl_disk_read, fl_disk_write) != FAT_INIT_OK)
+            {
+               printf("disk: Cannot init FAT32\n");
+               fl_startoff = -1;
+            }
    		}
    		if(mbr->partitions[i].type == 0x7f)
    		{

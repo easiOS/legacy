@@ -77,8 +77,7 @@ static void kbdcallback(registers_t regs)
     e->doublescan = doublescan;
     if(kc == 0x53 && doublescan && e->alt && e->ctrl)
     {
-      extern void kernupd_finish(void);
-      kernupd_finish();
+      // TODO: do something special
     }
   }
 end:

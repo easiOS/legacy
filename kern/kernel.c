@@ -33,7 +33,6 @@
 #include <cpuid.h>
 #include <dev/disk.h>
 #include <net/slip.h>
-#include <fs/thinfat32.h>
 
 struct cpu_desc cpu_desc;
 
@@ -301,9 +300,9 @@ void klog(const char* str)
   #if FAT32_DEBUG
   return;
   #endif
-  TFFile* f = tf_fopen((uint8_t*)"/user/klog", (const uint8_t*)"a");
+  FL_FILE* f = tf_fopen("/user/klog", "a");
   if(!f)
     return;
-  tf_fwrite((uint8_t*)str, strlen(str), 1, f);
-  tf_fclose(f);
+  fl_fwrite((uint8_t*)str, strlen(str), 1, f);
+  fl_fclose(f);
 }

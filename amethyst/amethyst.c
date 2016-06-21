@@ -13,7 +13,8 @@
 #include <dev/timer.h>
 #include <dev/kbd.h>
 #include <string.h>
-#include <fs/thinfat32.h>
+#include <stdlib.h>
+#include <fs/fat32/fat_filelib.h>
 
 #include "testwin.h"
 #include "ifconfig.h"
@@ -108,18 +109,18 @@ void amethyst_cmdeval(char* s)
 	fnbuf[0] = '\0';
 	strcat(fnbuf, "/bin/");
 	strcat(fnbuf, args[0]);
-	TFFile* f = tf_fopen((uint8_t*)fnbuf, (const uint8_t*)"r");
+	FL_FILE* f = fl_fopen(fnbuf, "r");
 	if(f)
 	{
-		void* progbuf = malloc(f->size);
+		void* progbuf = malloc(f->filelength);
 		if(!progbuf)
 		{
 			printf("amethyst: cannot load program from disk: out of memory\n");
-			tf_fclose(f);
+			fl_fclose(f);
 			return;
 		}
-		tf_fread((uint8_t*)progbuf, f->size, f);
-		tf_fclose(f);
+		fl_fread(progbuf, f->filelength, 1, f);
+		fl_fclose(f);
 		luavm_spawn(progbuf);
 		free(progbuf);
 		return;
