@@ -301,7 +301,7 @@ void klog(const char* str)
   #if FAT32_DEBUG
   return;
   #endif
-  FL_FILE* f = tf_fopen("/user/klog", "a");
+  FL_FILE* f = fl_fopen("/user/klog", "a");
   if(!f)
     return;
   fl_fwrite((uint8_t*)str, strlen(str), 1, f);
