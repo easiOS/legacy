@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <dtables.h>
 
-#define KERNEL_NAME "easiOS v0.3.11"
+#define KERNEL_NAME "easiOS v0.3.12"
 
 struct cpu_desc
 {
