@@ -17,7 +17,10 @@ easiOS is an in-development <span title="lol :-D :-D :DDD">operating system</spa
 * Python 3
 * GRUB2 (optional, for building ISO)
 1. Download source code (git clone, tarball, etc.)
-2. Run ./build
+2. Make a build directory somewhere
+3. Generate project files using CMake into the build directory
+4. Build the project
+5. (Optional) Run biso.py to generate ISO file
 
 ## How to run
 ### Requirements:
