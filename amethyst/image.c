@@ -25,6 +25,11 @@ struct bmp_header
 
 struct image_windata
 {
+	enum {
+		TUNK, // unknown
+		T256, // 256-color
+		T24 // 24-bit
+	} type;
 	rgb_t* palette;
 	unsigned char* bitmap;
 } __attribute__((packed));
@@ -63,11 +68,30 @@ void image_update(am_win* w, unsigned dt)
 
 }
 
-void image_draw(am_win* w, int bx, int by)
+void image_draw_t24(am_win* w, int bx, int by)
 {
 	if(!w->windata)
 		return;
 	struct image_windata* d = w->windata;
+	unsigned char* ci = d->bitmap;
+	for(int y = 0; y < w->h; y++)
+	{
+		for(int x = 0; x < w->w; x++)
+		{
+			vsetcol(ci[2], ci[1], ci[0], 255);
+			vplot(bx + x, by + w->h - y);
+			ci ++;
+		}
+		ci = d->bitmap + (y * w->w) + (w->w % 4);
+	}
+}
+
+void image_draw_t256(am_win* w, int bx, int by)
+{
+	if(!w->windata)
+		return;
+	struct image_windata* d = w->windata;
+
 	for(int y = 0; y < w->h; y++)
 	{
 		for(int x = 0; x < w->w; x++)
@@ -85,6 +109,9 @@ void image_event(am_win* w, am_event* e)
 {
 	
 }
+
+int image_loadbmp256(am_win* w, struct bmp_header* h, FL_FILE* f);
+int image_loadbmp24(am_win* w, struct bmp_header* h, FL_FILE* f);
 
 int image_main(int argc, char** argv)
 {
@@ -113,7 +140,6 @@ int image_main(int argc, char** argv)
 	w->load = &image_load;
 	w->unload = &image_unload;
 	w->update = &image_update;
-	w->draw = &image_draw;
 	w->event = &image_event;
 	w->load(w);
 	amethyst_set_active(w);
@@ -125,57 +151,87 @@ int image_main(int argc, char** argv)
 		printf("image: File not 256-bit BMP\n");
 		goto destroy;
 	}
-	if(h.bpp != 8)
-	{
-		printf("image: unsupported file, should be 256-color BMP\n");
-		goto destroy;
-	}
-	if(h.width % 4 != 0 || h.height % 4 != 0)
-	{
-		printf("image: unsupported file, size should be divisible by 4\n");
-		goto destroy;
-	}
-	int pn = h.colused;
-	if(!pn)
-		pn = 256;
-	w->w = h.width; w->h = h.height;
-	printf("image: reported size: %dx%d\n", w->w, w->h);
-	printf("image: offset: %d\n", h.off);
 	w->windata = malloc(sizeof(struct image_windata));
 	if(!w->windata)
 	{
 		printf("image: cannot allocate memory to load image\n");
 		goto destroy;
 	}
+	printf("image: reported size: %dx%d\n", h.width, h.height);
+	printf("image: offset: %d\n", h.off);
+	int ret = 0;
+	if(h.bpp == 8)
+		ret = image_loadbmp256(w, &h, f);
+	if(h.bpp == 24)
+		ret = image_loadbmp24(w, &h, f);
+	if(ret)
+	{
+		free(w->windata);
+		goto destroy;
+	}
+	return 0;
+
+	destroy:
+	fl_fclose(f);
+	amethyst_destroy_window(w);
+	return 1;
+}
+
+int image_loadbmp24(am_win* w, struct bmp_header* h, FL_FILE* f)
+{
+	w->draw = &image_draw_t24;
+	w->w = h->width; w->h = h->height;
 	struct image_windata* wd = w->windata;
+	wd->bitmap = malloc(((h->bpp * h->width + 31) / 32) * 4 * h->height);
+	if(!wd->bitmap)
+	{
+		printf("image: cannot allocate memory to load image\n");
+		return 1;
+	}
+	memset(wd->bitmap, 0xff, h->sizeimg);
+	uint8_t* bm_end = (uint8_t*)wd->bitmap + h->sizeimg;
+	int rowc = 1;
+	int rowsz = ((h->bpp * h->width + 31) / 32) * 4;
+	for(uint8_t* bm = (uint8_t*)wd->bitmap; bm < bm_end; bm++)
+	{
+		if(rowc == h->width)
+		{
+			char buf[rowsz - (h->width * 3)];
+			fl_fread(buf, rowsz - (h->width * 3), 1, f);
+			rowc = 1;
+		}
+		rowc++;
+		fl_fread(bm, 3, 1, f);
+	}
+	fl_fclose(f);
+	return 0;
+}
+
+int image_loadbmp256(am_win* w, struct bmp_header* h, FL_FILE* f)
+{
+	w->draw = &image_draw_t256;
+	int pn = h->colused;
+	if(pn == 0)
+		pn = 256;
+	w->w = h->width; w->h = h->height;
+	struct image_windata* wd = w->windata;
+	wd->type = T256;
 	wd->palette = malloc(pn * 4);
 	if(!wd->palette)
 	{
 		printf("image: cannot allocate memory to load image\n");
-		free(w->windata);
-		goto destroy;
+		return 1;
 	}
-	wd->bitmap = malloc(h.sizeimg);
+	wd->bitmap = malloc(h->sizeimg);
 	if(!wd->bitmap)
 	{
 		printf("image: cannot allocate memory to load image\n");
 		free(wd->palette);
-		free(w->windata);
-		goto destroy;
+		return 1;
 	}
-	memset(wd->bitmap, 0xff, h.sizeimg);
+	memset(wd->bitmap, 0xff, h->sizeimg);
 	fl_fread(wd->palette, pn * 4, 1, f);
-	uint8_t* bm_end = (uint8_t*)wd->bitmap + h.sizeimg;
-	/*for(uint8_t* bm = (uint8_t*)wd->bitmap; bm < bm_end; bm += 4)
-	{
-		tf_fread(bm, 4, f);
-	}*/
-	fl_fread(wd->bitmap, h.sizeimg, 1, f);
+	fl_fread(wd->bitmap, h->sizeimg, 1, f);
 	fl_fclose(f);
 	return 0;
-
-	destroy:
-	//tf_fclose(f);
-	amethyst_destroy_window(w);
-	return 1;
 }
