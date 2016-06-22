@@ -566,6 +566,7 @@ int fl_disk_read(unsigned long sector, unsigned char *buffer, unsigned long sect
 
 void ide_detect_gpt_partitions()
 {
+   return;
    printf("Searching GPT partitions\n");
    uint8_t gptbuffer[512];
    struct gpt_hdr* gpt = (struct gpt_hdr*)gptbuffer;
