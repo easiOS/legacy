@@ -1,0 +1,16 @@
+language: c
+
+compiler:
+ - gcc
+
+before_install:
+ - sudo add-apt-repository ppa:devin122/osdev
+ - sudo apt-get -qq update
+ - sudo apt-get install -y nasm gcc-i686-elf-cross binutils-i686-elf
+
+before_script:
+ - mkdir build
+ - cd build
+ - cmake ..
+
+script: make
