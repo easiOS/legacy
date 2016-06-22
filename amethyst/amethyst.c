@@ -21,6 +21,7 @@
 #include "luavm.h"
 #include "about.h"
 #include "image.h"
+#include "meminspect.h"
 
 am_win am_windows[AM_MAX_WINDOWS];
 am_win* am_active = NULL;
@@ -57,6 +58,11 @@ am_cmd_t am_commands[64] = {
 		.argc = 2,
 		.main = &image_main,
 	},
+	{
+		.name = "meminsp",
+		.argc = 2,
+		.main = &meminsp_spawn,
+	},
 	// End of Array
 	{
 		.name = "",
@@ -70,6 +76,7 @@ am_cmd_t* am_last2 = NULL;
 
 void amethyst_cmdeval(char* s)
 {
+	printf("%s\n", s);
 	char* args[32] = { NULL };
 	char* s1 = s;
 	args[0] = s;
@@ -89,6 +96,8 @@ void amethyst_cmdeval(char* s)
 	}
 	for(int i = 0; i < 64; i++)
 	{
+		if(am_commands[i].argc == 0)
+			break;
 		if(strcmp(am_commands[i].name, args[0]) == 0)
 		{
 			int ret = 1;
@@ -96,7 +105,7 @@ void amethyst_cmdeval(char* s)
 				ret = am_commands[i].main(argi, args);
 			if(am_last == &am_commands[i])
 				break;
-			if(ret != 0)
+			//if(ret != 0)
 			{
 				printf("amethyst: spawner of %s exited with code %d\n", am_commands[i].name, ret);
 			}
@@ -105,6 +114,7 @@ void amethyst_cmdeval(char* s)
 			return;
 		}
 	}
+	printf("amethyst: program %s not found in built-ins, searching disk\n");
 	char fnbuf[256];
 	fnbuf[0] = '\0';
 	strcat(fnbuf, "/bin/");
@@ -125,6 +135,7 @@ void amethyst_cmdeval(char* s)
 		free(progbuf);
 		return;
 	}
+	printf("amethyst: program %s not found on disk either.\n");
 }
 
 void amethyst_event()
@@ -284,7 +295,7 @@ void amethyst_draw()
 	// clear screen if needed
 	if(am_cls)
 	{
-		puts("amethyst: cleared screen\n");
+		//puts("amethyst: cleared screen\n");
 		vsetcol(60, 108, 164, 255);
 		vcls();
 		am_cls = 0;

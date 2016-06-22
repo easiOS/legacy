@@ -6,7 +6,7 @@ include_directories(include)
 ENABLE_LANGUAGE(ASM)
 
 set(CMAKE_C_COMPILER i686-elf-gcc)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -g -std=gnu99 -ffreestanding -Wall -fdiagnostics-color=always -fstack-protector-all")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -g -std=gnu99 -ffreestanding -Wall -fdiagnostics-color=always -fstack-protector-all -Wno-unused-function")
 set(CMAKE_CXX_COMPILER i686-elf-g++)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -g -ffreestanding -Wall -fdiagnostics-color=always -fstack-protector-all -fno-exceptions -fno-rtti")
 

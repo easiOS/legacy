@@ -144,3 +144,14 @@ int atoi(char* c) {
     }
     return (value * sign);
 }
+
+unsigned atou(char* c) { // NON-STANDARD
+    unsigned value = 0;
+    while (isdigit(*c))
+    {
+        value *= 10;
+        value += (unsigned) (*c-'0');
+        c++;
+    }
+    return (value);
+}

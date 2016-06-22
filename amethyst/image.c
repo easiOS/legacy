@@ -9,9 +9,9 @@
 struct bmp_header
 {
 	char type[2];
-	int size;
-	int res1;
-	int off;
+	unsigned int size;
+	unsigned int res1;
+	unsigned int off;
 	unsigned int hsiz;
 	int width;
 	int height;
@@ -19,7 +19,7 @@ struct bmp_header
 	unsigned short bpp;
 	unsigned int comp;
 	unsigned int sizeimg;
-	unsigned int xppm, yppm;
+	int xppm, yppm;
 	unsigned int colused, colimp;
 } __attribute__((packed));
 
@@ -80,9 +80,9 @@ void image_draw_t24(am_win* w, int bx, int by)
 		{
 			vsetcol(ci[2], ci[1], ci[0], 255);
 			vplot(bx + x, by + w->h - y);
-			ci ++;
+			ci+=3;
 		}
-		ci = d->bitmap + (y * w->w) + (w->w % 4);
+		ci += (w->w % 4);
 	}
 }
 
@@ -188,8 +188,9 @@ int image_loadbmp24(am_win* w, struct bmp_header* h, FL_FILE* f)
 		printf("image: cannot allocate memory to load image\n");
 		return 1;
 	}
-	memset(wd->bitmap, 0xff, h->sizeimg);
-	uint8_t* bm_end = (uint8_t*)wd->bitmap + h->sizeimg;
+	unsigned siz = ((h->bpp * h->width + 31) / 32) * 4 * h->height;
+	memset(wd->bitmap, 0xff, siz);
+	/*uint8_t* bm_end = (uint8_t*)wd->bitmap + h->sizeimg;
 	int rowc = 1;
 	int rowsz = ((h->bpp * h->width + 31) / 32) * 4;
 	for(uint8_t* bm = (uint8_t*)wd->bitmap; bm < bm_end; bm++)
@@ -202,7 +203,9 @@ int image_loadbmp24(am_win* w, struct bmp_header* h, FL_FILE* f)
 		}
 		rowc++;
 		fl_fread(bm, 3, 1, f);
-	}
+	}*/
+	fl_fseek(f, h->off, SEEK_SET);
+	fl_fread(wd->bitmap, siz, 1, f);
 	fl_fclose(f);
 	return 0;
 }
@@ -233,5 +236,6 @@ int image_loadbmp256(am_win* w, struct bmp_header* h, FL_FILE* f)
 	fl_fread(wd->palette, pn * 4, 1, f);
 	fl_fread(wd->bitmap, h->sizeimg, 1, f);
 	fl_fclose(f);
+	printf("image: bitmap buffer addr: 0x%x", wd->bitmap);
 	return 0;
 }
