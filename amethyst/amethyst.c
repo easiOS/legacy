@@ -30,6 +30,7 @@ unsigned am_width, am_height;
 unsigned am_flags;
 int am_cls;
 unsigned am_dt = 0;
+int am_tz = 0;
 
 int am_cmd = 0;
 char am_cmd_buffer[64] = {'\0'};
@@ -288,6 +289,7 @@ void amethyst_update(unsigned dt)
 		if(am_active->update)
 			am_active->update(am_active, dt);
 	get_time((uint32_t*)am_date);
+	am_date[3] = (am_date[3] + am_tz) % 24;
 }
 
 void amethyst_draw()
@@ -420,6 +422,8 @@ int amethyst_main(int width, int height)
 	am_cls = 1;
 	memset(am_windows, 0, AM_MAX_WINDOWS * sizeof(am_win));
 
+	am_tz = amethyst_get_timezone();
+
 	time_t last, now;
   	last = ticks();
   	now = last;
@@ -475,4 +479,17 @@ void amethyst_destroy_window(am_win* w)
 void amethyst_set_active(am_win* w)
 {
 	am_active = w;
+}
+
+int amethyst_get_timezone(void)
+{
+	FL_FILE* f = fl_fopen("/etc/timezone", "r");
+	if(!f)
+		return 0;
+	char buffer[64];
+	buffer[63] = '\0';
+	fl_fread(buffer, 63, 1, f);
+	int tz = atoi(buffer);
+	printf("amethyst: timezone in config: %d\n", tz);
+	return tz;
 }
