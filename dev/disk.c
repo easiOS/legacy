@@ -540,7 +540,7 @@ int fl_disk_write(unsigned long sector, unsigned char *buffer, unsigned long sec
 
     for (i=0;i<sector_count;i++)
     {
-        ide_write_sector(sector, buffer, 1, 0);
+        ide_write_sector(fl_startoff + sector, buffer, 1, 0);
         sector ++;
         buffer += 512;
     }
@@ -556,7 +556,7 @@ int fl_disk_read(unsigned long sector, unsigned char *buffer, unsigned long sect
 
     for (i=0;i<sector_count;i++)
     {
-        ide_read_sector(sector, buffer, 1, 0);
+        ide_read_sector(fl_startoff + sector, buffer, 1, 0);
         sector ++;
         buffer += 512;
     }
