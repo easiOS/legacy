@@ -3,6 +3,8 @@
 # easiOS
 easiOS is an in-development <span title="lol :-D :-D :DDD">operating system</span> for x86.
 
+![Screenshot of 0.3.12](https://raw.githubusercontent.com/easiOS/docs/master/art/screenshot.png)
+
 ## Features
 * Multi-user
 * Cooperative software multitasking
