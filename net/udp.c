@@ -7,6 +7,11 @@
 #include <net/ipv4.h>
 #include <dev/ethernet.h>
 
+struct {
+  udp_recvf f;
+  void* p;
+} udp_portbinds[65536] = {{NULL, NULL}};
+
 uint16_t udp_checksum(void* addr, void* addr2, void* addr3, size_t count, size_t count2, size_t count3)
 {
   register uint32_t sum = 0;
@@ -85,5 +90,23 @@ void udp_receive(void* srca, void* dsta, void* data, size_t len)
     h->src = ntohs(h->src); h->dst = ntohs(h->dst);
     h->length = ntohs(h->length);
     h->checksum = ntohs(h->checksum);
-    printf("udp: recv\nsrc: %u dst: %u len: %u checksum: %x\n", h->src, h->dst, h->length, h->checksum);
+    if(udp_portbinds[h->dst].f)
+    {
+      udp_portbinds[h->dst].f(udp_portbinds[h->dst].p, data, len, srca, dsta, h->src, h->dst);
+    }
+}
+
+int udp_bindport(unsigned short port, udp_recvf f, void* p)
+{
+  if(udp_portbinds[port].f != NULL)
+    return 1;
+  udp_portbinds[port].f = f;
+  udp_portbinds[port].p = p;
+  return 0;
+}
+
+void udp_unbindport(unsigned short port)
+{
+  udp_portbinds[port].f = NULL;
+  udp_portbinds[port].p = NULL;
 }

@@ -22,6 +22,7 @@
 #include "about.h"
 #include "image.h"
 #include "meminspect.h"
+#include "tftpd.h"
 
 am_win am_windows[AM_MAX_WINDOWS];
 am_win* am_active = NULL;
@@ -63,6 +64,11 @@ am_cmd_t am_commands[64] = {
 		.name = "meminsp",
 		.argc = 2,
 		.main = &meminsp_spawn,
+	},
+	{
+		.name = "tftpdcp",
+		.argc = 1,
+		.main = &tftpd_spawn,
 	},
 	// End of Array
 	{
