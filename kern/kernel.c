@@ -28,7 +28,6 @@
 #include <kshell.h>
 #include <users.h>
 #include <vfs.h>
-#include <acpi.h>
 #include <stdarg.h>
 #include <cpuid.h>
 #include <dev/disk.h>
@@ -215,22 +214,6 @@ void kmain(uint32_t magic, uint32_t mbp)
   disk_init();
   multiboot_enum(mbp);
   cpu_check_features();
-  puts("Detecting ACPI...");
-  struct rsdp_desc* rsdp_p = acpi_findrsdp();
-  if(rsdp_p)
-  {
-    printf("Found: %x\n", (uint32_t)rsdp_p);
-    puts("OEM string: ");
-    for(int i = 0; i < 6; i++)
-    {
-      putc(rsdp_p->oemid[i]);
-    }
-    putc('\n');
-  }
-  else
-  {
-    puts("not found.\n");
-  }
   init_descriptor_tables();
   timerinit(1000);
   read_rtc();
