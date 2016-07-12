@@ -3,7 +3,6 @@
 #include <dev/timer.h>
 #include <port.h>
 #include <stdio.h>
-#include <vfs.h>
 #include <fs/fat32/fat_filelib.h>
 #include <string.h>
 
@@ -683,34 +682,6 @@ void ide_detect_partitions()
                printf("disk: Cannot init FAT32\n");
                fl_startoff = -1;
             }
-   		}
-   		if(mbr->partitions[i].type == 0x7f)
-   		{
-   			printf("Partition found %d at LBA %d (size: %d)\n", i, mbr->partitions[i].lba, mbr->partitions[i].sectors);
-   			ide_read_sector(mbr->partitions[i].lba, partbuffer, 1, 0);
-   			struct initramfs_header* vfs = (struct initramfs_header*)partbuffer;
-   			if(vfs->magic != 0x45524653)
-   			{
-   				printf("  Not EOS partition\n");
-   			}
-   			int di = -1;
-   			for(int j = 0;j < 4; j++)
-   			{
-   				if(drives[j].letter == 0)
-   				{
-   					di = j;
-   					break;
-   				}
-   			}
-   			if(di == -1)
-   			{
-   				printf("  Cannot add more drives\n");
-   				return;
-   			}
-   			drives[di].letter = 'a' + di;
-   			drives[di].type = 0;
-   			drives[di].address.phys.lba = mbr->partitions[i].lba;
-   			drives[di].address.phys.size = mbr->partitions[i].sectors;
    		}
    	}
 }

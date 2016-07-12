@@ -27,7 +27,6 @@
 #include <dev/ethernet.h>
 #include <kshell.h>
 #include <users.h>
-#include <vfs.h>
 #include <stdarg.h>
 #include <cpuid.h>
 #include <dev/disk.h>
